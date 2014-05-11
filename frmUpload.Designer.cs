@@ -32,7 +32,7 @@
 			this.picImage = new System.Windows.Forms.PictureBox();
 			this.lblLength = new System.Windows.Forms.Label();
 			this.txtText = new System.Windows.Forms.TextBox();
-			this.ajax = new QIT.AjaxControl32();
+			this.ajax = new QIT.AjaxControl();
 			((System.ComponentModel.ISupportInitialize)(this.picImage)).BeginInit();
 			this.SuspendLayout();
 			// 
@@ -50,7 +50,7 @@
 			this.picImage.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
 			this.picImage.TabIndex = 4;
 			this.picImage.TabStop = false;
-			this.picImage.Click += new System.EventHandler(this.picImage_Click);
+			this.picImage.DoubleClick += new System.EventHandler(this.picImage_DoubleClick);
 			// 
 			// lblLength
 			// 
@@ -77,7 +77,7 @@
 			// 
 			// ajax
 			// 
-			this.ajax.isAjax32 = false;
+			this.ajax.is16 = false;
 			this.ajax.Location = new System.Drawing.Point(178, 45);
 			this.ajax.Name = "ajax";
 			this.ajax.Size = new System.Drawing.Size(32, 32);
@@ -101,7 +101,7 @@
 			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
 			this.Text = "QIT BETA";
 			this.Activated += new System.EventHandler(this.frmUpload_Activated);
-			this.Load += new System.EventHandler(this.frmUpload_Load);
+			this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.frmUpload_FormClosed);
 			this.Shown += new System.EventHandler(this.frmUpload_Shown);
 			this.Enter += new System.EventHandler(this.frmUpload_Enter);
 			((System.ComponentModel.ISupportInitialize)(this.picImage)).EndInit();
@@ -116,7 +116,7 @@
 		private System.Windows.Forms.PictureBox picImage;
 		private System.Windows.Forms.Label lblLength;
 		internal System.Windows.Forms.TextBox txtText;
-		private AjaxControl32 ajax;
+		private AjaxControl ajax;
 
 	}
 }

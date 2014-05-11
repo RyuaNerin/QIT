@@ -32,7 +32,7 @@
 			this.bgwBefore = new System.ComponentModel.BackgroundWorker();
 			this.bgwAfter = new System.ComponentModel.BackgroundWorker();
 			this.pnl = new System.Windows.Forms.Panel();
-			this.ajax = new QIT.AjaxControl16();
+			this.ajax = new QIT.AjaxControl();
 			this.pnl.SuspendLayout();
 			this.SuspendLayout();
 			// 
@@ -69,7 +69,6 @@
 			// 
 			// ajax
 			// 
-			this.ajax.isAjax32 = false;
 			this.ajax.Location = new System.Drawing.Point(68, 19);
 			this.ajax.Name = "ajax";
 			this.ajax.Size = new System.Drawing.Size(16, 16);
@@ -100,7 +99,7 @@
 		#endregion
 
 		private System.Windows.Forms.TextBox txtPin;
-		private AjaxControl16 ajax;
+		private AjaxControl ajax;
 		private System.ComponentModel.BackgroundWorker bgwBefore;
 		private System.ComponentModel.BackgroundWorker bgwAfter;
 		private System.Windows.Forms.Panel pnl;

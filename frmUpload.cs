@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -9,9 +7,11 @@ using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using System.Windows.Forms;
-using Twitter;
 using System.Drawing.Imaging;
 using System.Drawing.Drawing2D;
+using System.Threading;
+using Twitter;
+using System.ComponentModel;
 
 namespace QIT
 {
@@ -20,30 +20,63 @@ namespace QIT
 		public frmUpload()
 		{
 			InitializeComponent();
+
+			this.ajax.Left = this.txtText.Left + this.txtText.Width / 2 - 16;
+			this.ajax.Top = this.txtText.Top + this.txtText.Height / 2 - 16;
 		}
 
-		protected override void OnFormClosed(FormClosedEventArgs e)
-		{
-			base.OnFormClosed(e);
+		public bool AutoStart { get; set; }
 
+		private void frmUpload_FormClosed(object sender, FormClosedEventArgs e)
+		{
 			this._img.Dispose();
 		}
-
-		private void frmUpload_Load(object sender, EventArgs e)
+		
+		bool b = true;
+		private void frmUpload_Shown(object sender, EventArgs e)
 		{
+
 			try
 			{
-				this.ajax.Left = this.txtText.Left + this.txtText.Width / 2 - 16;
-				this.ajax.Top = this.txtText.Top + this.txtText.Height / 2 - 16;
+				if (!this.b)
+				{
+					if (this.AutoStart)
+						this.Tweet();
 
-				if (this.AutoStart)
-					this.Tweet();
+					this.b = false;
+				}
+
+				this.txtText.Focus();
 			}
 			catch
 			{ }
 		}
 
-		private void picImage_Click(object sender, EventArgs e)
+		private void frmUpload_Enter(object sender, EventArgs e)
+		{
+			try
+			{
+				this.txtText.Focus();
+			}
+			catch
+			{ }
+		}
+
+		private void frmUpload_Activated(object sender, EventArgs e)
+		{
+			try
+			{
+				this.txtText.Focus();
+			}
+			catch
+			{ }
+		}
+
+		private void picImage_DoubleClick(object sender, EventArgs e)
+		{
+			this.ShowPreview();
+		}
+		private void ShowPreview()
 		{
 			try
 			{
@@ -58,24 +91,53 @@ namespace QIT
 		}
 
 		//////////////////////////////////////////////////////////////////////////
-
-		public bool AutoStart { get; set; }
-
+		
 		private int		_filesize = (int)(2.8 * 1024 * 1024);
 		private string	_path;
 		private Image	_img;
 
-		public void SetImage(string path)
+		public bool SetImage(string path)
 		{
 			this._path = path;
-			this._img = Image.FromFile(path);
+			this._img = Image.FromFile(path, true);
 
-			// Resize
-			double scale = Math.Min(64.0d / this._img.Width, 64.0d / this._img.Height);
-			this.picImage.Image = this.ImageResize(this._img, (int)(this._img.Width * scale), (int)(this._img.Height * scale));
+			switch (this._img.PixelFormat)
+			{
+				case PixelFormat.Format1bppIndexed:
+				case PixelFormat.Format4bppIndexed:
+				case PixelFormat.Format8bppIndexed:
+				case PixelFormat.Indexed:
+					{
+						Image imgNotIndexed = new Bitmap(this._img.Width, this._img.Height);
+						using (Graphics g = Graphics.FromImage(imgNotIndexed))
+							g.DrawImage(
+								this._img,
+								new Rectangle(0, 0, this._img.Width, this._img.Height),
+								new Rectangle(0, 0, this._img.Width, this._img.Height),
+								GraphicsUnit.Pixel
+								);
 
-			if (new FileInfo(path).Length > _filesize)
-				this._img = this.ImageResize(this._img);
+						this._img.Dispose();
+						this._img = imgNotIndexed;
+					}
+					break;
+			}
+
+			try
+			{
+				// Resize
+				double scale = Math.Min(64.0d / this._img.Width, 64.0d / this._img.Height);
+				this.picImage.Image = this.ImageResize(this._img, (int)(this._img.Width * scale), (int)(this._img.Height * scale));
+
+				if (new FileInfo(path).Length > _filesize)
+					this._img = this.ImageResize(this._img);
+
+				return true;
+			}
+			catch
+			{
+				return false;
+			}
 		}
 
 		private Image ImageResize(Image img)
@@ -110,35 +172,6 @@ namespace QIT
 
 		//////////////////////////////////////////////////////////////////////////
 
-		private void frmUpload_Shown(object sender, EventArgs e)
-		{
-			try
-			{
-				this.txtText.Focus();
-			}
-			catch
-			{ }
-		}
-
-		private void frmUpload_Activated(object sender, EventArgs e)
-		{
-			try
-			{
-				this.txtText.Focus();
-			}
-			catch
-			{ }
-		}
-
-		private void frmUpload_Enter(object sender, EventArgs e)
-		{
-			try
-			{
-				this.txtText.Focus();
-			}
-			catch
-			{ }
-		}
 
 		private bool isOver120 = false;
 		private bool isOver130 = false;
@@ -179,24 +212,41 @@ namespace QIT
 
 		private void txtText_KeyDown(object sender, KeyEventArgs e)
 		{
-			try
+			bool isHandled = false;
+			if (!e.Control && (e.KeyCode == Keys.Enter || e.KeyCode == Keys.Return))
 			{
-				if (!e.Control && e.KeyData == Keys.Enter)
-				{
-					if (this.txtText.Text.Replace("\r\n", "\n").Length < 130)
-					{
-						e.Handled = true;
+				if (this.txtText.Text.Replace("\r\n", "\n").Length < 130)
+					this.Tweet();
 
-						this.Tweet();
-					}
-					else
-					{
-						System.Media.SystemSounds.Exclamation.Play();
-					}
-				}
+				else
+					System.Media.SystemSounds.Exclamation.Play();
+
+				isHandled = true;
 			}
-			catch
-			{ }
+			else if (e.Control && e.KeyCode == Keys.A)
+			{
+				this.txtText.SelectAll();
+
+				isHandled = true;
+			}
+			else if (e.Control && e.KeyCode == Keys.R)
+			{
+				this.ShowPreview();
+
+				isHandled = true;
+			}
+			else if (e.KeyCode == Keys.Escape)
+			{
+				this.Close();
+
+				isHandled = true;
+			}
+			
+			if (isHandled)
+			{
+				e.SuppressKeyPress = false;
+				e.Handled = true;
+			}
 		}
 
 		public void Tweet()
@@ -211,8 +261,17 @@ namespace QIT
 			{ }
 		}
 
+
+		private class ResultInfo
+		{
+			public bool success { get; set; }
+		}
+
+		private delegate void dv();
 		private void bgwTweet_DoWork(object sender, DoWorkEventArgs e)
 		{
+			e.Result = false;
+
 			try
 			{
 				byte[] buff;
@@ -311,7 +370,7 @@ namespace QIT
 						oWeb.Encoding = Encoding.UTF8;
 						oWeb.Headers.Set("Authorization", hash_parameter);
 						oWeb.Headers.Set("Content-Type", "multipart/form-data; boundary=" + boundary);
-						oWeb.UploadData(URL, "POST", buff);
+						oWeb.UploadData(new Uri(URL), "POST", buff);
 
 						e.Result = true;
 					}

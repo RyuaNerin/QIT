@@ -28,13 +28,30 @@
 		/// </summary>
 		private void InitializeComponent()
 		{
+			this.pic = new System.Windows.Forms.PictureBox();
+			((System.ComponentModel.ISupportInitialize)(this.pic)).BeginInit();
 			this.SuspendLayout();
+			// 
+			// pic
+			// 
+			this.pic.Dock = System.Windows.Forms.DockStyle.Fill;
+			this.pic.Location = new System.Drawing.Point(0, 0);
+			this.pic.Name = "pic";
+			this.pic.Size = new System.Drawing.Size(216, 182);
+			this.pic.TabIndex = 0;
+			this.pic.TabStop = false;
+			this.pic.Paint += new System.Windows.Forms.PaintEventHandler(this.pic_Paint);
+			this.pic.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.pic_MouseDoubleClick);
+			this.pic.MouseDown += new System.Windows.Forms.MouseEventHandler(this.pic_MouseDown);
+			this.pic.MouseMove += new System.Windows.Forms.MouseEventHandler(this.pic_MouseMove);
+			this.pic.MouseUp += new System.Windows.Forms.MouseEventHandler(this.pic_MouseUp);
 			// 
 			// frmPreview
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(216, 182);
+			this.Controls.Add(this.pic);
 			this.DoubleBuffered = true;
 			this.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
 			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.SizableToolWindow;
@@ -45,11 +62,18 @@
 			this.ShowInTaskbar = false;
 			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
 			this.Text = "이미지 미리보기 (100 x 100)";
+			this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.frmPreview_FormClosed);
+			this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.frmPreview_KeyDown);
+			this.Resize += new System.EventHandler(this.frmPreview_Resize);
+			((System.ComponentModel.ISupportInitialize)(this.pic)).EndInit();
 			this.ResumeLayout(false);
 
 		}
 
 		#endregion
+
+		private System.Windows.Forms.PictureBox pic;
+
 
 	}
 }

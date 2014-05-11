@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -14,6 +13,8 @@ namespace QIT
 		public frmMain()
 		{
 			InitializeComponent();
+
+			this.Text = Program.ProductName;
 		}
 
 		List<string> _lstPaths = new List<string>();
@@ -39,7 +40,17 @@ namespace QIT
 
 				string[] data = (string[])e.Data.GetData(DataFormats.FileDrop);
 
+				if (data.Length > 10)
+					if (MessageBox.Show(
+						this,
+						String.Format("정말 {0} 개의 이미지를 트윗하시겠습니까?", data.Length),
+						Program.ProductName,
+						MessageBoxButtons.YesNo,
+						MessageBoxIcon.Question) == DialogResult.No)
+						return;
+
 				_lstPaths.AddRange(data);
+				_lstPaths.Sort();
 
 				this.tmrQueue.Enabled = true;
 			}
@@ -58,22 +69,22 @@ namespace QIT
 				{
 					switch (_lstPaths[i].Substring(_lstPaths[i].LastIndexOf('.')).ToLower())
 					{
-
 						case ".png":
 						case ".jpg":
 						case ".jpeg":
 						case ".gif":
 							using (frmUpload frm = new frmUpload())
 							{
-								frm.SetImage(_lstPaths[i]);
-
 								frm.AutoStart = this._autoStart;
 
-								frm.Text = String.Format("QIT BETA 2. ({0} / {1})", i + 1, _lstPaths.Count);
+								frm.Text = String.Format("{0} ({1} / {2})", Program.ProductName, i + 1, _lstPaths.Count);
 								if (this._autoStart)
 									frm.txtText.Text = _lstPaths[i].Substring(_lstPaths[i].LastIndexOf('\\') + 1);
 
-								frm.ShowDialog(this);
+								if (frm.SetImage(_lstPaths[i]))
+									frm.ShowDialog(this);
+
+								frm.Dispose();
 							}
 							break;
 

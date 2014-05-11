@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -8,15 +9,26 @@ using System.Windows.Forms;
 
 namespace QIT
 {
-	internal class AjaxControl32 : Control
+	internal class AjaxControl : Control
 	{
-		public bool isAjax32 { get; set; }
+		private int _size = 16;
+		public bool is16
+		{
+			get
+			{
+				return (this._size == 16);
+			}
+			set
+			{
+				this._size = (value ? 16 : 32);
 
-		public AjaxControl32()
+				this.Width = this.Height = this. _size;
+			}
+		}
+
+		public AjaxControl()
 		{
 			this.DoubleBuffered = true;
-
-			this.Size = new Size(32, 32);
 		}
 
 		protected override void Dispose(bool disposing)
@@ -33,9 +45,9 @@ namespace QIT
 
 			e.Graphics.Clear(this.BackColor);
 			e.Graphics.DrawImage(
-				Properties.Resources.loading32,
-				new Rectangle(0, 0, 32, 32),
-				new Rectangle(0, 32 * this.iAjax, 32, 32),
+				(this._size == 16 ? Properties.Resources.loading : Properties.Resources.loading32),
+				new Rectangle(0, 0, this._size, this._size),
+				new Rectangle(0, this._size * this.iAjax, this._size, this._size),
 				GraphicsUnit.Pixel
 				);
 		}
@@ -70,19 +82,9 @@ namespace QIT
 
 		private void Threadp()
 		{
-			bool b;
-			while (true)
+			while (this.bAjax && !this.Disposing && !this.IsDisposed)
 			{
-				lock (this._sync)
-					b = this.bAjax;
-
-				if (!b)
-					break;
-
-				this.iAjax++;
-
-				if (this.iAjax >= 24)
-					this.iAjax = 0;
+				this.iAjax = (this.iAjax + 1) % 24;
 
 				this.Invalidate();
 

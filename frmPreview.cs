@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -17,6 +16,8 @@ namespace QIT
 		}
 		static Size s;
 
+		//////////////////////////////////////////////////////////////////////////
+
 		public frmPreview()
 		{
 			InitializeComponent();
@@ -29,30 +30,45 @@ namespace QIT
 		public void SetImage(Image img)
 		{
 			this._img = img;
-			this._imageSize = img.Size;
 
-			this.Text = String.Format("이미지 미리보기 ({0} x {1})", this._imageSize.Width, this._imageSize.Height);
+			this.Text = String.Format("이미지 미리보기 ({0} x {1})", this._img.Width, this._img.Height);
 
 			this.CheckPosition();
 
 			this.Invalidate();
 		}
 
-		Image	_img;
+		private void frmPreview_FormClosed(object sender, FormClosedEventArgs e)
+		{
+			frmPreview.s = this.ClientSize;
+		}
 
-		Size	_imageSize;
+
+		//////////////////////////////////////////////////////////////////////////
+
+		Image	_img;
 		Point	_location = new Point(0, 0);
 		Point	_locationMax;
 
 		bool	_viewOriginal = false;
 
-		protected override void OnPaint(PaintEventArgs e)
+		private void pic_Paint(object sender, PaintEventArgs e)
 		{
-			if (this._viewOriginal || (this.Width >= this._img.Width && this.Height >= this._img.Height))
+			if (this.pic.Width >= this._img.Width && this.pic.Height >= this._img.Height)
+			{
+				e.Graphics.DrawImageUnscaledAndClipped(
+					this._img,
+					new Rectangle(
+						e.ClipRectangle.Width / 2 - this._img.Width / 2,
+						e.ClipRectangle.Height / 2 - this._img.Height / 2,
+						this._img.Width,
+						this._img.Height));
+			}
+			else if (this._viewOriginal)
 				e.Graphics.DrawImage(
 					this._img,
 					e.ClipRectangle,
-					new Rectangle(this._location.X, this._location.Y, this.Width, this.Height),
+					new Rectangle(this._location.X, this._location.Y, e.ClipRectangle.Width, e.ClipRectangle.Height),
 					GraphicsUnit.Pixel
 					);
 
@@ -68,25 +84,17 @@ namespace QIT
 		{
 			double scale, scaleX, scaleY;
 
-			scaleX = (double)e.Width / (double)this._imageSize.Width;
-			scaleY = (double)e.Height / (double)this._imageSize.Height;
+			scaleX = (double)e.Width / (double)this._img.Width;
+			scaleY = (double)e.Height / (double)this._img.Height;
 
 			scale = Math.Min(scaleX, scaleY);
 
-			int w = (int)(this._imageSize.Width * scale) + 1;
-			int h = (int)(this._imageSize.Height * scale) + 1;
+			int w = (int)(this._img.Width * scale) + 1;
+			int h = (int)(this._img.Height * scale) + 1;
 			int l = e.Width / 2 - w / 2;
 			int t = e.Height / 2 - h / 2;
 
 			return new Rectangle(l, t, w, h);
-		}
-
-		protected override void OnMouseDoubleClick(MouseEventArgs e)
-		{
-			this._viewOriginal = !this._viewOriginal;
-
-			this._location = new Point(0, 0);
-			this.Invalidate();
 		}
 
 		//////////////////////////////////////////////////////////////////////////
@@ -94,21 +102,32 @@ namespace QIT
 		bool	_isDown = false;
 		int		_mousePointX;
 		int		_mousePointY;
-		protected override void OnResize(EventArgs e)
+		private void frmPreview_Resize(object sender, EventArgs e)
 		{
-			frmPreview.s = this.ClientSize;
-
 			this.SetLocationMax();
 
-			this.Invalidate();
+			this.pic.Invalidate();
 		}
 		private void SetLocationMax()
 		{
-			this._locationMax.X = this._imageSize.Width - this.Width;
-			this._locationMax.Y = this._imageSize.Height - this.Height;
+			try
+			{
+				this._locationMax.X = this._img.Width - this.pic.Width;
+				this._locationMax.Y = this._img.Height - this.pic.Height;
+			}
+			catch
+			{ }
 		}
 
-		protected override void OnMouseDown(MouseEventArgs e)
+		private void pic_MouseDoubleClick(object sender, MouseEventArgs e)
+		{
+			this._viewOriginal = !this._viewOriginal;
+
+			this._location = new Point(0, 0);
+			this.pic.Invalidate();
+		}
+
+		private void pic_MouseDown(object sender, MouseEventArgs e)
 		{
 			if (e.Button != System.Windows.Forms.MouseButtons.Left)
 				return;
@@ -117,27 +136,30 @@ namespace QIT
 			this._mousePointX = e.X;
 			this._mousePointY = e.Y;
 		}
-		protected override void OnMouseMove(MouseEventArgs e)
+
+		private void pic_MouseMove(object sender, MouseEventArgs e)
 		{
 			if (!this._isDown)
 				return;
 
-			this._location.X = this._location.X + (this._mousePointX - e.X);
-			this._location.Y = this._location.Y + (this._mousePointY - e.Y);
-
-			Console.WriteLine(this._location.ToString());
+			this._location.X = this._location.X + (int)((this._mousePointX - e.X) * 1.0d * this._img.Width / this.pic.Width);
+			this._location.Y = this._location.Y + (int)((this._mousePointY - e.Y) * 1.0d * this._img.Height / this.pic.Height);
 
 			this._mousePointX = e.X;
 			this._mousePointY = e.Y;
 
 			this.CheckPosition();
 
-			this.Invalidate();
+			this.pic.Invalidate();
 		}
-		protected override void OnMouseUp(MouseEventArgs e)
+
+		private void pic_MouseUp(object sender, MouseEventArgs e)
 		{
 			this._isDown = false;
+
+			this.pic.Invalidate();
 		}
+
 		private void CheckPosition()
 		{
 			if (this._location.X < 0)
@@ -150,26 +172,27 @@ namespace QIT
 			else if (this._location.Y > this._locationMax.Y)
 				this._location.Y = this._locationMax.Y;
 		}
-		protected override void OnKeyDown(KeyEventArgs e)
+
+		private void frmPreview_KeyDown(object sender, KeyEventArgs e)
 		{
-			if (e.KeyData == Keys.Escape)
+			if (e.KeyCode == Keys.Escape)
 				this.Close();
 
 			if (e.KeyCode == Keys.Up)
-				this._location.Y -= this._imageSize.Height / 20;
+				this._location.Y -= this._img.Height / 20;
 
 			if (e.KeyCode == Keys.Down)
-				this._location.Y += this._imageSize.Height / 20;
+				this._location.Y += this._img.Height / 20;
 
 			if (e.KeyCode == Keys.Left)
-				this._location.X -= this._imageSize.Width / 20;
+				this._location.X -= this._img.Width / 20;
 
 			if (e.KeyCode == Keys.Right)
-				this._location.X += this._imageSize.Width / 20;
+				this._location.X += this._img.Width / 20;
 
 			this.CheckPosition();
 
-			this.Invalidate();
+			this.pic.Invalidate();
 		}
 	}
 }
