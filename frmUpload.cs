@@ -95,7 +95,7 @@ namespace QIT
 
 		//////////////////////////////////////////////////////////////////////////
 		
-		private const	int		MaxFileSize = (int)(2.9 * 1024 * 1024);
+		private const	int		MaxFileSize = (int)(2.5 * 1024 * 1024);
 
 		private			double	_resizedRatio;
 		private			Image	_image;

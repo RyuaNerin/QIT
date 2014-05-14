@@ -15,8 +15,8 @@ namespace QIT
 
 		public static string	FilePath	= Path.Combine(Application.StartupPath, "QIT.info");
 
-		public static string	CKey		= "lQJwJWJoFlbvr2UQnDbg";
-		public static string	CSecret		= "DsuIRA1Ak9mmSCGl9wnNvjhmWJTmb9vZlRdQ7sMqXww";
+		public static string	CKey		= null;
+		public static string	CSecret		= null;
 		public static string	UToken		= null;
 		public static string	USecret		= null;
 
