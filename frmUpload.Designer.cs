@@ -33,6 +33,7 @@
 			this.lblLength = new System.Windows.Forms.Label();
 			this.txtText = new System.Windows.Forms.TextBox();
 			this.ajax = new QIT.AjaxControl();
+			this.lblImageSize = new System.Windows.Forms.Label();
 			((System.ComponentModel.ISupportInitialize)(this.picImage)).BeginInit();
 			this.SuspendLayout();
 			// 
@@ -50,16 +51,15 @@
 			this.picImage.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
 			this.picImage.TabIndex = 4;
 			this.picImage.TabStop = false;
-			this.picImage.DoubleClick += new System.EventHandler(this.picImage_DoubleClick);
+			this.picImage.MouseDown += new System.Windows.Forms.MouseEventHandler(this.picImage_MouseDown);
 			// 
 			// lblLength
 			// 
-			this.lblLength.AutoSize = true;
-			this.lblLength.Location = new System.Drawing.Point(82, 13);
+			this.lblLength.Location = new System.Drawing.Point(244, 13);
 			this.lblLength.Name = "lblLength";
-			this.lblLength.Size = new System.Drawing.Size(48, 15);
+			this.lblLength.Size = new System.Drawing.Size(62, 15);
 			this.lblLength.TabIndex = 5;
-			this.lblLength.Text = "0 / 130";
+			this.lblLength.Text = "130 / 130";
 			this.lblLength.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
 			// 
 			// txtText
@@ -78,17 +78,25 @@
 			// ajax
 			// 
 			this.ajax.is16 = false;
-			this.ajax.Location = new System.Drawing.Point(178, 45);
+			this.ajax.Location = new System.Drawing.Point(176, 42);
 			this.ajax.Name = "ajax";
 			this.ajax.Size = new System.Drawing.Size(32, 32);
 			this.ajax.TabIndex = 7;
 			this.ajax.Visible = false;
+			// 
+			// lblImageSize
+			// 
+			this.lblImageSize.Location = new System.Drawing.Point(82, 13);
+			this.lblImageSize.Name = "lblImageSize";
+			this.lblImageSize.Size = new System.Drawing.Size(156, 15);
+			this.lblImageSize.TabIndex = 8;
 			// 
 			// frmUpload
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(318, 90);
+			this.Controls.Add(this.lblImageSize);
 			this.Controls.Add(this.ajax);
 			this.Controls.Add(this.picImage);
 			this.Controls.Add(this.lblLength);
@@ -117,6 +125,7 @@
 		private System.Windows.Forms.Label lblLength;
 		internal System.Windows.Forms.TextBox txtText;
 		private AjaxControl ajax;
+		private System.Windows.Forms.Label lblImageSize;
 
 	}
 }

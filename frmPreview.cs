@@ -12,7 +12,7 @@ namespace QIT
 	{
 		static frmPreview()
 		{
-			frmPreview.s = new Size(160, 160);
+			frmPreview.s = new Size(250, 250);
 		}
 		static Size s;
 
@@ -30,8 +30,6 @@ namespace QIT
 		public void SetImage(Image img)
 		{
 			this._img = img;
-
-			this.Text = String.Format("이미지 미리보기 ({0} x {1})", this._img.Width, this._img.Height);
 
 			this.CheckPosition();
 
@@ -56,6 +54,7 @@ namespace QIT
 		{
 			if (this.pic.Width >= this._img.Width && this.pic.Height >= this._img.Height)
 			{
+				RawTrans(e.Graphics, e.ClipRectangle);
 				e.Graphics.DrawImageUnscaledAndClipped(
 					this._img,
 					new Rectangle(
@@ -65,22 +64,26 @@ namespace QIT
 						this._img.Height));
 			}
 			else if (this._viewOriginal)
+			{
 				e.Graphics.DrawImage(
 					this._img,
 					e.ClipRectangle,
 					new Rectangle(this._location.X, this._location.Y, e.ClipRectangle.Width, e.ClipRectangle.Height),
 					GraphicsUnit.Pixel
 					);
-
+			}
 			else
+			{
+				RawTrans(e.Graphics, e.ClipRectangle);
 				e.Graphics.DrawImage(
 					this._img,
 					this.getRectangle(e.ClipRectangle),
 					new Rectangle(0, 0, this._img.Width, this._img.Height),
 					GraphicsUnit.Pixel
 					);
+			}
 		}
-		public Rectangle getRectangle(Rectangle e)
+		private Rectangle getRectangle(Rectangle e)
 		{
 			double scale, scaleX, scaleY;
 
@@ -95,6 +98,36 @@ namespace QIT
 			int t = e.Height / 2 - h / 2;
 
 			return new Rectangle(l, t, w, h);
+		}
+		private void RawTrans(Graphics g, Rectangle rec)
+		{
+			int size = 24;
+
+			int xm = (int)Math.Ceiling(rec.Width * 1.0d / size);
+			int ym = (int)Math.Ceiling(rec.Height * 1.0d / size);
+
+			int w, h;
+
+			for (int y = 0; y < ym; ++y)
+			{
+				for (int x = 0; x < xm; ++x)
+				{
+					w = rec.Left + x * size;
+					if (w + size >= rec.Width) w = rec.Width - w;
+					else w = size;
+
+					h = rec.Top + y * size;
+					if (h + size >= rec.Height) h = rec.Height - h;
+					else h = size;
+
+					g.FillRectangle(
+						(((y % 2 + x % 2) % 2 == 0) ? Brushes.Gainsboro : Brushes.White),
+						rec.Left + x * size,
+						rec.Top + y * size,
+						w,
+						h);
+				}
+			}
 		}
 
 		//////////////////////////////////////////////////////////////////////////

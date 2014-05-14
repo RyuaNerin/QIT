@@ -65,8 +65,10 @@ namespace QIT
 				this.t,
 				this.s,
 				(string)e.Argument,
-				out Program.UToken,
-				out Program.USecret);
+				out Settings.UToken,
+				out Settings.USecret);
+
+			Settings.Save();
 		}
 
 		private void bgwAfter_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)

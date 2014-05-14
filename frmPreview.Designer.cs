@@ -37,7 +37,7 @@
 			this.pic.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.pic.Location = new System.Drawing.Point(0, 0);
 			this.pic.Name = "pic";
-			this.pic.Size = new System.Drawing.Size(216, 182);
+			this.pic.Size = new System.Drawing.Size(184, 166);
 			this.pic.TabIndex = 0;
 			this.pic.TabStop = false;
 			this.pic.Paint += new System.Windows.Forms.PaintEventHandler(this.pic_Paint);
@@ -50,18 +50,19 @@
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(216, 182);
+			this.ClientSize = new System.Drawing.Size(184, 166);
 			this.Controls.Add(this.pic);
 			this.DoubleBuffered = true;
 			this.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
 			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.SizableToolWindow;
 			this.KeyPreview = true;
 			this.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+			this.MinimumSize = new System.Drawing.Size(200, 200);
 			this.Name = "frmPreview";
 			this.ShowIcon = false;
 			this.ShowInTaskbar = false;
 			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-			this.Text = "이미지 미리보기 (100 x 100)";
+			this.Text = "이미지 미리보기";
 			this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.frmPreview_FormClosed);
 			this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.frmPreview_KeyDown);
 			this.Resize += new System.EventHandler(this.frmPreview_Resize);

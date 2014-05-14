@@ -10,8 +10,8 @@ using System.Windows.Forms;
 using System.Drawing.Imaging;
 using System.Drawing.Drawing2D;
 using System.Threading;
-using Twitter;
 using System.ComponentModel;
+using Twitter;
 
 namespace QIT
 {
@@ -23,13 +23,17 @@ namespace QIT
 
 			this.ajax.Left = this.txtText.Left + this.txtText.Width / 2 - 16;
 			this.ajax.Top = this.txtText.Top + this.txtText.Height / 2 - 16;
+
+			this._tempPath = Path.Combine(Application.StartupPath, String.Format("{0}.{1}", Helper.CreateString(), (this._isJPG ? "jpg" : "png")));
 		}
 
 		public bool AutoStart { get; set; }
 
 		private void frmUpload_FormClosed(object sender, FormClosedEventArgs e)
 		{
-			this._img.Dispose();
+			this._image.Dispose();
+
+			File.Delete(this._tempPath);
 		}
 		
 		bool b = true;
@@ -38,7 +42,7 @@ namespace QIT
 
 			try
 			{
-				if (!this.b)
+				if (this.b)
 				{
 					if (this.AutoStart)
 						this.Tweet();
@@ -72,17 +76,16 @@ namespace QIT
 			{ }
 		}
 
-		private void picImage_DoubleClick(object sender, EventArgs e)
-		{
-			this.ShowPreview();
-		}
+		//////////////////////////////////////////////////////////////////////////
+
 		private void ShowPreview()
 		{
 			try
 			{
 				using (frmPreview frm = new frmPreview())
 				{
-					frm.SetImage(this._img);
+					frm.Text = String.Format("미리보기 {0} ({1} x {2})", (this._isJPG ? "JPG" : "PNG"), this._image.Width, this._image.Height);
+					frm.SetImage(this._image);
 					frm.ShowDialog(this);
 				}
 			}
@@ -92,45 +95,194 @@ namespace QIT
 
 		//////////////////////////////////////////////////////////////////////////
 		
-		private int		_filesize = (int)(2.8 * 1024 * 1024);
-		private string	_path;
-		private Image	_img;
+		private const	int		MaxFileSize = (int)(2.9 * 1024 * 1024);
 
-		public bool SetImage(string path)
+		private			double	_resizedRatio;
+		private			Image	_image;
+		private			byte[]	_rawData;
+		private			bool	_isJPG;
+		private			bool	_isPSD;
+		private			string	_tempPath;
+
+		public bool SetImage(DragDropInfo info)
 		{
-			this._path = path;
-			this._img = Image.FromFile(path, true);
-
-			switch (this._img.PixelFormat)
+			try
 			{
-				case PixelFormat.Format1bppIndexed:
-				case PixelFormat.Format4bppIndexed:
-				case PixelFormat.Format8bppIndexed:
-				case PixelFormat.Indexed:
-					{
-						Image imgNotIndexed = new Bitmap(this._img.Width, this._img.Height);
-						using (Graphics g = Graphics.FromImage(imgNotIndexed))
-							g.DrawImage(
-								this._img,
-								new Rectangle(0, 0, this._img.Width, this._img.Height),
-								new Rectangle(0, 0, this._img.Width, this._img.Height),
-								GraphicsUnit.Pixel
-								);
+				switch (info.DataType)
+				{
+					case DragDropInfo.DataTypes.String:
+						{
+							string path = info.GetString();
 
-						this._img.Dispose();
-						this._img = imgNotIndexed;
-					}
+							if (Path.GetExtension(path).ToLower() == ".psd")
+							{
+								this._isPSD = true;
+								this._isJPG = false;
+
+								SimplePsd.CPSD psd = new SimplePsd.CPSD();
+								psd.Load(path);
+
+								this._image = Image.FromHbitmap(psd.HBitmap);
+							}
+							else
+							{
+								this._isPSD = false;
+								this._isJPG = (Path.GetExtension(path).ToLower() == ".jpg");
+
+								this._image = Image.FromFile(path, true);
+							}
+
+							return this.ResizeImage(new FileInfo(path).Length);
+						}
+
+					case DragDropInfo.DataTypes.Image:
+						{
+ 							this._image = info.GetImage();
+
+							return this.ResizeImage(long.MaxValue);
+						}
+
+					case DragDropInfo.DataTypes.Stream:
+						{
+							Stream stream = info.GetStream();
+
+							this._image = Image.FromStream(stream);
+
+							return this.ResizeImage(stream.Length);
+						}
+				}
+			}
+			catch
+			{ }
+
+			return false;
+		}
+			
+		private bool ResizeImage(long origFileSize)
+		{
+			//////////////////////////////////////////////////////////////////////////
+
+			long origPixels = this._image.Width * this._image.Height;
+			long resizedPixels;
+
+			this._isJPG = (this._image.RawFormat.Guid == ImageFormat.Jpeg.Guid);
+
+			switch (Settings.ImageExt)
+			{
+				case 0:
+					if (origFileSize > MaxFileSize)
+						this._isJPG = true;
+					break;
+
+				case 1:
+					this._isJPG = true;
+					break;
+
+				case 2:
+					this._isJPG = false;
 					break;
 			}
 
+			//////////////////////////////////////////////////////////////////////////
+
+			ImageCodecInfo		codecInfo;
+			EncoderParameters	parameters;
+
+			double	d = 1.1d;
+
+			if (!this._isPSD && this._isJPG)
+			{
+				codecInfo = GetEncoder(ImageFormat.Jpeg);
+				parameters = new EncoderParameters(1);
+				parameters.Param[0] = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality, 100L);
+			}
+			else if (!this._isPSD)
+			{
+				codecInfo = GetEncoder(ImageFormat.Png);
+				parameters = new EncoderParameters(1);
+
+				long depth = 24L;
+
+				if (Settings.PNGTrans)
+				{
+					switch (this._image.PixelFormat)
+					{
+						case PixelFormat.Format16bppArgb1555:
+						case PixelFormat.Format32bppArgb:
+						case PixelFormat.Format32bppPArgb:
+						case PixelFormat.Format64bppArgb:
+						case PixelFormat.Format64bppPArgb:
+							depth = 32L;
+							break;
+					}
+				}
+
+				parameters.Param[0] = new EncoderParameter(System.Drawing.Imaging.Encoder.ColorDepth, depth);
+
+				d = d / (depth / 8);
+			}
+			else
+			{
+				codecInfo = GetEncoder(ImageFormat.Png);
+				parameters = new EncoderParameters(1);
+				parameters.Param[0] = new EncoderParameter(System.Drawing.Imaging.Encoder.ColorDepth, 32);
+			}
+
+			//////////////////////////////////////////////////////////////////////////
+
 			try
 			{
-				// Resize
-				double scale = Math.Min(64.0d / this._img.Width, 64.0d / this._img.Height);
-				this.picImage.Image = this.ImageResize(this._img, (int)(this._img.Width * scale), (int)(this._img.Height * scale));
+				// Make Thumbnail
+				double scale = Math.Min((64.0d / this._image.Width), (64.0d / this._image.Height));
+				this.picImage.Image =
+					this.ResizeBySize(
+						this._image,
+						(int)(scale * this._image.Width),
+						(int)(scale * this._image.Height),
+						true);
 
-				if (new FileInfo(path).Length > _filesize)
-					this._img = this.ImageResize(this._img);
+				if (origFileSize <= MaxFileSize)
+				{
+					using (MemoryStream stmFile = new MemoryStream())
+					{
+						this._image.Save(stmFile, codecInfo, parameters);
+						this._rawData = stmFile.ToArray();
+						stmFile.Dispose();
+					}
+				}
+				else
+				{
+					Image	img;
+
+					do
+					{
+						img = this.ResizeByCapacity(this._image, this._isJPG, d);
+						this._image.Dispose();
+						this._image = img;
+
+						using (MemoryStream stmFile = new MemoryStream())
+						{
+							this._image.Save(stmFile, codecInfo, parameters);
+							this._rawData = stmFile.ToArray();
+							stmFile.Dispose();
+						}
+
+						d *= 0.9d;
+					}
+					while (this._rawData.Length > frmUpload.MaxFileSize);
+				}
+
+				resizedPixels = this._image.Width * this._image.Height;
+
+				_resizedRatio = (100.0d * resizedPixels / origPixels);
+
+				this.lblImageSize.Text =
+					String.Format(
+						"{0} {1} x {2} ({3:##0.0} %)",
+						(this._isJPG ? "JPG" : "PNG"),
+						this._image.Width,
+						this._image.Height,
+						_resizedRatio);
 
 				return true;
 			}
@@ -140,26 +292,71 @@ namespace QIT
 			}
 		}
 
-		private Image ImageResize(Image img)
+		private ImageCodecInfo GetEncoder(ImageFormat format)
+		{
+			ImageCodecInfo[] codecs = ImageCodecInfo.GetImageDecoders();
+
+			foreach (ImageCodecInfo codec in codecs)
+				if (codec.FormatID == format.Guid)
+					return codec;
+
+			return null;
+		}
+
+		private Image ResizeByCapacity(Image img, bool isJPG, double c)
 		{
 			// Ox : Oy = Rx : Ry
-			// Rx * Ry = r * s
-			// r = 2.6 : 1
+			// Rx * Ry = r
+			// Rw = sqrt(Ow * r / Oh)
+			// Rh = sqrt(Oh * r / Ow)
 
-			// Rw = sqrt(Ow * r * s / Oh)
-			// Rh = sqrt(Oh * r * s / Ow)
+			double d;
 
-			double w = Math.Sqrt(img.Width * 2.6d * _filesize / img.Height);
-			double h = Math.Sqrt(img.Height * 2.6d * _filesize / img.Width);
+			if (isJPG)
+				d = frmUpload.MaxFileSize * 2.6d * c;
+			else
+				d = frmUpload.MaxFileSize * 2.0d * c; // Pixel Depth
 
-			return this.ImageResize(img, (int)w, (int)h);
+			int w = (int)Math.Ceiling(Math.Sqrt(d * img.Width / img.Height));
+			int h = (int)Math.Ceiling(Math.Sqrt(d * img.Height / img.Width));
+
+			if (w > img.Width || h > img.Height)
+			{
+				w = img.Width;
+				h = img.Height;
+			}
+
+			return this.ResizeBySize(img, w, h, false);
 		}
-		private Image ImageResize(Image img, int width, int height)
+
+		private Image ResizeBySize(Image img, int width, int height, bool FillBackground)
 		{
-			Image imgResize = new Bitmap(width, height, img.PixelFormat);
+			PixelFormat pixelFormat = PixelFormat.Format24bppRgb;
+
+			if (!this._isJPG && Settings.PNGTrans)
+			{
+				switch (img.PixelFormat)
+				{
+					case PixelFormat.Format16bppArgb1555:
+					case PixelFormat.Format32bppArgb:
+					case PixelFormat.Format32bppPArgb:
+					case PixelFormat.Format64bppArgb:
+					case PixelFormat.Format64bppPArgb:
+						pixelFormat = PixelFormat.Format32bppArgb;
+						break;
+				}
+			}
+
+			Image imgResize = new Bitmap(width, height, pixelFormat);
 
 			using (Graphics g = Graphics.FromImage(imgResize))
 			{
+				foreach (PropertyItem propertyItem in this._image.PropertyItems)
+					imgResize.SetPropertyItem(propertyItem);
+
+				if (FillBackground)
+					g.Clear(Color.White);
+
 				g.InterpolationMode = InterpolationMode.HighQualityBicubic;
 				g.PixelOffsetMode = PixelOffsetMode.HighQuality;
 				g.SmoothingMode = SmoothingMode.HighQuality;
@@ -172,9 +369,8 @@ namespace QIT
 
 		//////////////////////////////////////////////////////////////////////////
 
-
+		private bool isOver110 = false;
 		private bool isOver120 = false;
-		private bool isOver130 = false;
 
 		private void txtText_TextChanged(object sender, EventArgs e)
 		{
@@ -184,26 +380,25 @@ namespace QIT
 
 				this.lblLength.Text = String.Format("{0} / 130", len);
 
-				if (!this.isOver130 && len >= 130)
+				if (!this.isOver120 && len > 120)
 				{
 					this.lblLength.ForeColor = this.txtText.ForeColor = Color.Red;
-					this.isOver130 = true;
-				}
-				else if (this.isOver130 && len < 130)
-				{
-					this.lblLength.ForeColor = this.txtText.ForeColor = SystemColors.WindowText;
-					this.isOver130 = false;
-				}
-
-				if (!this.isOver130 && !this.isOver120 && len >= 120)
-				{
-					this.lblLength.ForeColor = this.txtText.ForeColor = Color.Brown;
 					this.isOver120 = true;
 				}
-				else if (!this.isOver130 && this.isOver120 && len < 120)
+				else if (this.isOver120 && len <= 120)
 				{
 					this.lblLength.ForeColor = this.txtText.ForeColor = SystemColors.WindowText;
 					this.isOver120 = false;
+				}
+				else if (!this.isOver120 && !this.isOver110 && len > 110)
+				{
+					this.lblLength.ForeColor = this.txtText.ForeColor = Color.Brown;
+					this.isOver110 = true;
+				}
+				else if (!this.isOver120 && this.isOver110 && len <= 110)
+				{
+					this.lblLength.ForeColor = this.txtText.ForeColor = SystemColors.WindowText;
+					this.isOver110 = false;
 				}
 			}
 			catch
@@ -261,13 +456,6 @@ namespace QIT
 			{ }
 		}
 
-
-		private class ResultInfo
-		{
-			public bool success { get; set; }
-		}
-
-		private delegate void dv();
 		private void bgwTweet_DoWork(object sender, DoWorkEventArgs e)
 		{
 			e.Result = false;
@@ -277,37 +465,26 @@ namespace QIT
 				byte[] buff;
 				string boundary = Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString("N");
 
-				using (MemoryStream sBinary = new MemoryStream())
+				using (MemoryStream stream = new MemoryStream())
 				{
 					buff = Encoding.UTF8.GetBytes(
 						String.Format(
-						"--{0}\r\nContent-Disposition: form-data; name=\"status\"\r\n\r\n{1}\r\n--{0}\r\nContent-Type: application/octet-stream\r\nContent-Disposition: form-data; name=\"media[]\"; filename=\"{2}\"\r\n\r\n",
-						boundary,
-						(string)e.Argument,
-						Path.GetFileName(this._path))
-					);
-					sBinary.Write(buff, 0, buff.Length);
+							"--{0}\r\nContent-Disposition: form-data; name=\"status\"\r\n\r\n{1}\r\n--{0}\r\nContent-Type: application/octet-stream\r\nContent-Disposition: form-data; name=\"media[]\"; filename=\"img.{2}\"\r\n\r\n",
+							boundary,
+							(string)e.Argument,
+							(this._isJPG ? "jpg" : "png")));
+					stream.Write(buff, 0, buff.Length);
 
-					using (MemoryStream stmFile = new MemoryStream())
-					{
-						ImageCodecInfo codecInfo = GetEncoder(ImageFormat.Jpeg);
-
-						EncoderParameters parameters = new EncoderParameters(1);
-						parameters.Param[0] = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality, 100L);
-
-						this._img.Save(stmFile, codecInfo, parameters);
-
-						buff = stmFile.ToArray();
-						sBinary.Write(buff, 0, buff.Length);
-					}
+					stream.Write(this._rawData, 0, this._rawData.Length);
 
 					buff = Encoding.UTF8.GetBytes(String.Format("\r\n\r\n--{0}--\r\n", boundary));
-					sBinary.Write(buff, 0, buff.Length);
+					stream.Write(buff, 0, buff.Length);
 
-					buff = sBinary.ToArray();
+					buff = stream.ToArray();
 
-					sBinary.Close();
-					sBinary.Dispose();
+					stream.Flush();
+					stream.Close();
+					stream.Dispose();
 				}
 
 				//////////////////////////////////////////////////////////////////////////
@@ -321,10 +498,10 @@ namespace QIT
 
 				hash_parameter = String.Format(
 					"oauth_consumer_key={0}&oauth_nonce={1}&oauth_signature_method=HMAC-SHA1&oauth_timestamp={2}&oauth_token={3}&oauth_version=1.0",
-					Program.CKey,
+					Settings.CKey,
 					oauth_nonce,
 					oauth_timestamp,
-					Program.UToken
+					Settings.UToken
 				);
 
 				using (HMACSHA1 oCrypt = new HMACSHA1())
@@ -332,8 +509,8 @@ namespace QIT
 					oCrypt.Key = Encoding.UTF8.GetBytes(
 						string.Format(
 							"{0}&{1}",
-							TwitterAPI.UrlEncode(Program.CSecret),
-							TwitterAPI.UrlEncode(Program.USecret)
+							TwitterAPI.UrlEncode(Settings.CSecret),
+							TwitterAPI.UrlEncode(Settings.USecret)
 						)
 					);
 
@@ -357,8 +534,8 @@ namespace QIT
 					TwitterAPI.UrlEncode(oauth_signature),
 					oauth_nonce,
 					oauth_timestamp,
-					Program.CKey,
-					Program.UToken
+					Settings.CKey,
+					Settings.UToken
 				);
 
 				//////////////////////////////////////////////////////////////////////////
@@ -403,15 +580,24 @@ namespace QIT
 			{ }
 		}
 
-		private ImageCodecInfo GetEncoder(ImageFormat format)
+		//////////////////////////////////////////////////////////////////////////
+
+		private void picImage_MouseDown(object sender, MouseEventArgs e)
 		{
-			ImageCodecInfo[] codecs = ImageCodecInfo.GetImageDecoders();
+			if (e.Button == MouseButtons.Left)
+			{
+				if (!File.Exists(this._tempPath))
+					File.WriteAllBytes(this._tempPath, this._rawData);
 
-			foreach (ImageCodecInfo codec in codecs)
-				if (codec.FormatID == format.Guid)
-					return codec;
+				DataObject dataObject = new DataObject();
+				dataObject.SetData(DataFormats.FileDrop, new string[] { this._tempPath });
 
-			return null;
+				this.picImage.DoDragDrop(dataObject, DragDropEffects.All);
+			}
+			else if (e.Button == MouseButtons.Right)
+			{
+				this.ShowPreview();
+			}
 		}
 	}
 }

@@ -65,6 +65,7 @@
     <Compile Include="AjaxControl.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="DragDropInfo.cs" />
     <Compile Include="frmMain.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -89,10 +90,21 @@
     <Compile Include="frmUpload.Designer.cs">
       <DependentUpon>frmUpload.cs</DependentUpon>
     </Compile>
+    <Compile Include="Helper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QIT.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Settings.cs" />
+    <Compile Include="SimplePSD\CPSD.cs" />
+    <Compile Include="SimplePSD\BigEndianBinaryReader.cs" />
+    <Compile Include="SimplePSD\PSDColorModeData.cs" />
+    <Compile Include="SimplePSD\PSDDisplayInfo.cs" />
+    <Compile Include="SimplePSD\PSDHeaderInfo.cs" />
+    <Compile Include="SimplePSD\PSDImageResource.cs" />
+    <Compile Include="SimplePSD\PSDResolutionInfo.cs" />
+    <Compile Include="SimplePSD\PSDThumbNail.cs" />
+    <Compile Include="SimplePSD\WinInvoke32.cs" />
     <Compile Include="twitterApi.cs" />
     <Compile Include="twitterApi11.cs" />
     <EmbeddedResource Include="frmMain.resx">
@@ -133,6 +145,7 @@
   <ItemGroup>
     <None Include="LICENSE" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
