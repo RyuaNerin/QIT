@@ -7,12 +7,6 @@ namespace QIT
 {
 	static class Settings
 	{
-		static Settings()
-		{
-			Twitter.TwitterAPI11.consumerToken = Settings.CKey;
-			Twitter.TwitterAPI11.consumerSecret = Settings.CSecret;
-		}
-
 		public static string	FilePath	= Path.Combine(Application.StartupPath, "QIT.info");
 
 		public static string	CKey		= null;

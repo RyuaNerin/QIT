@@ -11,8 +11,10 @@ namespace QIT
 		[STAThread]
 		static void Main(string[] args)
 		{
-			Settings.CKey		= 0;
-			Settings.CSecret	= 0;
+			Settings.CKey		= "";
+			Settings.CSecret	= "";
+			Twitter.TwitterAPI11.consumerToken = Settings.CKey;
+			Twitter.TwitterAPI11.consumerSecret = Settings.CSecret;
 
 			Application.EnableVisualStyles();
 			Application.SetCompatibleTextRenderingDefault(false);
