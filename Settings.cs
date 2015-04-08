@@ -20,6 +20,10 @@ namespace QIT
 		public static int		ImageExt	= 0;
 		public static bool		PNGTrans	= true;
 
+        public static bool isTopmost = false;
+        public static bool isReversedCtrl = false;
+        public static bool isUniformityText = false;
+
 		public static void Load()
 		{
 			if (!File.Exists(Settings.FilePath))
@@ -58,9 +62,21 @@ namespace QIT
 									Settings.ImageExt = buff[0];
 									break;
 
-								case 3:
-									Settings.PNGTrans = (buff[0] == 1);
-									break;
+                                case 3:
+                                    Settings.PNGTrans = (buff[0] == 1);
+                                    break;
+
+                                case 4:
+                                    Settings.isTopmost = (buff[0] == 1);
+                                    break;
+
+                                case 5:
+                                    Settings.isReversedCtrl = (buff[0] == 1);
+                                    break;
+
+                                case 6:
+                                    Settings.isUniformityText = (buff[0] == 1);
+                                    break;
 							}
 						}
 					}
@@ -76,8 +92,11 @@ namespace QIT
 			{
 				Settings.Save(stream, 0, Settings.UToken);
 				Settings.Save(stream, 1, Settings.USecret);
-				Settings.Save(stream, 2, (byte)Settings.ImageExt);
-				Settings.Save(stream, 3, (byte)(Settings.PNGTrans ? 1 : 0));
+                Settings.Save(stream, 2, (byte)Settings.ImageExt);
+                Settings.Save(stream, 3, (byte)(Settings.PNGTrans ? 1 : 0));
+                Settings.Save(stream, 4, (byte)(Settings.isTopmost ? 1 : 0));
+                Settings.Save(stream, 5, (byte)(Settings.isReversedCtrl ? 1 : 0));
+                Settings.Save(stream, 6, (byte)(Settings.isUniformityText ? 1 : 0));
 			}
 		}
 		private static void Save(Stream stream, int key, string str)

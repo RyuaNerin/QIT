@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using System.Drawing.Imaging;
+using System.Runtime.InteropServices;
 
 namespace QIT
 {
@@ -17,19 +18,9 @@ namespace QIT
 			InitializeComponent();
 
 			this.Text = Program.ProductName;
+            this.TopMost = Settings.isTopmost;
 
-			if (Settings.ImageExt == 0)
-				this.btnExtOrig.Checked = true;
-			else if (Settings.ImageExt == 1)
-				this.btnExtPNG.Checked = true;
-			else if (Settings.ImageExt == 2)
-				this.btnExtJPG.Checked = true;
-			this.btnExtPNGTrans.Checked = Settings.PNGTrans;
-		}
-
-		private void btmCopyright_Click(object sender, EventArgs e)
-		{
-			System.Diagnostics.Process.Start("explorer", "\"http://blog.ryuanerin.kr/\"");
+            _buttPosition.Size = new Size(SystemInformation.CaptionButtonSize.Height, SystemInformation.CaptionButtonSize.Height);
 		}
 
 		private IList<DragDropInfo>	_lstImages = new List<DragDropInfo>();
@@ -111,6 +102,7 @@ namespace QIT
 		private void tmrQueue_Tick(object sender, EventArgs e)
 		{
 			this.tmrQueue.Enabled = false;
+            string UnifiedStr = string.Empty;
 			for (int i = 0; i < _lstImages.Count; ++i)
 			{
 				using (frmUpload frm = new frmUpload())
@@ -119,8 +111,12 @@ namespace QIT
 
 					frm.Text = String.Format("{0} ({1} / {2})", Program.ProductName, i + 1, _lstImages.Count);
 
-					if (frm.SetImage(_lstImages[i]))
-						frm.ShowDialog(this);
+                    if (frm.SetImage(_lstImages[i]))
+                    {
+                        if (Settings.isUniformityText) frm.SetText((i!=0)?UnifiedStr:"/uninited/");
+                        frm.ShowDialog(this);
+                        if (Settings.isUniformityText && i == 0) UnifiedStr = frm.GetText();
+                    }
 
 					frm.Dispose();
 
@@ -130,59 +126,213 @@ namespace QIT
 
 			this._lstImages.Clear();
 		}
+        
+        private void pnl_DragEnter(object sender, DragEventArgs e)
+        {
+            e.Effect = DragDropEffects.None;
 
-		private void btnExtOrig_CheckedChanged(object sender, EventArgs e)
-		{
-			if (this.btnExtOrig.Checked)
-			{
-				Settings.ImageExt = 0;
-				Settings.Save();
+            if (DragDropInfo.isAvailable(e))
+            {
+                bool allow = true;
 
-				this.btnExtJPG.Checked = this.btnExtPNG.Checked = false;
-			}
-			else
-			{
-				if (!this.btnExtJPG.Checked && !this.btnExtPNG.Checked)
-					this.btnExtOrig.Checked = true;
-			}
-		}
+                if (e.Data.GetDataPresent(DataFormats.FileDrop))
+                {
+                    string[] paths = (string[])e.Data.GetData(DataFormats.FileDrop);
 
-		private void btnExtPNG_CheckedChanged(object sender, EventArgs e)
-		{
-			if (this.btnExtPNG.Checked)
-			{
-				Settings.ImageExt = 1;
-				Settings.Save();
+                    for (int i = 0; i < paths.Length; ++i)
+                    {
+                        if (Array.IndexOf<string>(frmMain.AllowExtension, Path.GetExtension(paths[i]).ToLower()) < 0)
+                        {
+                            allow = false;
+                            break;
+                        }
+                    }
+                }
 
-				this.btnExtJPG.Checked = this.btnExtOrig.Checked = false;
-			}
-			else
-			{
-				if (!this.btnExtJPG.Checked && !this.btnExtOrig.Checked)
-					this.btnExtPNG.Checked = true;
-			}
-		}
+                if (allow)
+                    e.Effect = DragDropEffects.Move;
+            }
+        }
 
-		private void btnExtJPG_CheckedChanged(object sender, EventArgs e)
-		{
-			if (this.btnExtJPG.Checked)
-			{
-				Settings.ImageExt = 2;
-				Settings.Save();
+        void OpenSettingWindow()
+        {
+            new frmSettings().ShowDialog();
+            this.TopMost = Settings.isTopmost;
+        }
 
-				this.btnExtOrig.Checked = this.btnExtPNG.Checked = false;
-			}
-			else
-			{
-				if (!this.btnExtOrig.Checked && !this.btnExtPNG.Checked)
-					this.btnExtJPG.Checked = true;
-			}
-		}
+        /////////////////////////////////////////////////////////////////////////////////
+        // Title bar hooking
+        // http://www.experts-exchange.com/Programming/Languages/.NET/Q_25353633.html
+        /////////////////////////////////////////////////////////////////////////////////
 
-		private void btnExtPNGTrans_CheckedChanged(object sender, EventArgs e)
-		{
-			Settings.PNGTrans = this.btnExtPNGTrans.Checked;
-			Settings.Save();
-		}
-	}
+
+        // The state of our little button
+        ButtonState _buttState = ButtonState.Normal;
+        Rectangle _buttPosition = new Rectangle();
+
+        [DllImport("user32.dll")]
+        private static extern IntPtr GetWindowDC(IntPtr hWnd);
+        [DllImport("user32.dll")]
+        private static extern int GetWindowRect(IntPtr hWnd,
+                                                ref Rectangle lpRect);
+        [DllImport("user32.dll")]
+        private static extern int ReleaseDC(IntPtr hWnd, IntPtr hDC);
+        protected override void WndProc(ref Message m)
+        {
+            int x, y;
+            Rectangle windowRect = new Rectangle();
+            GetWindowRect(m.HWnd, ref windowRect);
+
+            switch (m.Msg)
+            {
+                // WM_NCPAINT
+                case 0x85:
+                // WM_PAINT
+                case 0x0A:
+                    base.WndProc(ref m);
+
+                    DrawButton(m.HWnd);
+
+                    m.Result = IntPtr.Zero;
+
+                    break;
+
+                // WM_ACTIVATE
+                case 0x86:
+                    base.WndProc(ref m);
+                    DrawButton(m.HWnd);
+
+                    break;
+
+                // WM_NCMOUSEMOVE
+                case 0xA0:
+                    // Extract the least significant 16 bits
+                    x = ((int)m.LParam << 16) >> 16;
+                    // Extract the most significant 16 bits
+                    y = (int)m.LParam >> 16;
+
+                    x -= windowRect.Left;
+                    y -= windowRect.Top;
+
+                    base.WndProc(ref m);
+
+                    if (!_buttPosition.Contains(new Point(x, y)) &&
+                        _buttState == ButtonState.Pushed)
+                    {
+                        _buttState = ButtonState.Normal;
+                        DrawButton(m.HWnd);
+                    }
+
+                    break;
+
+                // WM_NCLBUTTONDOWN
+                case 0xA1:
+                    // Extract the least significant 16 bits
+                    x = ((int)m.LParam << 16) >> 16;
+                    // Extract the most significant 16 bits
+                    y = (int)m.LParam >> 16;
+
+                    x -= windowRect.Left;
+                    y -= windowRect.Top;
+
+                    if (_buttPosition.Contains(new Point(x, y)))
+                    {
+                        _buttState = ButtonState.Pushed;
+                        DrawButton(m.HWnd);
+                    }
+                    else
+                        base.WndProc(ref m);
+
+                    break;
+
+                // WM_NCLBUTTONUP
+                case 0xA2:
+                    // Extract the least significant 16 bits
+                    x = ((int)m.LParam << 16) >> 16;
+                    // Extract the most significant 16 bits
+                    y = (int)m.LParam >> 16;
+
+                    x -= windowRect.Left;
+                    y -= windowRect.Top;
+
+                    if (_buttPosition.Contains(new Point(x, y)) &&
+                        _buttState == ButtonState.Pushed)
+                    {
+                        _buttState = ButtonState.Normal;
+                        OpenSettingWindow();
+
+                        DrawButton(m.HWnd);
+                    }
+                    else
+                        base.WndProc(ref m);
+
+                    break;
+
+                // WM_NCHITTEST
+                case 0x84:
+                    // Extract the least significant 16 bits
+                    x = ((int)m.LParam << 16) >> 16;
+                    // Extract the most significant 16 bits
+                    y = (int)m.LParam >> 16;
+
+                    x -= windowRect.Left;
+                    y -= windowRect.Top;
+
+                    if (_buttPosition.Contains(new Point(x, y)))
+                        m.Result = (IntPtr)18; // HTBORDER
+                    else
+                        base.WndProc(ref m);
+
+                    break;
+
+                default:
+                    base.WndProc(ref m);
+                    break;
+            }
+        }
+
+        private void DrawButton(IntPtr hwnd)
+        {
+
+            IntPtr hDC = GetWindowDC(hwnd);
+            int x, y;
+
+            try
+            {
+                using (Graphics g = Graphics.FromHdc(hDC))
+                {
+                    // Work out size and positioning
+                    int CaptionHeight = Bounds.Height - ClientRectangle.Height;
+                    Size ButtonSize = SystemInformation.CaptionButtonSize;
+                    x = Bounds.Width - 4 * ButtonSize.Width;
+                    y = (CaptionHeight - ButtonSize.Height) / 2 - 2;
+                    _buttPosition.Location = new Point(x, y);
+
+                    // Draw our "button"
+                    g.DrawImage(Bitmap.FromFile(_buttState == ButtonState.Pushed ? "c:/setting.png" : "c:/settingp.png"), _buttPosition);
+                }
+
+                ReleaseDC(hwnd, hDC);
+            }
+            catch { }
+        }
+
+        private void pnl_MouseEnter(object sender, EventArgs e)
+        {
+            if (_buttState == ButtonState.Pushed)
+            {
+                _buttState = ButtonState.Normal;
+                DrawButton(this.Handle);
+            }
+        }
+
+
+        /////////////////////////////////////////////////////////////////////////////////
+
+        private void frmMain_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            Settings.Save();
+        }
+
+    }
 }

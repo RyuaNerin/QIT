@@ -6,13 +6,15 @@ namespace QIT
 {
 	static class Program
 	{
-		public static string ProductName = String.Format("QIT v{0}", Application.ProductVersion);
+		public static string ProductName = String.Format("QITx v{0}", Application.ProductVersion);
 
 		[STAThread]
 		static void Main(string[] args)
 		{
-			Settings.CKey		= "";
-			Settings.CSecret	= "";
+            // Write consumer data here
+            Settings.CKey = "";
+            Settings.CSecret = "";
+
 			Twitter.TwitterAPI11.consumerToken = Settings.CKey;
 			Twitter.TwitterAPI11.consumerSecret = Settings.CSecret;
 

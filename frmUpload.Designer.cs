@@ -28,93 +28,96 @@
 		/// </summary>
 		private void InitializeComponent()
 		{
-			this.bgwTweet = new System.ComponentModel.BackgroundWorker();
-			this.picImage = new System.Windows.Forms.PictureBox();
-			this.lblLength = new System.Windows.Forms.Label();
-			this.txtText = new System.Windows.Forms.TextBox();
-			this.ajax = new QIT.AjaxControl();
-			this.lblImageSize = new System.Windows.Forms.Label();
-			((System.ComponentModel.ISupportInitialize)(this.picImage)).BeginInit();
-			this.SuspendLayout();
-			// 
-			// bgwTweet
-			// 
-			this.bgwTweet.DoWork += new System.ComponentModel.DoWorkEventHandler(this.bgwTweet_DoWork);
-			this.bgwTweet.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.bgwTweet_RunWorkerCompleted);
-			// 
-			// picImage
-			// 
-			this.picImage.Location = new System.Drawing.Point(12, 13);
-			this.picImage.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
-			this.picImage.Name = "picImage";
-			this.picImage.Size = new System.Drawing.Size(64, 64);
-			this.picImage.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
-			this.picImage.TabIndex = 4;
-			this.picImage.TabStop = false;
-			this.picImage.MouseDown += new System.Windows.Forms.MouseEventHandler(this.picImage_MouseDown);
-			// 
-			// lblLength
-			// 
-			this.lblLength.Location = new System.Drawing.Point(244, 13);
-			this.lblLength.Name = "lblLength";
-			this.lblLength.Size = new System.Drawing.Size(62, 15);
-			this.lblLength.TabIndex = 5;
-			this.lblLength.Text = "130 / 130";
-			this.lblLength.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-			// 
-			// txtText
-			// 
-			this.txtText.ForeColor = System.Drawing.SystemColors.WindowText;
-			this.txtText.Location = new System.Drawing.Point(82, 32);
-			this.txtText.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
-			this.txtText.MaxLength = 140;
-			this.txtText.Multiline = true;
-			this.txtText.Name = "txtText";
-			this.txtText.Size = new System.Drawing.Size(224, 45);
-			this.txtText.TabIndex = 6;
-			this.txtText.TextChanged += new System.EventHandler(this.txtText_TextChanged);
-			this.txtText.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtText_KeyDown);
-			// 
-			// ajax
-			// 
-			this.ajax.is16 = false;
-			this.ajax.Location = new System.Drawing.Point(176, 42);
-			this.ajax.Name = "ajax";
-			this.ajax.Size = new System.Drawing.Size(32, 32);
-			this.ajax.TabIndex = 7;
-			this.ajax.Visible = false;
-			// 
-			// lblImageSize
-			// 
-			this.lblImageSize.Location = new System.Drawing.Point(82, 13);
-			this.lblImageSize.Name = "lblImageSize";
-			this.lblImageSize.Size = new System.Drawing.Size(156, 15);
-			this.lblImageSize.TabIndex = 8;
-			// 
-			// frmUpload
-			// 
-			this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
-			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(318, 90);
-			this.Controls.Add(this.lblImageSize);
-			this.Controls.Add(this.ajax);
-			this.Controls.Add(this.picImage);
-			this.Controls.Add(this.lblLength);
-			this.Controls.Add(this.txtText);
-			this.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
-			this.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
-			this.MaximizeBox = false;
-			this.Name = "frmUpload";
-			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-			this.Text = "QIT BETA";
-			this.Activated += new System.EventHandler(this.frmUpload_Activated);
-			this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.frmUpload_FormClosed);
-			this.Shown += new System.EventHandler(this.frmUpload_Shown);
-			this.Enter += new System.EventHandler(this.frmUpload_Enter);
-			((System.ComponentModel.ISupportInitialize)(this.picImage)).EndInit();
-			this.ResumeLayout(false);
-			this.PerformLayout();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmUpload));
+            this.bgwTweet = new System.ComponentModel.BackgroundWorker();
+            this.picImage = new System.Windows.Forms.PictureBox();
+            this.lblLength = new System.Windows.Forms.Label();
+            this.txtText = new System.Windows.Forms.TextBox();
+            this.ajax = new QIT.AjaxControl();
+            this.lblImageSize = new System.Windows.Forms.Label();
+            ((System.ComponentModel.ISupportInitialize)(this.picImage)).BeginInit();
+            this.SuspendLayout();
+            // 
+            // bgwTweet
+            // 
+            this.bgwTweet.DoWork += new System.ComponentModel.DoWorkEventHandler(this.bgwTweet_DoWork);
+            this.bgwTweet.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.bgwTweet_RunWorkerCompleted);
+            // 
+            // picImage
+            // 
+            this.picImage.Location = new System.Drawing.Point(12, 13);
+            this.picImage.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.picImage.Name = "picImage";
+            this.picImage.Size = new System.Drawing.Size(64, 64);
+            this.picImage.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
+            this.picImage.TabIndex = 4;
+            this.picImage.TabStop = false;
+            this.picImage.MouseDown += new System.Windows.Forms.MouseEventHandler(this.picImage_MouseDown);
+            // 
+            // lblLength
+            // 
+            this.lblLength.Location = new System.Drawing.Point(244, 13);
+            this.lblLength.Name = "lblLength";
+            this.lblLength.Size = new System.Drawing.Size(62, 15);
+            this.lblLength.TabIndex = 5;
+            this.lblLength.Text = "130 / 130";
+            this.lblLength.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // txtText
+            // 
+            this.txtText.ForeColor = System.Drawing.SystemColors.WindowText;
+            this.txtText.Location = new System.Drawing.Point(82, 32);
+            this.txtText.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.txtText.MaxLength = 140;
+            this.txtText.Multiline = true;
+            this.txtText.Name = "txtText";
+            this.txtText.Size = new System.Drawing.Size(224, 45);
+            this.txtText.TabIndex = 6;
+            this.txtText.TextChanged += new System.EventHandler(this.txtText_TextChanged);
+            this.txtText.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtText_KeyDown);
+            // 
+            // ajax
+            // 
+            this.ajax.is16 = false;
+            this.ajax.Location = new System.Drawing.Point(176, 42);
+            this.ajax.Name = "ajax";
+            this.ajax.Size = new System.Drawing.Size(32, 32);
+            this.ajax.TabIndex = 7;
+            this.ajax.Visible = false;
+            // 
+            // lblImageSize
+            // 
+            this.lblImageSize.Location = new System.Drawing.Point(82, 13);
+            this.lblImageSize.Name = "lblImageSize";
+            this.lblImageSize.Size = new System.Drawing.Size(156, 15);
+            this.lblImageSize.TabIndex = 8;
+            // 
+            // frmUpload
+            // 
+            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.ClientSize = new System.Drawing.Size(318, 90);
+            this.Controls.Add(this.lblImageSize);
+            this.Controls.Add(this.ajax);
+            this.Controls.Add(this.picImage);
+            this.Controls.Add(this.lblLength);
+            this.Controls.Add(this.txtText);
+            this.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.MaximizeBox = false;
+            this.Name = "frmUpload";
+            this.ShowIcon = false;
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
+            this.Text = "QITx";
+            this.Activated += new System.EventHandler(this.frmUpload_Activated);
+            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.frmUpload_FormClosed);
+            this.Shown += new System.EventHandler(this.frmUpload_Shown);
+            this.Enter += new System.EventHandler(this.frmUpload_Enter);
+            ((System.ComponentModel.ISupportInitialize)(this.picImage)).EndInit();
+            this.ResumeLayout(false);
+            this.PerformLayout();
 
 		}
 
