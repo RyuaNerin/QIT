@@ -113,7 +113,8 @@ namespace QIT
 
                     if (frm.SetImage(_lstImages[i]))
                     {
-                        if (Settings.isUniformityText) frm.SetText((i!=0)?UnifiedStr:"/uninited/");
+                        frm.Index = i;
+                        if (Settings.isUniformityText && i!=0) frm.SetText(UnifiedStr);
                         frm.ShowDialog(this);
                         if (Settings.isUniformityText && i == 0) UnifiedStr = frm.GetText();
                     }

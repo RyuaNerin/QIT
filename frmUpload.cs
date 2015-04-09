@@ -37,6 +37,8 @@ namespace QIT
         }
 
         bool b = true;
+        public int Index { get; set; }
+
         private void frmUpload_Shown(object sender, EventArgs e)
         {
             try
@@ -50,7 +52,7 @@ namespace QIT
                 }
 
                 if (Settings.isUniformityText)
-                    if (this.txtText.Text != "/uninited/")
+                    if (Index>0)
                         this.Tweet();
                     else
                         this.txtText.Text = "";
@@ -465,7 +467,7 @@ namespace QIT
             {
                 this.txtText.Enabled = false;
                 this.ajax.Start();
-                this.bgwTweet.RunWorkerAsync(this.txtText.Text);
+                this.bgwTweet.RunWorkerAsync(this.txtText.Text.Replace("/N/", string.Format("{0}", this.Index+1)));
             }
             catch
             { }
