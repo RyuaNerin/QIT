@@ -92,5 +92,17 @@ namespace QIT
 			}
 		}
 
+        private void InitializeComponent()
+        {
+            this.SuspendLayout();
+            this.ResumeLayout(false);
+
+        }
+
+        private void AjaxControl_MouseUp(object sender, MouseEventArgs e)
+        {
+            
+        }
+
 	}
 }
