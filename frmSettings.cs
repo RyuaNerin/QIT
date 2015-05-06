@@ -28,7 +28,10 @@ namespace QIT
                 this.radioButton2.Checked = true;
             else if (Settings.ImageExt == 2)
                 this.radioButton3.Checked = true;
+            this.checkBox5.Checked = Settings.isEnabledShell;
         }
+
+        static string[] FileType = { "jpegfile", "pngfile", "giffile", "bmpfile" };
 
         private void button2_Click(object sender, EventArgs e)
         {
@@ -39,7 +42,32 @@ namespace QIT
             if (this.radioButton1.Checked) Settings.ImageExt = 0;
             else if (this.radioButton2.Checked) Settings.ImageExt = 1;
             else if (this.radioButton3.Checked) Settings.ImageExt = 2;
+            if (this.checkBox5.Checked)
+            {
+                if (!Settings.isEnabledShell) MessageBox.Show("QITx를 삭제하기 전에 본 옵션의 체크를 해제하십시오.", "경고");
+                AddShellRegestry();
+                Settings.isEnabledShell = true;
+            }
+            else
+            {
+                CygwinContextMenu.FileShellExtension.Unregister(FileType, Application.ProductName);
+                Settings.isEnabledShell = false;
+            }
             this.Close();
+        }
+
+        public static void AddShellRegestry()
+        {
+            // full path to self, %L is placeholder for selected file
+            string menuCommand = string.Format(
+                "\"{0}\" \"%L\"", Application.ExecutablePath);
+
+            // register the context menu
+            CygwinContextMenu.FileShellExtension.Register(
+                FileType,
+                //frmMain.AllowExtension,
+                Application.ProductName, "QITx로 트윗하기",
+                menuCommand);
         }
 
         private void button1_Click(object sender, EventArgs e)

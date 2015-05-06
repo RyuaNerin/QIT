@@ -23,12 +23,13 @@ namespace QIT
         public static bool isTopmost = false;
         public static bool isReversedCtrl = false;
         public static bool isUniformityText = false;
+        public static bool isEnabledShell = false;
+        public static string lastExecutablePath = null;
 
 		public static void Load()
 		{
 			if (!File.Exists(Settings.FilePath))
 				return;
-
 			int		key;
 			int		len;
 			byte[]	buff;
@@ -77,6 +78,14 @@ namespace QIT
                                 case 6:
                                     Settings.isUniformityText = (buff[0] == 1);
                                     break;
+
+                                case 7:
+                                    Settings.isEnabledShell = (buff[0] == 1);
+                                    break;
+
+                                case 8:
+                                    Settings.lastExecutablePath = Encoding.UTF8.GetString(buff);
+                                    break;
 							}
 						}
 					}
@@ -97,6 +106,8 @@ namespace QIT
                 Settings.Save(stream, 4, (byte)(Settings.isTopmost ? 1 : 0));
                 Settings.Save(stream, 5, (byte)(Settings.isReversedCtrl ? 1 : 0));
                 Settings.Save(stream, 6, (byte)(Settings.isUniformityText ? 1 : 0));
+                Settings.Save(stream, 7, (byte)(Settings.isEnabledShell ? 1 : 0));
+                Settings.Save(stream, 8, Settings.lastExecutablePath);
 			}
 		}
 		private static void Save(Stream stream, int key, string str)

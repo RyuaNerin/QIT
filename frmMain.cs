@@ -54,7 +54,7 @@ namespace QIT
             }
         }
 
-        private static readonly string[] AllowExtension = { ".bmp", ".emf", ".exif", ".gif", ".ico", ".jpg", ".jpeg", ".png", ".tiff", ".wmf", ".psd" };
+        public static readonly string[] AllowExtension = { ".bmp", ".emf", ".exif", ".gif", ".ico", ".jpg", ".jpeg", ".png", ".tiff", ".wmf", ".psd" };
 
         private void pnl_DragDrop(object sender, DragEventArgs e)
         {
