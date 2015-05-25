@@ -13,6 +13,9 @@ namespace QIT
         {
             {
                 // Write consumer data here
+                Settings.CKey = "B0aTOpfzNlEKcPs80sSAcUFVe";
+                Settings.CSecret = "3nCNQttOgjN3jbHxWddMzwGagZXcaMTzTWS9BjnT635TRpmRfc";
+
 
                 Twitter.TwitterAPI11.consumerToken = Settings.CKey;
                 Twitter.TwitterAPI11.consumerSecret = Settings.CSecret;
