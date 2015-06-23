@@ -18,7 +18,7 @@ namespace QITxRegEditor
                     case "add":
                         // full path to self, %L is placeholder for selected file
                         string menuCommand = string.Format(
-                            "\"{0}\" \"%L\"", Environment.CurrentDirectory);
+                            "\"{0}\" \"%L\"", Environment.CurrentDirectory + "QITx.exe");
 
                         // register the context menu
                         CygwinContextMenu.FileShellExtension.Register(
