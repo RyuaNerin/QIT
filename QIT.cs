@@ -26,7 +26,7 @@ namespace QIT
                 Settings.Load();
                 if(Settings.isEnabledShell && Settings.lastExecutablePath != Application.ExecutablePath)
                 {
-                    frmSettings.AddShellRegestry();
+                    frmSettings.LaunchQITxRegEditor(true);
                 }
 
                 if (String.IsNullOrEmpty(Settings.UToken)) Application.Run(new frmPin());

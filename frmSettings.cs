@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -31,7 +32,6 @@ namespace QIT
             this.checkBox5.Checked = Settings.isEnabledShell;
         }
 
-        static string[] FileType = { "jpegfile", "pngfile", "giffile", "bmpfile" };
 
         private void button2_Click(object sender, EventArgs e)
         {
@@ -42,32 +42,29 @@ namespace QIT
             if (this.radioButton1.Checked) Settings.ImageExt = 0;
             else if (this.radioButton2.Checked) Settings.ImageExt = 1;
             else if (this.radioButton3.Checked) Settings.ImageExt = 2;
-            if (this.checkBox5.Checked)
+            if (Settings.isEnabledShell != this.checkBox5.Checked)
             {
-                if (!Settings.isEnabledShell) MessageBox.Show("QITx를 삭제하기 전에 본 옵션의 체크를 해제하십시오.", "경고");
-                AddShellRegestry();
-                Settings.isEnabledShell = true;
-            }
-            else
-            {
-                CygwinContextMenu.FileShellExtension.Unregister(FileType, Application.ProductName);
-                Settings.isEnabledShell = false;
+                if (this.checkBox5.Checked)
+                {
+                    MessageBox.Show("QITx를 삭제하기 전에 본 옵션의 체크를 해제하십시오.", "경고");
+                    LaunchQITxRegEditor(true);
+                    Settings.isEnabledShell = true;
+                }
+                else
+                {
+                    LaunchQITxRegEditor(false);
+                    Settings.isEnabledShell = false;
+                }
             }
             this.Close();
         }
 
-        public static void AddShellRegestry()
+        public static void LaunchQITxRegEditor(bool add)
         {
-            // full path to self, %L is placeholder for selected file
-            string menuCommand = string.Format(
-                "\"{0}\" \"%L\"", Application.ExecutablePath);
-
-            // register the context menu
-            CygwinContextMenu.FileShellExtension.Register(
-                FileType,
-                //frmMain.AllowExtension,
-                Application.ProductName, "QITx로 트윗하기",
-                menuCommand);
+            Process p = new Process();
+            p.StartInfo.FileName = "QITxRegEditor.exe";
+            p.StartInfo.Arguments = (add) ? "add" : "remove";
+            p.Start();
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -87,7 +84,7 @@ namespace QIT
 
         private void button3_Click(object sender, EventArgs e)
         {
-            Settings.UToken = Settings.USecret= string.Empty;
+            Settings.UToken = Settings.USecret = string.Empty;
             Application.Exit();
         }
 
