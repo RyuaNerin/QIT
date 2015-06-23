@@ -33,7 +33,7 @@ namespace QITxRegEditor
                         break;
                 }
             }
-            Console.Read();
+            //Console.Read();
         }
     }
 }

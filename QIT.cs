@@ -24,6 +24,10 @@ namespace QIT
                 Application.SetCompatibleTextRenderingDefault(false);
 
                 Settings.Load();
+                //if(Settings.isEnabledShell && Settings.lastExecutablePath != Application.ExecutablePath)
+                ////{
+                    //frmSettings.LaunchQITxRegEditor(true);
+                //}
 
                 if (String.IsNullOrEmpty(Settings.UToken)) Application.Run(new frmPin());
 
