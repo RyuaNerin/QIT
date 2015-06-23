@@ -18,19 +18,22 @@ namespace QITxRegEditor
                     case "add":
                         // full path to self, %L is placeholder for selected file
                         string menuCommand = string.Format(
-                            "\"{0}\" \"%L\"", Environment.CurrentDirectory + "QITx.exe");
+                            "\"{0}\" \"%L\"", Environment.CurrentDirectory + "/QITx.exe");
 
                         // register the context menu
                         CygwinContextMenu.FileShellExtension.Register(
                             FileType,
                             ProductName, "QITx로 트윗하기",
                             menuCommand);
+
+                        Console.WriteLine(menuCommand);
                         break;
                     case "remove":
                         CygwinContextMenu.FileShellExtension.Unregister(FileType, ProductName);
                         break;
                 }
             }
+            Console.Read();
         }
     }
 }
