@@ -131,14 +131,12 @@ namespace QIT
 				this._dataType = DataTypes.None;
 			}
 		}
-		private static Regex regSrc
-			= new Regex(@"<img.*?src=[""'](.*?)[""'].*>", RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.Compiled);
-		private static Regex regFragmentStart
-			= new Regex(@"^StartFragment:(\d+)", RegexOptions.Multiline | RegexOptions.Compiled);
-		private static Regex regFragmentEnd
-			= new Regex(@"^EndFragment:(\d+)", RegexOptions.Multiline | RegexOptions.Compiled);
-		private static Regex regBaseUrl
-			= new Regex(@"http://.*?/", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+		private static RegexOptions regISC	= RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.IgnoreCase;
+		private static RegexOptions regMC	= RegexOptions.Compiled | RegexOptions.Multiline;
+		private static Regex regSrc				= new Regex(@"<img.*?src=[""'](.*?)[""'].*>",	regISC);
+		private static Regex regFragmentStart	= new Regex(@"^StartFragment:(\d+)",			regMC);
+		private static Regex regFragmentEnd		= new Regex(@"^EndFragment:(\d+)",				regMC);
+		private static Regex regBaseUrl			= new Regex(@"http://.*?/",						regMC);
 
 		~DragDropInfo()
 		{
