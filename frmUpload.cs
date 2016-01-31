@@ -165,6 +165,21 @@ namespace QIT
             return false;
         }
 
+		public bool SetImage(Image image)
+		{
+			try
+			{
+
+				this._isJPG = true;
+				this._isPSD = false;
+				this._image = image;
+				return this.ResizeImage( long.MaxValue );
+			}
+			catch
+			{ }
+			return false;
+		}
+
         public void SetText(string str)
         {
             this.txtText.Text = str;
