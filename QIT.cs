@@ -29,8 +29,8 @@ namespace QIT
 				//frmSettings.LaunchQITxRegEditor(true);
 				//}
 
-				Application.Run( new QIT.ScreenCapture.Stasisfield() );
-				return;
+                //Application.Run( new QIT.ScreenCapture.Stasisfield() );
+                //return;
 
                 if (String.IsNullOrEmpty(Settings.UToken)) Application.Run(new frmPin());
 

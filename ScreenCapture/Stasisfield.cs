@@ -150,18 +150,22 @@ namespace QIT.ScreenCapture
 				{
 					graphics.Graphics.Clear( Color.Black );
 
-					graphics.Graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.High;
-					graphics.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-					graphics.Graphics.TranslateTransform( this.AutoScrollPosition.X, this.AutoScrollPosition.Y );
+                    graphics.Graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.High;
+                    graphics.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                    graphics.Graphics.TranslateTransform(this.AutoScrollPosition.X, this.AutoScrollPosition.Y);
 
-					graphics.Graphics.DrawImage( stasisImage, Point.Empty );
-					using ( Brush b = new SolidBrush( Color.FromArgb( 128, 255, 255, 255 ) ) )
-					{
-						graphics.Graphics.FillRectangle( b, new Rectangle( Point.Empty, this.Size ) );
-					}
+                    using (Image copy = (Image)stasisImage.Clone())
+                    {
+                        graphics.Graphics.DrawImage(copy, Point.Empty);
+                    }
 
-					if ( clickedLocation[0] != EmptyPoint && clickedLocation[1] != EmptyPoint )
-					{
+                    using (Brush b = new SolidBrush(Color.FromArgb(128, 255, 255, 255)))
+                    {
+                        graphics.Graphics.FillRectangle(b, new Rectangle(Point.Empty, this.Size));
+                    }
+
+                    if (clickedLocation[0] != EmptyPoint && clickedLocation[1] != EmptyPoint)
+                    {
 						using ( Pen p = new Pen( Color.Red, 1.2f ) )
 						{
 							graphics.Graphics.DrawRectangle( p, GetSizeFromLocation( clickedLocation[0], clickedLocation[1] ) );
@@ -178,27 +182,29 @@ namespace QIT.ScreenCapture
 
 		private void Post( )
 		{
-			var rect = GetSizeFromLocation(clickedLocation[0], clickedLocation[1]);
-			Image origin = (Image)stasisImage.Clone();
-			Image cropedImage = new Bitmap(rect.Width, rect.Height);
+			var src = GetSizeFromLocation(clickedLocation[0], clickedLocation[1]);
+            //var dest = new Rectangle(Point.Empty, stasisImage.Size);
+            var dest = new Rectangle(0, 0, src.Width, src.Height);
+			Image cropedImage = new Bitmap(src.Width, src.Height);
 
 			using ( Graphics g = Graphics.FromImage( cropedImage ) )
 			{
 				g.DrawImage(
-					origin,
-					new Rectangle( Point.Empty, origin.Size ),
-					rect,
+                    stasisImage,
+                    dest,
+					src,
 					GraphicsUnit.Pixel
 				);
-			}
 
-			using ( frmUpload frm = new frmUpload( ) )
-			{
-				frm.AutoStart = false;
-				frm.Text = "캡쳐 화면 전송중";
-				frm.SetImage( cropedImage );
-				frm.ShowDialog( );
-			}
+			    using ( frmUpload frm = new frmUpload( ) )
+			    {
+				    frm.AutoStart = false;
+				    frm.Text = "캡쳐 화면 전송중";
+                    frm.SetText(string.Format("dest : {0}\nsrc : {1}", dest.ToString(), src.ToString()));
+				    frm.SetImage( cropedImage );
+				    frm.ShowDialog( );
+                }
+            }
 
 			this.Close( );
 		}

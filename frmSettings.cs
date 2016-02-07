@@ -88,5 +88,10 @@ namespace QIT
             Application.Exit();
         }
 
+        private void doTAHT(object sender, EventArgs e)
+        {
+            new QIT.ScreenCapture.Stasisfield().ShowDialog();
+        }
+
     }
 }
