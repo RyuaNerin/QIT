@@ -1,4 +1,4 @@
-﻿namespace QIT.ScreenCapture
+﻿namespace Quicx.ScreenCapture
 {
 	partial class Stasisfield
 	{

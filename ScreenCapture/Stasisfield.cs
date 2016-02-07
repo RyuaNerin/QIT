@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 
-namespace QIT.ScreenCapture
+namespace Quicx.ScreenCapture
 {
 	public partial class Stasisfield : Form
 	{
@@ -68,7 +68,11 @@ namespace QIT.ScreenCapture
 				RenderThread = new Thread( Render );
 				RenderThread.Start( );
 
+                // 폼 닫히기 전 이벤트 정의
                 this.FormClosing += Stasisfield_FormClosing;
+
+                // 커서 변경
+                this.Cursor = Cursors.Cross;
 
 				isLoading = true;
 				return true;

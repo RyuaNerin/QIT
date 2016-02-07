@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 
-namespace QIT
+namespace Quicx
 {
     public partial class frmSettings : Form
     {
@@ -46,23 +46,23 @@ namespace QIT
             {
                 if (this.checkBox5.Checked)
                 {
-                    MessageBox.Show("QITx를 삭제하기 전에 본 옵션의 체크를 해제하십시오.", "경고");
-                    LaunchQITxRegEditor(true);
+                    MessageBox.Show("Quicx를 삭제하기 전에 본 옵션의 체크를 해제하십시오.", "경고");
+                    LaunchQuicxRegEditor(true);
                     Settings.isEnabledShell = true;
                 }
                 else
                 {
-                    LaunchQITxRegEditor(false);
+                    LaunchQuicxRegEditor(false);
                     Settings.isEnabledShell = false;
                 }
             }
             this.Close();
         }
 
-        public static void LaunchQITxRegEditor(bool add)
+        public static void LaunchQuicxRegEditor(bool add)
         {
             Process p = new Process();
-            p.StartInfo.FileName = "QITxRegEditor.exe";
+            p.StartInfo.FileName = "QuicxRegEditor.exe";
             p.StartInfo.Arguments = (add) ? "add" : "remove";
             p.Start();
         }
@@ -91,7 +91,7 @@ namespace QIT
         private void doTAHT(object sender, EventArgs e)
         {
             this.Hide();
-            new QIT.ScreenCapture.Stasisfield().ShowDialog();
+            new Quicx.ScreenCapture.Stasisfield().ShowDialog();
         }
 
     }

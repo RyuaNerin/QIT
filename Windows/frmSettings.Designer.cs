@@ -1,4 +1,4 @@
-﻿namespace QIT
+﻿namespace Quicx
 {
     partial class frmSettings
     {
@@ -54,7 +54,7 @@
             this.checkBox1.Name = "checkBox1";
             this.checkBox1.Size = new System.Drawing.Size(112, 16);
             this.checkBox1.TabIndex = 0;
-            this.checkBox1.Text = "QIT를 항상 위로";
+            this.checkBox1.Text = "Quicx를 항상 위로";
             this.checkBox1.UseVisualStyleBackColor = true;
             // 
             // checkBox2
@@ -80,7 +80,7 @@
             // button1
             // 
             this.button1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.button1.Location = new System.Drawing.Point(206, 228);
+            this.button1.Location = new System.Drawing.Point(206, 189);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(62, 23);
             this.button1.TabIndex = 1;
@@ -91,7 +91,7 @@
             // button2
             // 
             this.button2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.button2.Location = new System.Drawing.Point(138, 228);
+            this.button2.Location = new System.Drawing.Point(138, 189);
             this.button2.Name = "button2";
             this.button2.Size = new System.Drawing.Size(62, 23);
             this.button2.TabIndex = 1;
@@ -103,7 +103,7 @@
             // 
             this.checkBox4.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.checkBox4.AutoSize = true;
-            this.checkBox4.Location = new System.Drawing.Point(13, 148);
+            this.checkBox4.Location = new System.Drawing.Point(13, 109);
             this.checkBox4.Name = "checkBox4";
             this.checkBox4.Size = new System.Drawing.Size(88, 16);
             this.checkBox4.TabIndex = 0;
@@ -116,7 +116,7 @@
             this.groupBox1.Controls.Add(this.radioButton3);
             this.groupBox1.Controls.Add(this.radioButton2);
             this.groupBox1.Controls.Add(this.radioButton1);
-            this.groupBox1.Location = new System.Drawing.Point(13, 171);
+            this.groupBox1.Location = new System.Drawing.Point(13, 132);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Size = new System.Drawing.Size(258, 46);
             this.groupBox1.TabIndex = 2;
@@ -160,7 +160,7 @@
             // 
             this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(12, 224);
+            this.label1.Location = new System.Drawing.Point(12, 185);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(119, 12);
             this.label1.TabIndex = 3;
@@ -171,7 +171,7 @@
             // 
             this.label2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(12, 239);
+            this.label2.Location = new System.Drawing.Point(12, 200);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(93, 12);
             this.label2.TabIndex = 3;
@@ -181,7 +181,7 @@
             // button3
             // 
             this.button3.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.button3.Location = new System.Drawing.Point(193, 144);
+            this.button3.Location = new System.Drawing.Point(193, 105);
             this.button3.Name = "button3";
             this.button3.Size = new System.Drawing.Size(75, 23);
             this.button3.TabIndex = 4;
@@ -202,7 +202,7 @@
             // button4
             // 
             this.button4.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.button4.Location = new System.Drawing.Point(168, 100);
+            this.button4.Location = new System.Drawing.Point(193, 76);
             this.button4.Name = "button4";
             this.button4.Size = new System.Drawing.Size(75, 23);
             this.button4.TabIndex = 4;
@@ -214,7 +214,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(280, 263);
+            this.ClientSize = new System.Drawing.Size(280, 224);
             this.Controls.Add(this.button4);
             this.Controls.Add(this.button3);
             this.Controls.Add(this.label2);
