@@ -90,7 +90,7 @@ namespace Quicx
 
         private void doTAHT(object sender, EventArgs e)
         {
-            this.Hide();
+            this.WindowState = FormWindowState.Minimized;
             new Quicx.ScreenCapture.Stasisfield().ShowDialog();
         }
 

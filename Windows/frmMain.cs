@@ -38,7 +38,7 @@ namespace Quicx
             if (Keyboard.Modifiers == (System.Windows.Input.ModifierKeys.Control) &&
                 e.Key == Key.C)
             {
-                this.Hide();
+                this.WindowState = FormWindowState.Minimized;
                 new Quicx.ScreenCapture.Stasisfield().ShowDialog();
             }
         }
@@ -195,7 +195,7 @@ namespace Quicx
 
         private void button1_Click(object sender, EventArgs e)
         {
-            this.Hide();
+            this.WindowState = FormWindowState.Minimized;
             new Quicx.ScreenCapture.Stasisfield().ShowDialog();
         }
     }
