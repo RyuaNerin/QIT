@@ -90,6 +90,7 @@ namespace QIT
 
         private void doTAHT(object sender, EventArgs e)
         {
+            this.Hide();
             new QIT.ScreenCapture.Stasisfield().ShowDialog();
         }
 

@@ -28,19 +28,16 @@
 		/// </summary>
 		private void InitializeComponent( )
 		{
-			this.SuspendLayout();
-			// 
-			// Stasisfield
-			// 
-			this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 12F);
-			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(284, 261);
-			this.Name = "Stasisfield";
-			this.Text = "Stasisfield";
-			this.MouseDown += new System.Windows.Forms.MouseEventHandler(this.Stasisfield_MouseDown);
-			this.MouseMove += new System.Windows.Forms.MouseEventHandler(this.Stasisfield_MouseMove);
-			this.MouseUp += new System.Windows.Forms.MouseEventHandler(this.Stasisfield_MouseUp);
-			this.ResumeLayout(false);
+            this.SuspendLayout();
+            // 
+            // Stasisfield
+            // 
+            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 12F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.ClientSize = new System.Drawing.Size(284, 261);
+            this.Name = "Stasisfield";
+            this.Text = "Stasisfield";
+            this.ResumeLayout(false);
 
 		}
 
