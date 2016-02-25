@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Windows.Forms;
 
 namespace Quicx
@@ -91,7 +92,8 @@ namespace Quicx
         private void doTAHT(object sender, EventArgs e)
         {
             this.WindowState = FormWindowState.Minimized;
-            new Quicx.ScreenCapture.Stasisfield().ShowDialog();
+			Thread.Sleep( 200 );
+			new Quicx.ScreenCapture.Stasisfield().ShowDialog();
         }
 
     }

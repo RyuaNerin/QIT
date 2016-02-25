@@ -41,8 +41,11 @@ namespace Quicx.ScreenCapture
 				// 폼 초기화
 				this.FormBorderStyle = FormBorderStyle.None;
 				this.Location = new Point( 0, 0 );
+				this.TopMost = true;
+				this.ShowInTaskbar = false;
 				// 다중 화면 캡쳐 지원을 위해 이 부분을 수정합니다. (지금 말고)
 				this.Size = Screen.PrimaryScreen.Bounds.Size;
+
 
 				// 그래픽스 객체 초기화
 				graphicsContext = BufferedGraphicsManager.Current;
@@ -63,6 +66,7 @@ namespace Quicx.ScreenCapture
 				this.MouseDown += Stasisfield_MouseDown;
 				this.MouseUp += Stasisfield_MouseUp;
 				this.MouseMove += Stasisfield_MouseMove;
+				this.KeyDown += Stasisfield_KeyDown;
 
 				// 렌더링 스레드 초기화
 				RenderThread = new Thread( Render );
@@ -84,7 +88,7 @@ namespace Quicx.ScreenCapture
 
 		}
 
-        void Stasisfield_FormClosing(object sender, FormClosingEventArgs e)
+		void Stasisfield_FormClosing(object sender, FormClosingEventArgs e)
         {
             RenderThread.Abort();
             if (isDone)
@@ -120,6 +124,15 @@ namespace Quicx.ScreenCapture
 			isDrag = false;
             isDone = true;
             this.Close();
+		}
+		private void Stasisfield_KeyDown( object sender, KeyEventArgs e )
+		{
+			if(e.KeyCode == Keys.Escape)
+			{
+				this.isDone = false;
+				this.isDrag = false;
+				this.Close( );
+			}
 		}
 		#endregion
 

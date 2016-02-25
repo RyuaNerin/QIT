@@ -10,6 +10,7 @@ using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using Decchi.Utilities;
 using System.Windows.Input;
+using System.Threading;
 
 namespace Quicx
 {
@@ -29,17 +30,17 @@ namespace Quicx
 
 
             manager = new GlobalKeyboardHook();
+			manager.HookedKeys.Add( System.Windows.Input.Key.C );
             manager.KeyDown += manager_KeyDown;
 
         }
 
         void manager_KeyDown(object sender, GlobalKeyboardHook.KeyHookEventArgs e)
         {
-            if (Keyboard.Modifiers == (System.Windows.Input.ModifierKeys.Control) &&
+            if (Keyboard.Modifiers == (System.Windows.Input.ModifierKeys.Control | System.Windows.Input.ModifierKeys.Shift) &&
                 e.Key == Key.C)
             {
-                this.WindowState = FormWindowState.Minimized;
-                new Quicx.ScreenCapture.Stasisfield().ShowDialog();
+				GenerateStasisField( );
             }
         }
 
@@ -193,10 +194,20 @@ namespace Quicx
             }
         }
 
+		private void GenerateStasisField()
+		{
+			this.Opacity = 0;
+			this.ShowInTaskbar = false;
+			//this.WindowState = FormWindowState.Minimized;
+			new Quicx.ScreenCapture.Stasisfield( ).ShowDialog( );
+			//this.WindowState = FormWindowState.Normal;
+			this.Opacity = 255;
+			this.ShowInTaskbar = true;
+		}
+
         private void button1_Click(object sender, EventArgs e)
         {
-            this.WindowState = FormWindowState.Minimized;
-            new Quicx.ScreenCapture.Stasisfield().ShowDialog();
+			GenerateStasisField( );
         }
     }
 }
