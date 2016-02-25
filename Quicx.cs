@@ -54,7 +54,7 @@ namespace Quicx
 					{
 						if ( args[0] == "Stasis" )
 						{
-							
+							new Quicx.ScreenCapture.Stasisfield( ).ShowDialog( );
 						}
 						else
 						{
