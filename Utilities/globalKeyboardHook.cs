@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Windows.Input;
 
-namespace Decchi.Utilities
+namespace Quicx.Utilities
 {
 	/// <summary>
 	/// A class that manages a global low level keyboard hook

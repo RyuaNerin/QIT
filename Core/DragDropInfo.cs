@@ -9,7 +9,7 @@ using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using System.Net;
 
-namespace QIT
+namespace Quicx
 {
 	public class DragDropInfo : IDisposable
 	{
