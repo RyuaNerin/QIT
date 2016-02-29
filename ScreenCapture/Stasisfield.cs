@@ -277,14 +277,7 @@ namespace Quicx.ScreenCapture
 		/// <param name="image">트윗할 이미지</param>
 		private void Post( Image image )
 		{
-			using ( frmUpload frm = new frmUpload( ) )
-			{
-				frm.AutoStart = false;
-				frm.Text = "캡쳐 화면 전송중";
-				//frm.SetText(string.Format("dest : {0}\nsrc : {1}", dest.ToString(), src.ToString()));
-				frm.SetImage( image );
-				frm.ShowDialog( );
-			}
+			TweetModerator.Tweet( image, "캡처 화면 전송중" );
 		}
 		
 	}

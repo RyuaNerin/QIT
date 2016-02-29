@@ -8,7 +8,7 @@ using System.Text;
 using System.Windows.Forms;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
-using Decchi.Utilities;
+using Quicx.Utilities;
 using System.Windows.Input;
 using System.Threading;
 
@@ -33,15 +33,28 @@ namespace Quicx
 			manager.HookedKeys.Add( System.Windows.Input.Key.C );
             manager.KeyDown += manager_KeyDown;
 
+			this.KeyDown += FrmMain_KeyDown;
+
         }
 
-        void manager_KeyDown(object sender, GlobalKeyboardHook.KeyHookEventArgs e)
+		private void FrmMain_KeyDown( object sender, System.Windows.Forms.KeyEventArgs e )
+		{
+			if ( e.Modifiers == Keys.Control && e.KeyCode == Keys.V )
+			{
+				var clipImage = Clipboarder.getClipboardImage();
+				if ( clipImage == null ) return;
+				TweetModerator.Tweet( clipImage, "클립보드 이미지 전송중" );
+			}
+		}
+
+		void manager_KeyDown(object sender, GlobalKeyboardHook.KeyHookEventArgs e)
         {
             if (Keyboard.Modifiers == (System.Windows.Input.ModifierKeys.Control | System.Windows.Input.ModifierKeys.Shift) &&
                 e.Key == Key.C)
             {
 				GenerateStasisField( );
             }
+
         }
 
         private IList<DragDropInfo> _lstImages = new List<DragDropInfo>();
