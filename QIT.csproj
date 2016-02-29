@@ -7,10 +7,11 @@
     <ProjectGuid>{32B8745E-EBB6-4D7C-918C-A0D863C9F939}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>QIT</RootNamespace>
-    <AssemblyName>QIT</AssemblyName>
-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <RootNamespace>Quicx</RootNamespace>
+    <AssemblyName>Quicx</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
     <PublishUrl>게시\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -23,9 +24,9 @@
     <MapFileExtensions>true</MapFileExtensions>
     <ApplicationRevision>0</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
-    <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -36,6 +37,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -45,6 +47,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
     <SignAssembly>false</SignAssembly>
@@ -54,48 +57,82 @@
     </AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>QIT.Program</StartupObject>
+    <StartupObject>Quicx.Program</StartupObject>
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>qitx.ico</ApplicationIcon>
+  </PropertyGroup>
+  <PropertyGroup>
+    <TargetZone>LocalIntranet</TargetZone>
+  </PropertyGroup>
+  <PropertyGroup>
+    <GenerateManifests>false</GenerateManifests>
+  </PropertyGroup>
+  <PropertyGroup />
+  <PropertyGroup />
   <ItemGroup>
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
     <Reference Include="System" />
+    <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+    <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AjaxControl.cs">
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Utilities\globalKeyboardHook.cs" />
+    <Compile Include="Windows\AjaxControl.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="DragDropInfo.cs" />
-    <Compile Include="frmMain.cs">
+    <Compile Include="Core\DragDropInfo.cs" />
+    <Compile Include="Windows\frmMain.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="frmMain.Designer.cs">
+    <Compile Include="Windows\frmMain.Designer.cs">
       <DependentUpon>frmMain.cs</DependentUpon>
     </Compile>
-    <Compile Include="frmPin.cs">
+    <Compile Include="Windows\frmPin.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="frmPin.Designer.cs">
+    <Compile Include="Windows\frmPin.Designer.cs">
       <DependentUpon>frmPin.cs</DependentUpon>
     </Compile>
-    <Compile Include="frmPreview.cs">
+    <Compile Include="Windows\frmPreview.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="frmPreview.Designer.cs">
+    <Compile Include="Windows\frmPreview.Designer.cs">
       <DependentUpon>frmPreview.cs</DependentUpon>
     </Compile>
-    <Compile Include="frmUpload.cs">
+    <Compile Include="Windows\frmSettings.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="frmUpload.Designer.cs">
+    <Compile Include="Windows\frmSettings.Designer.cs">
+      <DependentUpon>frmSettings.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Windows\frmUpload.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Windows\frmUpload.Designer.cs">
       <DependentUpon>frmUpload.cs</DependentUpon>
     </Compile>
-    <Compile Include="Helper.cs" />
+    <Compile Include="Core\Helper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="QIT.cs">
+    <Compile Include="Quicx.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Settings.cs" />
+    <Compile Include="ScreenCapture\Stasisfield.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ScreenCapture\Stasisfield.Designer.cs">
+      <DependentUpon>Stasisfield.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Core\Settings.cs" />
     <Compile Include="SimplePSD\CPSD.cs" />
     <Compile Include="SimplePSD\BigEndianBinaryReader.cs" />
     <Compile Include="SimplePSD\PSDColorModeData.cs" />
@@ -105,30 +142,34 @@
     <Compile Include="SimplePSD\PSDResolutionInfo.cs" />
     <Compile Include="SimplePSD\PSDThumbNail.cs" />
     <Compile Include="SimplePSD\WinInvoke32.cs" />
-    <Compile Include="twitterApi.cs" />
-    <Compile Include="twitterApi11.cs" />
-    <EmbeddedResource Include="frmMain.resx">
+    <Compile Include="Core\HttpCommunicator\twitterApi.cs" />
+    <Compile Include="Core\HttpCommunicator\twitterApi11.cs" />
+    <EmbeddedResource Include="Windows\AjaxControl.resx">
+      <DependentUpon>AjaxControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Windows\frmMain.resx">
       <DependentUpon>frmMain.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="frmPin.resx">
+    <EmbeddedResource Include="Windows\frmPin.resx">
       <DependentUpon>frmPin.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="frmPreview.resx">
+    <EmbeddedResource Include="Windows\frmPreview.resx">
       <DependentUpon>frmPreview.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="frmUpload.resx">
+    <EmbeddedResource Include="Windows\frmSettings.resx">
+      <DependentUpon>frmSettings.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Windows\frmUpload.resx">
       <DependentUpon>frmUpload.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Resources.resx</DependentUpon>
-      <DesignTime>True</DesignTime>
-    </Compile>
+    <EmbeddedResource Include="ScreenCapture\Stasisfield.resx">
+      <DependentUpon>Stasisfield.cs</DependentUpon>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
@@ -143,10 +184,14 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <None Include="app.config" />
     <None Include="LICENSE" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="TextFile1.txt" />
+    <Content Include="qitx.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="OldVersion\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
