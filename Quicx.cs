@@ -20,9 +20,9 @@ namespace Quicx
 
 			if ( mtxSuccess )
 			{
-				// Write consumer data here
-				Settings.CKey = "B0aTOpfzNlEKcPs80sSAcUFVe";
-				Settings.CSecret = "3nCNQttOgjN3jbHxWddMzwGagZXcaMTzTWS9BjnT635TRpmRfc";
+                // QIT
+                Settings.CKey = "lQJwJWJoFlbvr2UQnDbg";
+                Settings.CSecret = "DsuIRA1Ak9mmSCGl9wnNvjhmWJTmb9vZlRdQ7sMqXww";
 
 
 				Twitter.TwitterAPI11.consumerToken = Settings.CKey;

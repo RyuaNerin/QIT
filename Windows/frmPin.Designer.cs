@@ -46,7 +46,7 @@
             this.txtPin.Size = new System.Drawing.Size(124, 23);
             this.txtPin.TabIndex = 1;
             this.txtPin.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-            this.txtPin.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.txtPin_KeyPress);
+            this.txtPin.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtPin_KeyDown);
             // 
             // bgwBefore
             // 

@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Drawing;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 
 namespace Quicx
@@ -40,24 +36,33 @@ namespace Quicx
 			this.txtPin.Focus();
 		}
 
-		private void txtPin_KeyPress(object sender, KeyPressEventArgs e)
-		{
-			if (e.KeyChar == '\x0D' || e.KeyChar == '\x0A')
-			{
-				this.txtPin.Enabled = false;
+        private void txtPin_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                this.txtPin.Enabled = false;
 
-				this.ajax.Start();
-				this.bgwAfter.RunWorkerAsync(this.txtPin.Text);
-			}
+                this.ajax.Start();
+                this.bgwAfter.RunWorkerAsync(this.txtPin.Text);
+            }
 
-			if (e.KeyChar == (char)Keys.Escape)
-				this.Close();
+            if (e.KeyCode == Keys.Escape)
+                this.Close();
 
-			if (!Char.IsNumber(e.KeyChar) &&
-				(e.KeyChar != (char)Keys.Back) &&
-				(e.KeyChar != (char)Keys.Delete))
-				e.Handled = true;
-		}
+            if (Char.IsNumber((char)e.KeyValue) ||
+				(e.KeyCode == Keys.Back) ||
+                (e.KeyCode == Keys.Delete))
+                return;
+
+            if (e.Modifiers == Keys.Control && e.KeyCode == Keys.C)
+            {
+                var str = Clipboard.GetText();
+                int i;
+                if (str.Length == 7 && int.TryParse(str, out i)) return;
+            }
+
+            e.Handled = true;
+        }
 
 		private void bgwAfter_DoWork(object sender, DoWorkEventArgs e)
 		{

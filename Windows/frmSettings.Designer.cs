@@ -40,7 +40,6 @@
             this.radioButton2 = new System.Windows.Forms.RadioButton();
             this.radioButton1 = new System.Windows.Forms.RadioButton();
             this.label1 = new System.Windows.Forms.Label();
-            this.label2 = new System.Windows.Forms.Label();
             this.button3 = new System.Windows.Forms.Button();
             this.checkBox5 = new System.Windows.Forms.CheckBox();
             this.button4 = new System.Windows.Forms.Button();
@@ -52,7 +51,7 @@
             this.checkBox1.AutoSize = true;
             this.checkBox1.Location = new System.Drawing.Point(13, 13);
             this.checkBox1.Name = "checkBox1";
-            this.checkBox1.Size = new System.Drawing.Size(112, 16);
+            this.checkBox1.Size = new System.Drawing.Size(125, 16);
             this.checkBox1.TabIndex = 0;
             this.checkBox1.Text = "Quicx를 항상 위로";
             this.checkBox1.UseVisualStyleBackColor = true;
@@ -159,24 +158,13 @@
             // label1
             // 
             this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(12, 185);
+            this.label1.Location = new System.Drawing.Point(12, 181);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(119, 12);
+            this.label1.Size = new System.Drawing.Size(120, 34);
             this.label1.TabIndex = 3;
-            this.label1.Text = "Made By RyuaNerin";
+            this.label1.Text = "RyuaNerin\r\nSasarino MARi";
+            this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.label1.Click += new System.EventHandler(this.label1_Click);
-            // 
-            // label2
-            // 
-            this.label2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(12, 200);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(93, 12);
-            this.label2.TabIndex = 3;
-            this.label2.Text = "plus X by MARi";
-            this.label2.Click += new System.EventHandler(this.label2_Click);
             // 
             // button3
             // 
@@ -217,7 +205,6 @@
             this.ClientSize = new System.Drawing.Size(280, 224);
             this.Controls.Add(this.button4);
             this.Controls.Add(this.button3);
-            this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.button2);
@@ -254,7 +241,6 @@
         private System.Windows.Forms.RadioButton radioButton2;
         private System.Windows.Forms.RadioButton radioButton1;
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Button button3;
         private System.Windows.Forms.CheckBox checkBox5;
         private System.Windows.Forms.Button button4;

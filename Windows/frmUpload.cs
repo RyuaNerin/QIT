@@ -1,17 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using System.Windows.Forms;
-using System.Drawing.Imaging;
-using System.Drawing.Drawing2D;
-using System.Threading;
-using System.ComponentModel;
 using Twitter;
+using System.Text.RegularExpressions;
 
 namespace Quicx
 {
@@ -401,36 +399,39 @@ namespace Quicx
 
         //////////////////////////////////////////////////////////////////////////
 
-        private bool isOver110 = false;
-        private bool isOver120 = false;
+        private bool m_isOver80p = false;
+        private bool m_isOver90p = false;
+        private bool m_tweetable = false;
 
+        private static Regex m_regex = new Regex("/^(https?:\\/\\/)?([\\da-z\\.-]+)\\.([a-z\\.]{2,6})([\\/\\w \\.-]*)*\\/?$/", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private void txtText_TextChanged(object sender, EventArgs e)
         {
             try
             {
-                int len = this.txtText.Text.Replace("\r\n", "\n").Length;
+                var len = m_regex.Replace(this.txtText.Text.Replace("\r\n", "\n"), "12345678901234567890123").Length;
 
-                this.lblLength.Text = String.Format("{0} / 130", len);
+                this.lblLength.Text = String.Format("{0} / 117", len);
+                this.m_tweetable = len <= 117;
 
-                if (!this.isOver120 && len > 120)
+                if (!this.m_isOver90p && len > 105)
                 {
                     this.lblLength.ForeColor = this.txtText.ForeColor = Color.Red;
-                    this.isOver120 = true;
+                    this.m_isOver90p = true;
                 }
-                else if (this.isOver120 && len <= 120)
+                else if (this.m_isOver90p && len <= 105)
                 {
                     this.lblLength.ForeColor = this.txtText.ForeColor = SystemColors.WindowText;
-                    this.isOver120 = false;
+                    this.m_isOver90p = false;
                 }
-                else if (!this.isOver120 && !this.isOver110 && len > 110)
+                else if (!this.m_isOver90p && !this.m_isOver80p && len > 93)
                 {
                     this.lblLength.ForeColor = this.txtText.ForeColor = Color.Brown;
-                    this.isOver110 = true;
+                    this.m_isOver80p = true;
                 }
-                else if (!this.isOver120 && this.isOver110 && len <= 110)
+                else if (!this.m_isOver90p && this.m_isOver80p && len <= 93)
                 {
                     this.lblLength.ForeColor = this.txtText.ForeColor = SystemColors.WindowText;
-                    this.isOver110 = false;
+                    this.m_isOver80p = false;
                 }
             }
             catch
@@ -442,9 +443,8 @@ namespace Quicx
             bool isHandled = false;
             if (!e.Control && (e.KeyCode == Keys.Enter || e.KeyCode == Keys.Return))
             {
-                if (this.txtText.Text.Replace("\r\n", "\n").Length < 130)
+                if (this.m_tweetable)
                     this.Tweet();
-
                 else
                     System.Media.SystemSounds.Exclamation.Play();
 
