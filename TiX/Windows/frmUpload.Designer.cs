@@ -138,7 +138,6 @@
 		private System.Windows.Forms.Label lblImageSize;
         private System.Windows.Forms.TextBox txtText;
         private System.ComponentModel.BackgroundWorker bgwResize;
-
 	}
 }
 

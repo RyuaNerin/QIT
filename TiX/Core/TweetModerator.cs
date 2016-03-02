@@ -14,5 +14,17 @@ namespace TiX
 				frm.ShowDialog( );
 			}
 		}
+
+		public static void Tweet( Image image, string title, string TargetUserID, string TargetTweetID )
+		{
+			using ( frmUpload frm = new frmUpload( DragDropInfo.Create( image ) ) )
+			{
+				frm.AutoStart = false;
+				frm.Text = title;
+				frm.TweetString = "@" + TargetUserID;
+				frm.MentionTo = TargetTweetID;
+				frm.ShowDialog( );
+			}
+		}
 	}
 }

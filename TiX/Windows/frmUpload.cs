@@ -22,10 +22,11 @@ namespace TiX
         private Image m_image;
         private Image m_imageThumbnail;
         private byte[] m_rawData;
+		internal string MentionTo;
 
-        //////////////////////////////////////////////////////////////////////////
+		//////////////////////////////////////////////////////////////////////////
 
-        private frmUpload()
+		private frmUpload()
         {
             InitializeComponent();
 
