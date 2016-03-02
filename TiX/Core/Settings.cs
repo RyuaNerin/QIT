@@ -7,7 +7,7 @@ namespace TiX
 {
 	static class Settings
 	{
-		public static string	FilePath	= Path.Combine(Application.StartupPath, "Quicx.info");
+		public static string	FilePath	= Path.Combine(Application.StartupPath, "TiX.info");
 
 		public static string	CKey		= null;
 		public static string	CSecret		= null;

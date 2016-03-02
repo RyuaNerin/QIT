@@ -8,12 +8,12 @@ namespace TiX
 {
 	static class Program
 	{
-		public static string ProductName = String.Format("Quicx v{0}", Application.ProductVersion);
+		public static string ProductName = String.Format("TiX v{0}", Application.ProductVersion);
 
 		[STAThread]
 		static void Main( string[] args )
 		{
-			const string mtxName = "Quicx_Twitter";
+			const string mtxName = "Tix_Twitter";
 			Mutex mtx = new Mutex(true, mtxName);
 
 			TimeSpan tsWait = new TimeSpan(0, 0, 2);
@@ -24,8 +24,7 @@ namespace TiX
                 // QIT
                 Settings.CKey = "lQJwJWJoFlbvr2UQnDbg";
                 Settings.CSecret = "DsuIRA1Ak9mmSCGl9wnNvjhmWJTmb9vZlRdQ7sMqXww";
-
-
+				
 				Twitter.TwitterAPI11.consumerToken = Settings.CKey;
 				Twitter.TwitterAPI11.consumerSecret = Settings.CSecret;
 
@@ -33,15 +32,6 @@ namespace TiX
 				Application.SetCompatibleTextRenderingDefault( false );
 
 				Settings.Load( );
-				//if(Settings.isEnabledShell && Settings.lastExecutablePath != Application.ExecutablePath)
-				////{
-				//frmSettings.LaunchQuicxRegEditor(true);
-				//}
-
-				//Application.Run( new Quicx.ScreenCapture.Stasisfield() );
-				//return;
-
-				//Application.Run(new )
 
 				if ( String.IsNullOrEmpty( Settings.UToken ) ) Application.Run( new frmPin( ) );
 

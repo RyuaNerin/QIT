@@ -117,7 +117,7 @@
             this.Name = "frmUpload";
             this.ShowIcon = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "Quicx";
+            this.Text = "TiX";
             this.TopMost = true;
             this.Activated += new System.EventHandler(this.frmUpload_Activated);
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.frmUpload_FormClosed);
