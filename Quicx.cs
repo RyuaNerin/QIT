@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Windows.Forms;
@@ -58,27 +59,19 @@ namespace Quicx
 						}
 						else
 						{
+                            var lst = new List<DragDropInfo>();
+
 							string UnifiedStr = string.Empty;
 							for ( int i = 0; i < args.Length; ++i )
 							{
-								using ( frmUpload frm = new frmUpload( ) )
-								{
-									if ( File.Exists( args[i] ) )
-									{
-										frm.AutoStart = false;
-										frm.Text = String.Format( "{0} ({1} / {2})", Program.ProductName, i + 1, args.Length );
-
-										if ( frm.SetImage( new DragDropInfo( args[i] ) ) )
-										{
-											frm.Index = i;
-											if ( Settings.isUniformityText && i != 0 ) frm.SetText( UnifiedStr );
-											frm.ShowDialog( );
-											if ( Settings.isUniformityText && i == 0 ) UnifiedStr = frm.GetText( );
-										}
-										frm.Dispose( );
-									}
-								}
+                                if (!File.Exists(args[i])) continue;
+                                lst.Add(DragDropInfo.Create(args[i]));
 							}
+
+                            var frm = new frmUpload(lst);
+                            frm.AutoStart = false;
+
+                            Application.Run(frm);
 						}
 					}
 				}

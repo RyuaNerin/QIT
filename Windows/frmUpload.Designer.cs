@@ -35,6 +35,7 @@
             this.txtText = new System.Windows.Forms.TextBox();
             this.ajax = new Quicx.AjaxControl();
             this.lblImageSize = new System.Windows.Forms.Label();
+            this.bgwResize = new System.ComponentModel.BackgroundWorker();
             ((System.ComponentModel.ISupportInitialize)(this.picImage)).BeginInit();
             this.SuspendLayout();
             // 
@@ -56,7 +57,7 @@
             // 
             // lblLength
             // 
-            this.lblLength.Location = new System.Drawing.Point(244, 13);
+            this.lblLength.Location = new System.Drawing.Point(249, 13);
             this.lblLength.Name = "lblLength";
             this.lblLength.Size = new System.Drawing.Size(62, 15);
             this.lblLength.TabIndex = 5;
@@ -71,10 +72,11 @@
             this.txtText.MaxLength = 140;
             this.txtText.Multiline = true;
             this.txtText.Name = "txtText";
-            this.txtText.Size = new System.Drawing.Size(224, 45);
+            this.txtText.Size = new System.Drawing.Size(229, 45);
             this.txtText.TabIndex = 6;
             this.txtText.TextChanged += new System.EventHandler(this.txtText_TextChanged);
             this.txtText.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtText_KeyDown);
+            this.txtText.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.txtText_KeyPress);
             // 
             // ajax
             // 
@@ -89,14 +91,19 @@
             // 
             this.lblImageSize.Location = new System.Drawing.Point(82, 13);
             this.lblImageSize.Name = "lblImageSize";
-            this.lblImageSize.Size = new System.Drawing.Size(156, 15);
+            this.lblImageSize.Size = new System.Drawing.Size(161, 15);
             this.lblImageSize.TabIndex = 8;
+            // 
+            // bgwResize
+            // 
+            this.bgwResize.DoWork += new System.ComponentModel.DoWorkEventHandler(this.bgwResize_DoWork);
+            this.bgwResize.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.bgwResize_RunWorkerCompleted);
             // 
             // frmUpload
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(318, 90);
+            this.ClientSize = new System.Drawing.Size(323, 90);
             this.Controls.Add(this.lblImageSize);
             this.Controls.Add(this.ajax);
             this.Controls.Add(this.picImage);
@@ -126,10 +133,11 @@
 
 		private System.ComponentModel.BackgroundWorker bgwTweet;
 		private System.Windows.Forms.PictureBox picImage;
-		private System.Windows.Forms.Label lblLength;
-		internal System.Windows.Forms.TextBox txtText;
+        private System.Windows.Forms.Label lblLength;
 		private AjaxControl ajax;
 		private System.Windows.Forms.Label lblImageSize;
+        private System.Windows.Forms.TextBox txtText;
+        private System.ComponentModel.BackgroundWorker bgwResize;
 
 	}
 }

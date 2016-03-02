@@ -86,6 +86,7 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="Utilities\globalKeyboardHook.cs" />
+    <Compile Include="Utilities\ImageResize.cs" />
     <Compile Include="Windows\AjaxControl.cs">
       <SubType>Component</SubType>
     </Compile>

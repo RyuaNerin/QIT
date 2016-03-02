@@ -28,15 +28,13 @@
 		/// </summary>
 		private void InitializeComponent()
 		{
-            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmMain));
             this.pnl = new System.Windows.Forms.Panel();
+            this.btnStasisField = new System.Windows.Forms.Button();
             this.label4 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
-            this.tmrQueue = new System.Windows.Forms.Timer(this.components);
-            this.button1 = new System.Windows.Forms.Button();
             this.pnl.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -44,7 +42,7 @@
             // 
             this.pnl.AllowDrop = true;
             this.pnl.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
-            this.pnl.Controls.Add(this.button1);
+            this.pnl.Controls.Add(this.btnStasisField);
             this.pnl.Controls.Add(this.label4);
             this.pnl.Controls.Add(this.label2);
             this.pnl.Controls.Add(this.label1);
@@ -52,12 +50,22 @@
             this.pnl.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pnl.Location = new System.Drawing.Point(0, 0);
             this.pnl.Name = "pnl";
-            this.pnl.Size = new System.Drawing.Size(224, 112);
+            this.pnl.Size = new System.Drawing.Size(224, 125);
             this.pnl.TabIndex = 0;
             this.pnl.DragDrop += new System.Windows.Forms.DragEventHandler(this.pnl_DragDrop);
             this.pnl.DragEnter += new System.Windows.Forms.DragEventHandler(this.pnl_DragEnter);
             this.pnl.DragOver += new System.Windows.Forms.DragEventHandler(this.pnl_DragOver);
             this.pnl.MouseUp += new System.Windows.Forms.MouseEventHandler(this.pnl_MouseUp);
+            // 
+            // btnStasisField
+            // 
+            this.btnStasisField.Location = new System.Drawing.Point(137, 99);
+            this.btnStasisField.Name = "btnStasisField";
+            this.btnStasisField.Size = new System.Drawing.Size(75, 23);
+            this.btnStasisField.TabIndex = 1;
+            this.btnStasisField.Text = "그거";
+            this.btnStasisField.UseVisualStyleBackColor = true;
+            this.btnStasisField.Click += new System.EventHandler(this.btnStasisField_Click);
             // 
             // label4
             // 
@@ -77,9 +85,9 @@
             this.label2.ForeColor = System.Drawing.Color.MediumBlue;
             this.label2.Location = new System.Drawing.Point(36, 40);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(153, 20);
+            this.label2.Size = new System.Drawing.Size(163, 20);
             this.label2.TabIndex = 13;
-            this.label2.Text = "Ctrl을 눌러 바로 작성";
+            this.label2.Text = "Ctrl을 눌러 [바로] 작성";
             this.label2.MouseUp += new System.Windows.Forms.MouseEventHandler(this.pnl_MouseUp);
             // 
             // label1
@@ -105,26 +113,11 @@
             this.label3.Text = "우클릭하여 설정 열기";
             this.label3.MouseUp += new System.Windows.Forms.MouseEventHandler(this.pnl_MouseUp);
             // 
-            // tmrQueue
-            // 
-            this.tmrQueue.Interval = 1;
-            this.tmrQueue.Tick += new System.EventHandler(this.tmrQueue_Tick);
-            // 
-            // button1
-            // 
-            this.button1.Location = new System.Drawing.Point(146, 82);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(75, 23);
-            this.button1.TabIndex = 1;
-            this.button1.Text = "그거";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.button1_Click);
-            // 
             // frmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(224, 112);
+            this.ClientSize = new System.Drawing.Size(224, 125);
             this.Controls.Add(this.pnl);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
@@ -141,12 +134,11 @@
 
 		#endregion
 
-		private System.Windows.Forms.Panel pnl;
-        private System.Windows.Forms.Timer tmrQueue;
+        private System.Windows.Forms.Panel pnl;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Label label4;
-        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Button btnStasisField;
 	}
 }

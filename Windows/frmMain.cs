@@ -1,15 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Drawing;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
-using System.Drawing.Imaging;
-using System.Runtime.InteropServices;
 using Quicx.Utilities;
-using System.Threading;
 
 namespace Quicx
 {
@@ -30,10 +23,9 @@ namespace Quicx
 
             manager = new GlobalKeyboardHook();
 			manager.Down.Add(new HookKey(Keys.C, true, true, false, false));
-            manager.KeyDown += manager_KeyDown;
+            manager.KeyDown += (s, e) => GenerateStasisField();
 
 			this.KeyDown += FrmMain_KeyDown;
-
         }
 
 		private void FrmMain_KeyDown( object sender, System.Windows.Forms.KeyEventArgs e )
@@ -48,14 +40,6 @@ namespace Quicx
 			}
 		}
 
-		void manager_KeyDown(object sender, KeyHookEventArgs e)
-        {
-            GenerateStasisField( );
-        }
-
-        private IList<DragDropInfo> _lstImages = new List<DragDropInfo>();
-        private bool _autoStart;
-
         private void pnl_DragOver(object sender, DragEventArgs e)
         {
             e.Effect = DragDropEffects.None;
@@ -68,11 +52,12 @@ namespace Quicx
                 {
                     string[] paths = (string[])e.Data.GetData(DataFormats.FileDrop);
 
+                    allow = false;
                     for (int i = 0; i < paths.Length; ++i)
                     {
-                        if (Array.IndexOf<string>(frmMain.AllowExtension, Path.GetExtension(paths[i]).ToLower()) < 0)
+                        if (Array.IndexOf<string>(frmMain.AllowExtension, Path.GetExtension(paths[i]).ToLower()) >= 0)
                         {
-                            allow = false;
+                            allow = true;
                             break;
                         }
                     }
@@ -82,13 +67,13 @@ namespace Quicx
             }
         }
 
-        public static readonly string[] AllowExtension = { ".bmp", ".emf", ".exif", ".gif", ".ico", ".jpg", ".jpeg", ".png", ".tiff", ".wmf", ".psd" };
+        public static readonly string[] AllowExtension = { ".bmp", ".emf", ".exif", ".gif", ".ico", ".jpg", ".jpeg", ".png", ".tif", ".tiff", ".wmf", ".psd" };
 
         private void pnl_DragDrop(object sender, DragEventArgs e)
         {
             try
-            {
-                this._autoStart = ((e.KeyState & 8) == 8);
+            {                
+                var data = new CallbackData();
 
                 // Local Files
                 if (e.Data.GetDataPresent(DataFormats.FileDrop))
@@ -104,57 +89,42 @@ namespace Quicx
                             MessageBoxIcon.Question) == DialogResult.No)
                             return;
 
-                    Array.Sort<string>(paths);
-
                     for (int i = 0; i < paths.Length; ++i)
                         if (Array.IndexOf<string>(frmMain.AllowExtension, Path.GetExtension(paths[i]).ToLower()) >= 0)
-                            this._lstImages.Add(new DragDropInfo(paths[i]));
+                            data.List.Add(DragDropInfo.Create(paths[i]));
                 }
                 else
                 {
-                    DragDropInfo info = new DragDropInfo(e);
-                    if (info.DataType != DragDropInfo.DataTypes.None)
-                        this._lstImages.Add(info);
+                    DragDropInfo info = DragDropInfo.Create(e);
+                    if (info != null)
+                        data.List.Add(info);
                     else
                         info.Dispose();
                 }
 
-                this.tmrQueue.Enabled = true;
-
-            }
-            catch
-            {
-
-            }
-        }
-
-        private void tmrQueue_Tick(object sender, EventArgs e)
-        {
-            this.tmrQueue.Enabled = false;
-            string UnifiedStr = string.Empty;
-            for (int i = 0; i < _lstImages.Count; ++i)
-            {
-                using (frmUpload frm = new frmUpload())
+                if (data.List.Count > 0)
                 {
-                    frm.AutoStart = this._autoStart;
-
-                    frm.Text = String.Format("{0} ({1} / {2})", Program.ProductName, i + 1, _lstImages.Count);
-
-                    if (frm.SetImage(_lstImages[i]))
-                    {
-                        frm.Index = i;
-                        if (Settings.isUniformityText && i != 0) frm.SetText(UnifiedStr);
-                        frm.ShowDialog(this);
-                        if (Settings.isUniformityText && i == 0) UnifiedStr = frm.GetText();
-                    }
-
-                    frm.Dispose();
-
-                    _lstImages[i].Dispose();
+                    data.AutoStart = ((e.KeyState & 8) == 8);
+                    data.IAsyncResult = this.BeginInvoke(new Action<CallbackData>(this.Callback), data);
                 }
             }
+            catch
+            { }
+        }
 
-            this._lstImages.Clear();
+        private class CallbackData
+        {
+            public bool AutoStart;
+            public List<DragDropInfo> List = new List<DragDropInfo>();
+            public IAsyncResult IAsyncResult;
+        }
+        private void Callback(CallbackData data)
+        {
+            this.EndInvoke(data.IAsyncResult);
+
+            var frm = new frmUpload(data.List);
+            frm.AutoStart = data.AutoStart;
+            frm.Show(this);
         }
 
         private void pnl_DragEnter(object sender, DragEventArgs e)
@@ -194,12 +164,14 @@ namespace Quicx
 
             if (e.Button == System.Windows.Forms.MouseButtons.Right)
             {
-                new frmSettings().ShowDialog();
+                using (var frm = new frmSettings())
+                    frm.ShowDialog();
+
                 this.TopMost = Settings.isTopmost;
                 if (Settings.isReversedCtrl)
-                    label2.Text = "Ctrl을 눌러 내용 작성";
+                    label2.Text = "Ctrl을 눌러 [내용] 작성";
                 else
-                    label2.Text = "Ctrl을 눌러 바로 작성";
+                    label2.Text = "Ctrl을 눌러 [바로] 작성";
             }
         }
 
@@ -208,13 +180,14 @@ namespace Quicx
 			this.Opacity = 0;
 			this.ShowInTaskbar = false;
 			//this.WindowState = FormWindowState.Minimized;
-			new Quicx.ScreenCapture.Stasisfield( ).ShowDialog( );
+			using (var stasis = new Quicx.ScreenCapture.Stasisfield( ))
+                stasis.ShowDialog( );
 			//this.WindowState = FormWindowState.Normal;
 			this.Opacity = 255;
 			this.ShowInTaskbar = true;
 		}
 
-        private void button1_Click(object sender, EventArgs e)
+        private void btnStasisField_Click(object sender, EventArgs e)
         {
 			GenerateStasisField( );
         }

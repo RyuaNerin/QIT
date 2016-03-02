@@ -1,64 +1,148 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
-using System.Drawing.Drawing2D;
-using System.Drawing.Imaging;
 using System.IO;
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
-using System.Windows.Forms;
-using Twitter;
 using System.Text.RegularExpressions;
+using System.Windows.Forms;
+using Quicx.Utilities;
+using Twitter;
 
 namespace Quicx
 {
     public partial class frmUpload : Form
     {
-        public frmUpload()
+        private IList<DragDropInfo> m_infos;
+        private int m_index = -1;
+        private double m_ratio;
+        private string m_extension;
+        private Image m_image;
+        private Image m_imageThumbnail;
+        private byte[] m_rawData;
+
+        //////////////////////////////////////////////////////////////////////////
+
+        private frmUpload()
         {
             InitializeComponent();
 
             this.ajax.Left = this.txtText.Left + this.txtText.Width / 2 - 16;
             this.ajax.Top = this.txtText.Top + this.txtText.Height / 2 - 16;
+        }
+        public frmUpload(IList<DragDropInfo> infos) : this()
+        {
+            this.m_infos = infos;
 
-            this._tempPath = Path.Combine(Application.StartupPath, String.Format("{0}.{1}", Helper.CreateString(), (this._isJPG ? "jpg" : "png")));
+            this.Text = String.Format("{0} (1 / {1})", Program.ProductName, this.m_infos.Count);
+        }
+        public frmUpload(DragDropInfo info) : this()
+        {
+            this.m_infos = new List<DragDropInfo>();
+            this.m_infos.Add(info);
+
+            this.Text = String.Format("{0} (1 / 1)", Program.ProductName);
         }
 
         public bool AutoStart { get; set; }
-
-        private void frmUpload_FormClosed(object sender, FormClosedEventArgs e)
+        public string TweetString
         {
-            this._image.Dispose();
-
-            File.Delete(this._tempPath);
+            get { return this.txtText.Text; }
+            set { this.txtText.Text = value; }
         }
-
-        bool b = true;
-        public int Index { get; set; }
 
         private void frmUpload_Shown(object sender, EventArgs e)
         {
-            try
+            StartNew();
+        }
+
+        private void StartNew()
+        {
+            Clear();
+
+            if (++this.m_index >= this.m_infos.Count)
             {
-                if (this.b)
+                this.Close();
+                return;
+            }
+
+            this.Text = String.Format("{0} ({1} / {2})", Program.ProductName, this.m_index + 1, this.m_infos.Count);
+
+            this.txtText.Enabled = false;
+            this.ajax.Start();
+            this.bgwResize.RunWorkerAsync();
+        }
+        private void Clear()
+        {
+            this.m_rawData = null;
+
+            if (this.m_image != null)
+                this.m_image.Dispose();
+
+            if (this.m_imageThumbnail != null)
+                this.m_imageThumbnail.Dispose();
+
+            this.lblImageSize.Text = string.Empty;
+            this.picImage.Image = null;
+        }
+
+        private void bgwResize_DoWork(object sender, DoWorkEventArgs e)
+        {
+            this.m_image = this.m_infos[this.m_index].GetImage();
+            if (this.m_image == null) return;
+
+            ImageResize.ResizeImage(ref this.m_image, ref this.m_rawData, ref this.m_ratio, ref this.m_extension);
+         
+            var ratio = Math.Min(64d / this.m_image.Width, 64d / this.m_image.Height);
+            var newWidth  = (int)(this.m_image.Width  * ratio);
+            var newHeight = (int)(this.m_image.Height * ratio);
+
+            var newImage = new Bitmap(newWidth, newHeight);
+
+            using (var graphics = Graphics.FromImage(newImage))
+                graphics.DrawImage(this.m_image, 0, 0, newWidth, newHeight);
+
+            this.m_imageThumbnail = newImage;
+
+            e.Result = 0;
+        }
+
+        private void bgwResize_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            if (e.Result == null)
+            {
+                this.Clear();
+                this.StartNew();
+            }
+            else
+            {
+                this.ajax.Stop();
+                this.txtText.Enabled = true;
+
+                this.picImage.Image = this.m_imageThumbnail;
+
+                this.lblImageSize.Text =
+                    String.Format(
+                        "{0} {1} x {2} ({3:##0.0} %)",
+                        this.m_extension.ToUpper(),
+                        this.m_image.Width,
+                        this.m_image.Height,
+                        this.m_ratio);
+
+                if (this.AutoStart && (!Settings.isUniformityText || this.m_index > 0))
                 {
-                    if (Settings.isReversedCtrl ? !this.AutoStart : this.AutoStart)
-                        this.Tweet();
-
-                    this.b = false;
+                    // 자동 트윗이거나,
+                    // 내용 통일이 아니거나,
+                    // 내용 통일이고 index 가 0 이 아닐때 자동트윗
+                    this.Tweet();
                 }
-
-                if (Settings.isUniformityText)
-                    if (Index>0)
-                        this.Tweet();
-                    else
-                        this.txtText.Text = "";
+                else if (Settings.isUniformityText && this.m_index > 0)
+                    this.Tweet();
 
                 this.txtText.Focus();
             }
-            catch
-            { }
         }
 
         private void frmUpload_Enter(object sender, EventArgs e)
@@ -89,8 +173,8 @@ namespace Quicx
             {
                 using (frmPreview frm = new frmPreview())
                 {
-                    frm.Text = String.Format("미리보기 {0} ({1} x {2})", (this._isJPG ? "JPG" : "PNG"), this._image.Width, this._image.Height);
-                    frm.SetImage(this._image);
+                    frm.Text = String.Format("미리보기 {0} ({1} x {2})", (this.m_extension.ToUpper()), this.m_image.Width, this.m_image.Height);
+                    frm.SetImage(this.m_image);
                     frm.ShowDialog(this);
                 }
             }
@@ -98,310 +182,17 @@ namespace Quicx
             { }
         }
 
-        //////////////////////////////////////////////////////////////////////////
-
-        private const int MaxFileSize = (int)(2.5 * 1024 * 1024);
-
-        private double _resizedRatio;
-        private Image _image;
-        private byte[] _rawData;
-        private bool _isJPG;
-        private bool _isPSD;
-        private string _tempPath;
-
-        public bool SetImage(DragDropInfo info)
+        private void frmUpload_FormClosed(object sender, FormClosedEventArgs e)
         {
-            try
-            {
-                switch (info.DataType)
-                {
-                    case DragDropInfo.DataTypes.String:
-                        {
-                            string path = info.GetString();
-
-                            if (Path.GetExtension(path).ToLower() == ".psd")
-                            {
-                                this._isPSD = true;
-                                this._isJPG = false;
-
-                                SimplePsd.CPSD psd = new SimplePsd.CPSD();
-                                psd.Load(path);
-
-                                this._image = Image.FromHbitmap(psd.HBitmap);
-                            }
-                            else
-                            {
-                                this._isPSD = false;
-                                this._isJPG = (Path.GetExtension(path).ToLower() == ".jpg");
-
-                                this._image = Image.FromFile(path, true);
-                            }
-
-                            return this.ResizeImage(new FileInfo(path).Length);
-                        }
-
-                    case DragDropInfo.DataTypes.Image:
-                        {
-                            this._image = info.GetImage();
-
-                            return this.ResizeImage(long.MaxValue);
-                        }
-
-                    case DragDropInfo.DataTypes.Stream:
-                        {
-                            Stream stream = info.GetStream();
-
-                            this._image = Image.FromStream(stream);
-
-                            return this.ResizeImage(stream.Length);
-                        }
-                }
-            }
-            catch
-            { }
-
-            return false;
-        }
-
-		public bool SetImage(Image image)
-		{
-			try
-			{
-
-				this._isJPG = true;
-				this._isPSD = false;
-				this._image = image;
-				return this.ResizeImage( long.MaxValue );
-			}
-			catch
-			{ }
-			return false;
-		}
-
-        public void SetText(string str)
-        {
-            this.txtText.Text = str;
-        }
-
-        public string GetText()
-        {
-            return this.txtText.Text;
-        }
-
-        private bool ResizeImage(long origFileSize)
-        {
-            //////////////////////////////////////////////////////////////////////////
-
-            long origPixels = this._image.Width * this._image.Height;
-            long resizedPixels;
-
-            this._isJPG = (this._image.RawFormat.Guid == ImageFormat.Jpeg.Guid);
-
-            switch (Settings.ImageExt)
-            {
-                case 0:
-                    if (origFileSize > MaxFileSize)
-                        this._isJPG = true;
-                    break;
-
-                case 1:
-                    this._isJPG = true;
-                    break;
-
-                case 2:
-                    this._isJPG = false;
-                    break;
-            }
-
-            //////////////////////////////////////////////////////////////////////////
-
-            ImageCodecInfo codecInfo;
-            EncoderParameters parameters;
-
-            double d = 1.1d;
-
-            if (!this._isPSD && this._isJPG)
-            {
-                codecInfo = GetEncoder(ImageFormat.Jpeg);
-                parameters = new EncoderParameters(1);
-                parameters.Param[0] = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality, 100L);
-            }
-            else if (!this._isPSD)
-            {
-                codecInfo = GetEncoder(ImageFormat.Png);
-                parameters = new EncoderParameters(1);
-
-                long depth = 24L;
-
-                if (Settings.PNGTrans)
-                {
-                    switch (this._image.PixelFormat)
-                    {
-                        case PixelFormat.Format16bppArgb1555:
-                        case PixelFormat.Format32bppArgb:
-                        case PixelFormat.Format32bppPArgb:
-                        case PixelFormat.Format64bppArgb:
-                        case PixelFormat.Format64bppPArgb:
-                            depth = 32L;
-                            break;
-                    }
-                }
-
-                parameters.Param[0] = new EncoderParameter(System.Drawing.Imaging.Encoder.ColorDepth, depth);
-
-                d = d / (depth / 8);
-            }
-            else
-            {
-                codecInfo = GetEncoder(ImageFormat.Png);
-                parameters = new EncoderParameters(1);
-                parameters.Param[0] = new EncoderParameter(System.Drawing.Imaging.Encoder.ColorDepth, 32);
-            }
-
-            //////////////////////////////////////////////////////////////////////////
-
-            try
-            {
-                // Make Thumbnail
-                double scale = Math.Min((64.0d / this._image.Width), (64.0d / this._image.Height));
-                this.picImage.Image =
-                    this.ResizeBySize(
-                        this._image,
-                        (int)(scale * this._image.Width),
-                        (int)(scale * this._image.Height),
-                        true);
-
-                if (origFileSize <= MaxFileSize)
-                {
-                    using (MemoryStream stmFile = new MemoryStream())
-                    {
-                        this._image.Save(stmFile, codecInfo, parameters);
-                        this._rawData = stmFile.ToArray();
-                        stmFile.Dispose();
-                    }
-                }
-                else
-                {
-                    Image img;
-
-                    do
-                    {
-                        img = this.ResizeByCapacity(this._image, this._isJPG, d);
-                        this._image.Dispose();
-                        this._image = img;
-
-                        using (MemoryStream stmFile = new MemoryStream())
-                        {
-                            this._image.Save(stmFile, codecInfo, parameters);
-                            this._rawData = stmFile.ToArray();
-                            stmFile.Dispose();
-                        }
-
-                        d *= 0.9d;
-                    }
-                    while (this._rawData.Length > frmUpload.MaxFileSize);
-                }
-
-                resizedPixels = this._image.Width * this._image.Height;
-
-                _resizedRatio = (100.0d * resizedPixels / origPixels);
-
-                this.lblImageSize.Text =
-                    String.Format(
-                        "{0} {1} x {2} ({3:##0.0} %)",
-                        (this._isJPG ? "JPG" : "PNG"),
-                        this._image.Width,
-                        this._image.Height,
-                        _resizedRatio);
-
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
-        private ImageCodecInfo GetEncoder(ImageFormat format)
-        {
-            ImageCodecInfo[] codecs = ImageCodecInfo.GetImageDecoders();
-
-            foreach (ImageCodecInfo codec in codecs)
-                if (codec.FormatID == format.Guid)
-                    return codec;
-
-            return null;
-        }
-
-        private Image ResizeByCapacity(Image img, bool isJPG, double c)
-        {
-            // Ox : Oy = Rx : Ry
-            // Rx * Ry = r
-            // Rw = sqrt(Ow * r / Oh)
-            // Rh = sqrt(Oh * r / Ow)
-
-            double d;
-
-            if (isJPG)
-                d = frmUpload.MaxFileSize * 2.6d * c;
-            else
-                d = frmUpload.MaxFileSize * 2.0d * c; // Pixel Depth
-
-            int w = (int)Math.Ceiling(Math.Sqrt(d * img.Width / img.Height));
-            int h = (int)Math.Ceiling(Math.Sqrt(d * img.Height / img.Width));
-
-            if (w > img.Width || h > img.Height)
-            {
-                w = img.Width;
-                h = img.Height;
-            }
-
-            return this.ResizeBySize(img, w, h, false);
-        }
-
-        private Image ResizeBySize(Image img, int width, int height, bool FillBackground)
-        {
-            PixelFormat pixelFormat = PixelFormat.Format24bppRgb;
-
-            if (!this._isJPG && Settings.PNGTrans)
-            {
-                switch (img.PixelFormat)
-                {
-                    case PixelFormat.Format16bppArgb1555:
-                    case PixelFormat.Format32bppArgb:
-                    case PixelFormat.Format32bppPArgb:
-                    case PixelFormat.Format64bppArgb:
-                    case PixelFormat.Format64bppPArgb:
-                        pixelFormat = PixelFormat.Format32bppArgb;
-                        break;
-                }
-            }
-
-            Image imgResize = new Bitmap(width, height, pixelFormat);
-
-            using (Graphics g = Graphics.FromImage(imgResize))
-            {
-                foreach (PropertyItem propertyItem in this._image.PropertyItems)
-                    imgResize.SetPropertyItem(propertyItem);
-
-                if (FillBackground)
-                    g.Clear(Color.White);
-
-                g.InterpolationMode = InterpolationMode.HighQualityBicubic;
-                g.PixelOffsetMode = PixelOffsetMode.HighQuality;
-                g.SmoothingMode = SmoothingMode.HighQuality;
-
-                g.DrawImage(img, 0, 0, width, height);
-            }
-
-            return imgResize;
+            Clear();
+            this.Dispose();
         }
 
         //////////////////////////////////////////////////////////////////////////
 
         private bool m_isOver80p = false;
         private bool m_isOver90p = false;
-        private bool m_tweetable = false;
+        private bool m_tweetable = true;
 
         private static Regex m_regex = new Regex("/^(https?:\\/\\/)?([\\da-z\\.-]+)\\.([a-z\\.]{2,6})([\\/\\w \\.-]*)*\\/?$/", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private void txtText_TextChanged(object sender, EventArgs e)
@@ -438,6 +229,7 @@ namespace Quicx
             { }
         }
 
+        private bool m_handledText = false;
         private void txtText_KeyDown(object sender, KeyEventArgs e)
         {
             bool isHandled = false;
@@ -464,28 +256,29 @@ namespace Quicx
             }
             else if (e.KeyCode == Keys.Escape)
             {
-                this.Close();
+                this.StartNew();
 
                 isHandled = true;
             }
 
-            if (isHandled)
-            {
-                e.SuppressKeyPress = false;
+            m_handledText = isHandled;
+//             if (isHandled)
+//             {
+//                 e.SuppressKeyPress = false;
+//                 e.Handled = true;
+//             }
+        }
+        private void txtText_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (m_handledText == true)
                 e.Handled = true;
-            }
         }
 
         public void Tweet()
         {
-            try
-            {
-                this.txtText.Enabled = false;
-                this.ajax.Start();
-                this.bgwTweet.RunWorkerAsync(this.txtText.Text.Replace("/N/", string.Format("{0}", this.Index+1)));
-            }
-            catch
-            { }
+            this.txtText.Enabled = false;
+            this.ajax.Start();
+            this.bgwTweet.RunWorkerAsync(this.txtText.Text.Replace("/N/", string.Format("{0}", this.m_index + 1)));
         }
 
         private void bgwTweet_DoWork(object sender, DoWorkEventArgs e)
@@ -494,32 +287,10 @@ namespace Quicx
 
             try
             {
-                byte[] buff;
-                string boundary = Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString("N");
+                string boundary  = Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString("N");
+                string boundary2 = "--" + boundary;
 
-                using (MemoryStream stream = new MemoryStream())
-                {
-                    buff = Encoding.UTF8.GetBytes(
-                        String.Format(
-                            "--{0}\r\nContent-Disposition: form-data; name=\"status\"\r\n\r\n{1}\r\n--{0}\r\nContent-Type: application/octet-stream\r\nContent-Disposition: form-data; name=\"media[]\"; filename=\"img.{2}\"\r\n\r\n",
-                            boundary,
-                            (string)e.Argument,
-                            (this._isJPG ? "jpg" : "png")));
-                    stream.Write(buff, 0, buff.Length);
-
-                    stream.Write(this._rawData, 0, this._rawData.Length);
-
-                    buff = Encoding.UTF8.GetBytes(String.Format("\r\n\r\n--{0}--\r\n", boundary));
-                    stream.Write(buff, 0, buff.Length);
-
-                    buff = stream.ToArray();
-
-                    stream.Flush();
-                    stream.Close();
-                    stream.Dispose();
-                }
-
-                //////////////////////////////////////////////////////////////////////////
+                //////////////////////////////////////////////////
 
                 string URL, oauth_nonce, oauth_timestamp, hash_parameter, oauth_signature;
 
@@ -570,46 +341,52 @@ namespace Quicx
                     Settings.UToken
                 );
 
-                //////////////////////////////////////////////////////////////////////////
+                var req = WebRequest.Create(URL) as HttpWebRequest;
+                req.ContentType = "multipart/form-data; charset=utf-8; boundary=" + boundary;
+                req.Headers.Set("Authorization", hash_parameter);
+                req.Method = "POST";
 
-                try
+                var stream = req.GetRequestStream();
+                using (var writer = new StreamWriter(stream, Encoding.UTF8) { AutoFlush = true, NewLine = "\r\n" })
                 {
-                    using (WebClient oWeb = new WebClient())
-                    {
-                        oWeb.Encoding = Encoding.UTF8;
-                        oWeb.Headers.Set("Authorization", hash_parameter);
-                        oWeb.Headers.Set("Content-Type", "multipart/form-data; boundary=" + boundary);
-                        oWeb.UploadData(new Uri(URL), "POST", buff);
+                    writer.WriteLine(boundary2);
+                    writer.WriteLine("Content-Disposition: form-data; name=\"status\"");
+                    writer.WriteLine();
+                    writer.WriteLine(e.Argument as string);
 
-                        e.Result = true;
-                    }
+                    writer.WriteLine(boundary2);
+                    writer.WriteLine("Content-Type: application/octet-stream");
+                    writer.WriteLine("Content-Disposition: form-data; name=\"media[]\"; filename=\"img.{0}\"", this.m_extension);
+                    writer.WriteLine();
+                    stream.Write(this.m_rawData, 0, this.m_rawData.Length);
+                    writer.WriteLine();
+
+                    writer.WriteLine(boundary2 + "--");
                 }
-                catch
+
+                using (var res = req.GetResponse())
                 { }
+
+                e.Result = true;
             }
             catch
-            { }
+            {
+            }
         }
 
         private void bgwTweet_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            try
-            {
-                this.ajax.Stop();
-                bool b = (bool)e.Result;
+            this.ajax.Stop();
 
-                if (b)
-                {
-                    this.Close();
-                }
-                else
-                {
-                    this.txtText.Enabled = true;
-                    this.txtText.Focus();
-                }
+            if ((bool)e.Result == false)
+            {
+                this.txtText.Enabled = true;
+                this.txtText.Focus();
             }
-            catch
-            { }
+            else
+            {
+                this.StartNew();
+            }
         }
 
         //////////////////////////////////////////////////////////////////////////
@@ -618,11 +395,12 @@ namespace Quicx
         {
             if (e.Button == MouseButtons.Left)
             {
-                if (!File.Exists(this._tempPath))
-                    File.WriteAllBytes(this._tempPath, this._rawData);
+                var temp = Path.GetTempFileName();
+                temp = Path.ChangeExtension(temp, "." + this.m_extension);
+                File.WriteAllBytes(temp, this.m_rawData);
 
                 DataObject dataObject = new DataObject();
-                dataObject.SetData(DataFormats.FileDrop, new string[] { this._tempPath });
+                dataObject.SetData(DataFormats.FileDrop, new string[] { temp });
 
                 this.picImage.DoDragDrop(dataObject, DragDropEffects.All);
             }

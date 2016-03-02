@@ -48,9 +48,10 @@ namespace Quicx
 
 		private void pic_Paint(object sender, PaintEventArgs e)
 		{
+			RawTrans(e.Graphics, e.ClipRectangle);
+
 			if (this.pic.Width >= this._img.Width && this.pic.Height >= this._img.Height)
 			{
-				RawTrans(e.Graphics, e.ClipRectangle);
 				e.Graphics.DrawImageUnscaledAndClipped(
 					this._img,
 					new Rectangle(
@@ -61,16 +62,34 @@ namespace Quicx
 			}
 			else if (this._viewOriginal)
 			{
+                var rect = e.ClipRectangle;
+                int x, y;
+
+                if (this._img.Width < this.Width)
+                {
+                    rect.X = (rect.Width - this._img.Width) / 2;
+                    x = 0;
+                }
+                else
+                    x = this._location.X;
+
+                if (this._img.Height < this.Height)
+                {
+                    rect.Y = (rect.Height - this._img.Height) / 2;
+                    y = 0;
+                }
+                else
+                    y = this._location.Y;
+
 				e.Graphics.DrawImage(
 					this._img,
-					e.ClipRectangle,
-					new Rectangle(this._location.X, this._location.Y, e.ClipRectangle.Width, e.ClipRectangle.Height),
+					rect,
+					new Rectangle(x, y, e.ClipRectangle.Width, e.ClipRectangle.Height),
 					GraphicsUnit.Pixel
 					);
 			}
 			else
 			{
-				RawTrans(e.Graphics, e.ClipRectangle);
 				e.Graphics.DrawImage(
 					this._img,
 					this.getRectangle(e.ClipRectangle),
@@ -134,6 +153,8 @@ namespace Quicx
 		private void frmPreview_Resize(object sender, EventArgs e)
 		{
 			this.SetLocationMax();
+
+            this.CheckPosition();
 
 			this.pic.Invalidate();
 		}

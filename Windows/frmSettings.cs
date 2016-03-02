@@ -17,13 +17,6 @@ namespace Quicx
             this.checkBox1.Checked = Settings.isTopmost;
             this.checkBox2.Checked = Settings.isReversedCtrl;
             this.checkBox3.Checked = Settings.isUniformityText;
-            this.checkBox4.Checked = Settings.PNGTrans;
-            if (Settings.ImageExt == 0)
-                this.radioButton1.Checked = true;
-            else if (Settings.ImageExt == 1)
-                this.radioButton2.Checked = true;
-            else if (Settings.ImageExt == 2)
-                this.radioButton3.Checked = true;
             this.checkBox5.Checked = Settings.isEnabledShell;
         }
 
@@ -33,10 +26,6 @@ namespace Quicx
             Settings.isTopmost = this.checkBox1.Checked;
             Settings.isReversedCtrl = this.checkBox2.Checked;
             Settings.isUniformityText = this.checkBox3.Checked;
-            Settings.PNGTrans = this.checkBox4.Checked;
-            if (this.radioButton1.Checked) Settings.ImageExt = 0;
-            else if (this.radioButton2.Checked) Settings.ImageExt = 1;
-            else if (this.radioButton3.Checked) Settings.ImageExt = 2;
             if (Settings.isEnabledShell != this.checkBox5.Checked)
             {
                 if (this.checkBox5.Checked)
@@ -51,6 +40,7 @@ namespace Quicx
                     Settings.isEnabledShell = false;
                 }
             }
+            Settings.Save();
             this.Close();
         }
 
@@ -69,12 +59,7 @@ namespace Quicx
 
         private void label1_Click(object sender, EventArgs e)
         {
-            System.Diagnostics.Process.Start("explorer", "\"http://blog.ryuanerin.kr/\"");
-        }
-
-        private void label2_Click(object sender, EventArgs e)
-        {
-            System.Diagnostics.Process.Start("explorer", "\"http://shinku.panty.moe/\"");
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo { UseShellExecute = true, FileName = "\"https://github.com/RyuaNerin/QIT\"" });
         }
 
         private void button3_Click(object sender, EventArgs e)
@@ -83,7 +68,7 @@ namespace Quicx
             Application.Exit();
         }
 
-        private void doTAHT(object sender, EventArgs e)
+        private void btnStasisField_Click(object sender, EventArgs e)
         {
             this.WindowState = FormWindowState.Minimized;
 			Thread.Sleep( 200 );

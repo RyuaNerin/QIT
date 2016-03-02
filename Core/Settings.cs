@@ -14,14 +14,11 @@ namespace Quicx
 		public static string	UToken		= null;
 		public static string	USecret		= null;
 
-		// 0 : Auto
-		// 1 : PNG
-		// 2 : JPEG
-		public static int		ImageExt	= 0;
-		public static bool		PNGTrans	= true;
-
         public static bool isTopmost = false;
         public static bool isReversedCtrl = false;
+        /// <summary>
+        /// 내용통일
+        /// </summary>
         public static bool isUniformityText = false;
         public static bool isEnabledShell = false;
         public static string lastExecutablePath = null;
@@ -59,14 +56,6 @@ namespace Quicx
 									Settings.USecret = Encoding.UTF8.GetString(buff);
 									break;
 
-								case 2:
-									Settings.ImageExt = buff[0];
-									break;
-
-                                case 3:
-                                    Settings.PNGTrans = (buff[0] == 1);
-                                    break;
-
                                 case 4:
                                     Settings.isTopmost = (buff[0] == 1);
                                     break;
@@ -101,8 +90,6 @@ namespace Quicx
 			{
 				Settings.Save(stream, 0, Settings.UToken);
 				Settings.Save(stream, 1, Settings.USecret);
-                Settings.Save(stream, 2, (byte)Settings.ImageExt);
-                Settings.Save(stream, 3, (byte)(Settings.PNGTrans ? 1 : 0));
                 Settings.Save(stream, 4, (byte)(Settings.isTopmost ? 1 : 0));
                 Settings.Save(stream, 5, (byte)(Settings.isReversedCtrl ? 1 : 0));
                 Settings.Save(stream, 6, (byte)(Settings.isUniformityText ? 1 : 0));
