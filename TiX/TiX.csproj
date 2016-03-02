@@ -56,7 +56,7 @@
     <AssemblyOriginatorKeyFile>TiX.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>Quicx.Program</StartupObject>
+    <StartupObject>TiX.Program</StartupObject>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>TiX.ico</ApplicationIcon>
