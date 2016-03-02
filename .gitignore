@@ -44,5 +44,5 @@ Temporary Items
 
 bin/
 obj/
-QIT.v12.suo
 *.suo
+uncommit/
