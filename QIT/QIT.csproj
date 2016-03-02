@@ -50,11 +50,10 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
-    <SignAssembly>false</SignAssembly>
+    <SignAssembly>true</SignAssembly>
   </PropertyGroup>
   <PropertyGroup>
-    <AssemblyOriginatorKeyFile>
-    </AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>QIT.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject>Quicx.Program</StartupObject>
@@ -186,6 +185,7 @@
   <ItemGroup>
     <None Include="app.config" />
     <None Include="LICENSE" />
+    <None Include="QIT.snk" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="qitx.ico" />
