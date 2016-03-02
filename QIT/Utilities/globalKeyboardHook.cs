@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
-namespace Quicx.Utilities
+namespace TiX.Utilities
 {
     public delegate void KeyHookEvent(object sender, KeyHookEventArgs e);
     

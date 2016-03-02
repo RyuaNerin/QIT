@@ -1,4 +1,4 @@
-﻿namespace Quicx
+﻿namespace TiX
 {
 	partial class frmUpload
 	{
@@ -33,7 +33,7 @@
             this.picImage = new System.Windows.Forms.PictureBox();
             this.lblLength = new System.Windows.Forms.Label();
             this.txtText = new System.Windows.Forms.TextBox();
-            this.ajax = new Quicx.AjaxControl();
+            this.ajax = new TiX.AjaxControl();
             this.lblImageSize = new System.Windows.Forms.Label();
             this.bgwResize = new System.ComponentModel.BackgroundWorker();
             ((System.ComponentModel.ISupportInitialize)(this.picImage)).BeginInit();

@@ -4,7 +4,7 @@ using System.IO;
 using System.Threading;
 using System.Windows.Forms;
 
-namespace Quicx
+namespace TiX
 {
     public partial class frmSettings : Form
     {
@@ -78,7 +78,7 @@ namespace Quicx
         {
             this.WindowState = FormWindowState.Minimized;
 			Thread.Sleep( 200 );
-			new Quicx.ScreenCapture.Stasisfield().ShowDialog();
+			new TiX.ScreenCapture.Stasisfield().ShowDialog();
         }
 
     }

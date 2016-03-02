@@ -1,4 +1,4 @@
-﻿namespace Quicx
+﻿namespace TiX
 {
 	partial class frmPreview
 	{

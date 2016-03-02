@@ -3,7 +3,7 @@ using System.IO;
 using System.Text;
 using System.Windows.Forms;
 
-namespace Quicx
+namespace TiX
 {
 	static class Settings
 	{

@@ -2,7 +2,7 @@
 using System.ComponentModel;
 using System.Windows.Forms;
 
-namespace Quicx
+namespace TiX
 {
 	public partial class frmPin : Form
 	{

@@ -4,7 +4,7 @@ using System.IO;
 using System.Threading;
 using System.Windows.Forms;
 
-namespace Quicx
+namespace TiX
 {
 	static class Program
 	{
@@ -55,7 +55,7 @@ namespace Quicx
 					{
 						if ( args[0] == "Stasis" )
 						{
-							Application.Run( new Quicx.ScreenCapture.Stasisfield( ) );
+							Application.Run( new TiX.ScreenCapture.Stasisfield( ) );
 						}
 						else
 						{

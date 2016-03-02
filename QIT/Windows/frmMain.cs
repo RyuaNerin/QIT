@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Windows.Forms;
-using Quicx.Utilities;
+using TiX.Utilities;
 
-namespace Quicx
+namespace TiX
 {
     public partial class frmMain : Form
     {
@@ -180,7 +180,7 @@ namespace Quicx
 			this.Opacity = 0;
 			this.ShowInTaskbar = false;
 			//this.WindowState = FormWindowState.Minimized;
-			using (var stasis = new Quicx.ScreenCapture.Stasisfield( ))
+			using (var stasis = new TiX.ScreenCapture.Stasisfield( ))
                 stasis.ShowDialog( );
 			//this.WindowState = FormWindowState.Normal;
 			this.Opacity = 255;

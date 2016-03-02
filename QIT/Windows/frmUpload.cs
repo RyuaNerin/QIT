@@ -8,10 +8,10 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
-using Quicx.Utilities;
+using TiX.Utilities;
 using Twitter;
 
-namespace Quicx
+namespace TiX
 {
     public partial class frmUpload : Form
     {

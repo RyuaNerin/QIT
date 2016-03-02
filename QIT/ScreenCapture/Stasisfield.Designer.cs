@@ -1,4 +1,4 @@
-﻿namespace Quicx.ScreenCapture
+﻿namespace TiX.ScreenCapture
 {
 	partial class Stasisfield
 	{

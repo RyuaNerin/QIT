@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // 어셈블리의 일반 정보는 다음 특성 집합을 통해 제어됩니다.
 // 어셈블리와 관련된 정보를 수정하려면
 // 이 특성 값을 변경하십시오.
-[assembly: AssemblyTitle("Quicx")]
+[assembly: AssemblyTitle("TiX")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("Quicx")]
-[assembly: AssemblyCopyright("CopyRight (C) 2014, RyuaNerin")]
+[assembly: AssemblyProduct("TiX")]
+[assembly: AssemblyCopyright("CopyRight (C) 2014- RyuaNerin, Sasarino MARi")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text;
 
-namespace Quicx
+namespace TiX
 {
 	public static class Helper
 	{

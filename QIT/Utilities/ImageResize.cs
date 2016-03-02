@@ -5,7 +5,7 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 
-namespace Quicx.Utilities
+namespace TiX.Utilities
 {
     public static class ImageResize
     {

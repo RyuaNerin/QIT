@@ -2,7 +2,7 @@
 using System.Threading;
 using System.Windows.Forms;
 
-namespace Quicx
+namespace TiX
 {
 	internal class AjaxControl : Control
 	{
