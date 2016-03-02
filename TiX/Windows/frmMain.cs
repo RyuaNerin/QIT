@@ -16,9 +16,9 @@ namespace TiX
             this.Text = Program.ProductName;
             this.TopMost = Settings.isTopmost;
             if (Settings.isReversedCtrl)
-                label2.Text = "Ctrl을 눌러 내용 작성";
+                label2.Text = "Ctrl을 눌러 [내용] 작성";
             else
-                label2.Text = "Ctrl을 눌러 바로 작성";
+                label2.Text = "Ctrl을 눌러 [바로] 작성";
 
 
             manager = new GlobalKeyboardHook();
