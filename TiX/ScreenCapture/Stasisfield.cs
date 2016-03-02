@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Drawing.Drawing2D;
 using System.Threading;
 using System.Windows.Forms;
 
@@ -15,26 +16,25 @@ namespace TiX.ScreenCapture
 		/// <returns>작업 성공 여부</returns>
 		public Stasisfield( )
 		{
-			flag = 0;
 			InitializeComponent( );
 
-			this.m_rect = SystemInformation.VirtualScreen;
+			this.m_screenRect = SystemInformation.VirtualScreen;
 
 			// 폼 초기화
-			this.Size = this.m_rect.Size;
+			this.Size = this.m_screenRect.Size;
 
 			// 이미지 캡쳐
-			stasisImage = new Bitmap( this.m_rect.Width, this.m_rect.Height, PixelFormat.Format24bppRgb );
-			using ( Graphics g = Graphics.FromImage( stasisImage ) )
+			m_capture = new Bitmap( this.m_screenRect.Width, this.m_screenRect.Height, PixelFormat.Format24bppRgb );
+			using ( Graphics g = Graphics.FromImage( m_capture ) )
 			{
-				g.CopyFromScreen( this.m_rect.Location, Point.Empty, this.m_rect.Size );
+				g.CopyFromScreen( this.m_screenRect.Location, Point.Empty, this.m_screenRect.Size );
 			}
 
 			// 배경용 이미지 생성.
-			stasisImageBlur = new Bitmap( this.m_rect.Width, this.m_rect.Height, PixelFormat.Format32bppArgb );
-			using ( Graphics g = Graphics.FromImage( stasisImageBlur ) )
+			m_captureBlur = new Bitmap( this.m_screenRect.Width, this.m_screenRect.Height, PixelFormat.Format32bppArgb );
+			using ( Graphics g = Graphics.FromImage( m_captureBlur ) )
 			{
-				g.DrawImageUnscaledAndClipped( stasisImage, new Rectangle( 0, 0, this.m_rect.Width, this.m_rect.Height ) );
+				g.DrawImageUnscaledAndClipped( m_capture, new Rectangle( 0, 0, this.m_screenRect.Width, this.m_screenRect.Height ) );
 
 				// 뿌연 효과 적용
 				using ( Brush b = new SolidBrush( Color.FromArgb( 128, 255, 255, 255 ) ) )
@@ -44,84 +44,87 @@ namespace TiX.ScreenCapture
 			}
 
 			// 폼에 적용
-			this.BackgroundImage = stasisImageBlur;
+			this.BackgroundImage = m_captureBlur;
 
 			// 클릭 좌표 초기화
-			clickedLocation[0] = clickedLocation[1] = EmptyPoint;
+			m_location[0] = m_location[1] = EmptyPoint;
 		}
 
 		public Stasisfield( string TargetUserID, string TargetTweetID ) : this( )
 		{
-			flag = 1;
 			this.TargetTweetID = TargetTweetID;
 			this.TargetUserID = TargetUserID;
 		}
 
-		private Rectangle m_rect;
-		private bool isDone = false;
-		private bool isDrag = false;
-		private Image stasisImageBlur = null; // 정지장이 생성되는 시점의 화면 화상입니다.
-		private Image stasisImage = null; // 정지장이 생성되는 시점의 화면 화상입니다.
-		private Point[] clickedLocation = new Point[2]; // 마우스 다운 및 업 이벤트 발생 좌표
-		private Point EmptyPoint { get { return new Point( -1, -1 ); } }
-		private Pen p = new Pen(Color.Red, 1.0f);
-		private int flag;
-		private string TargetUserID;
-		private string TargetTweetID;
+		private static readonly Point EmptyPoint = new Point(-1, -1); 
+
+		private Rectangle   m_screenRect;
+		private bool        m_done          = false;
+		private bool        m_drag          = false;
+		private Image       m_captureBlur   = null;                     // 정지장이 생성되는 시점의 화면 화상입니다.
+		private Image       m_capture       = null;                     // 정지장이 생성되는 시점의 화면 화상입니다.
+		private Point[]     m_location      = new Point[2];             // 마우스 다운 및 업 이벤트 발생 좌표
+
+		public string TargetUserID  { get; private set; } 
+		public string TargetTweetID { get; private set; } 
+        public Image  CropedImage   { get; private set; }
 
 		private void Stasisfield_FormClosed( object sender, FormClosedEventArgs e )
 		{
-			this.stasisImageBlur.Dispose( );
-			this.stasisImage.Dispose( );
+			this.m_captureBlur.Dispose( );
+			this.m_capture.Dispose( );
 		}
 
 		private void Stasisfield_Shown( object sender, EventArgs e )
 		{
-			this.Location = new Point( this.m_rect.Left, this.m_rect.Top );
+			this.Location = new Point( this.m_screenRect.Left, this.m_screenRect.Top );
 		}
 
-		void Stasisfield_FormClosing( object sender, FormClosingEventArgs e )
+		private void Stasisfield_FormClosing( object sender, FormClosingEventArgs e )
 		{
-			if ( isDone )
+			if ( m_done )
 			{
 				this.Hide( );
 
-				var src = GetSizeFromLocation(clickedLocation[0], clickedLocation[1]);
-				if ( CropAvailable( clickedLocation[0], clickedLocation[1], src ) )
+				var src = GetSizeFromLocation(m_location[0], m_location[1]);
+				if ( CropAvailable( m_location[0], m_location[1], src ) )
 				{
-					var cropedImage = CropImage(stasisImage, src);
-					Post( cropedImage );
+                    this.CropedImage = CropImage(m_capture, src);
 				}
 			}
 		}
 
+
 		#region 마우스 클릭 이벤트
 		private void Stasisfield_MouseMove( object sender, MouseEventArgs e )
 		{
-			if ( isDrag )
+			if ( m_drag )
 			{
-				clickedLocation[1] = e.Location;
+				m_location[1] = e.Location;
 				this.Invalidate( );
-			}
+            }
 		}
 		private void Stasisfield_MouseDown( object sender, MouseEventArgs e )
 		{
-			clickedLocation[0] = e.Location;
-			clickedLocation[1] = EmptyPoint;
-			isDrag = true;
+			m_location[0] = e.Location;
+			m_location[1] = EmptyPoint;
+			m_drag = true;
 		}
 		private void Stasisfield_MouseUp( object sender, MouseEventArgs e )
 		{
-			isDrag = false;
-			isDone = true;
-			this.Close( );
+            if (m_drag)
+            {
+			    m_drag = false;
+			    m_done = true;
+			    this.Close( );
+            }
 		}
 		private void Stasisfield_KeyDown( object sender, KeyEventArgs e )
 		{
 			if ( e.KeyCode == Keys.Escape )
 			{
-				this.isDone = false;
-				this.isDrag = false;
+				this.m_done = false;
+				this.m_drag = false;
 				this.Close( );
 			}
 		}
@@ -129,19 +132,21 @@ namespace TiX.ScreenCapture
 
 		protected override void OnPaint( PaintEventArgs e )
 		{
-			base.OnPaint( e );
+            base.OnPaint(e);
 
-			var src = GetSizeFromLocation(clickedLocation[0], clickedLocation[1]);
-			if ( CropAvailable( clickedLocation[0], clickedLocation[1], src ) )
+			var src = GetSizeFromLocation(m_location[0], m_location[1]);
+
+			if ( CropAvailable( m_location[0], m_location[1], src ) )
 			{
 				// 이미지 밝게 다시 그리기
-				var cropedImage = CropImage(stasisImage, src);
+				var cropedImage = CropImage(m_capture, src);
 				e.Graphics.DrawImage( cropedImage, src );
 
 				// 빨간펜 선생님
-				e.Graphics.DrawRectangle( p, GetSizeFromLocation( clickedLocation[0], clickedLocation[1] ) );
-				// 이 부분은 클릭 좌표 조정을 위해 남겨두었어요. 어딘가 쓸떼가 있지 않을까 해서
-				e.Graphics.DrawString( string.Format( "down at : {0}\tup at : {1}", clickedLocation[0].ToString( ), clickedLocation[1] ), new Font( "맑은 고딕", 13 ), Brushes.Black, Point.Empty );
+				e.Graphics.DrawRectangle(Pens.Red, GetSizeFromLocation( m_location[0], m_location[1] ) );
+
+                e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+				e.Graphics.DrawString(string.Format("{0}x{1} - {2}x{3}", src.Left, src.Top, src.Right, src.Bottom), this.Font, Brushes.Black, Point.Empty);
 			}
 		}
 
@@ -200,23 +205,5 @@ namespace TiX.ScreenCapture
 
 			return cropedImage;
 		}
-
-		/// <summary>
-		/// 이미지를 트윗합니다.
-		/// </summary>
-		/// <param name="image">트윗할 이미지</param>
-		private void Post( Image image )
-		{
-			switch ( flag )
-			{
-				case 1:
-					TweetModerator.Tweet( image, "캡처 화면 전송중", TargetUserID, TargetTweetID );
-					break;
-				default:
-					TweetModerator.Tweet( image, "캡처 화면 전송중" );
-					break;
-			}
-		}
-
 	}
 }

@@ -26,32 +26,33 @@ namespace TiX
 
         //////////////////////////////////////////////////////////////////////////
 
-        private frmUpload()
+        private frmUpload(bool mainWnd)
         {
             InitializeComponent();
 
             this.ajax.Left = this.txtText.Left + this.txtText.Width / 2 - 16;
             this.ajax.Top = this.txtText.Top + this.txtText.Height / 2 - 16;
-        }
-        public frmUpload(IList<DragDropInfo> infos, bool mainWnd = false) : this()
-        {
-            this.m_infos = infos;
 
             this.ShowInTaskbar = mainWnd;
 
+            if (Program.MainWindow != null)
+            {
+                this.Left = Program.MainWindow.Left + (Program.MainWindow.Width  - this.Width)  / 2;
+                this.Top  = Program.MainWindow.Top  + (Program.MainWindow.Height - this.Height) / 2;
+            }
+        }
+        public frmUpload(IList<DragDropInfo> infos, bool mainWnd = false) : this(mainWnd)
+        {
+            this.m_infos = infos;
+            
             this.Text = String.Format("{0} (1 / {1})", Program.ProductName, this.m_infos.Count);
         }
+        public frmUpload(DragDropInfo info, bool mainWnd = false) : this(mainWnd)
         {
+            this.m_infos = new List<DragDropInfo>();
+            this.m_infos.Add(info);
 
-        }
-
-        public void SetPosition(Form frm)
-        {
-            if (frm != null)
-            {
-                this.Left = frm.Left + (frm.Width  - this.Width)  / 2;
-                this.Top  = frm.Top  + (frm.Height - this.Height) / 2;
-            }
+            this.Text = String.Format("{0} (1 / {1})", Program.ProductName, this.m_infos.Count);
         }
 
         public bool AutoStart { get; set; }

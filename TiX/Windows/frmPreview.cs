@@ -171,7 +171,9 @@ namespace TiX
 
 		private void pic_MouseDoubleClick(object sender, MouseEventArgs e)
 		{
-			this._viewOriginal = !this._viewOriginal;
+            this._viewOriginal = !this._viewOriginal;
+            this.SetLocationMax();
+            this.CheckPosition();
 
 			this._location = new Point(0, 0);
 			this.pic.Invalidate();

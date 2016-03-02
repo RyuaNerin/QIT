@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Windows.Forms;
 using TiX.Utilities;
+using System.Threading;
+using System.Drawing;
 
 namespace TiX
 {
@@ -22,8 +24,8 @@ namespace TiX
 
 
             manager = new GlobalKeyboardHook();
-			manager.Down.Add(new HookKey(Keys.C, true, true, false, false));
-            manager.KeyDown += (s, e) => GenerateStasisField();
+			manager.Down.Add(Keys.C | Keys.Control | Keys.Shift);
+            manager.KeyDown += GlobalKeyboardHook_KeyDown;
 
 			this.KeyDown += FrmMain_KeyDown;
         }
@@ -39,6 +41,19 @@ namespace TiX
                 }
 			}
 		}
+
+        private long m_stasis = 0;
+        private void GlobalKeyboardHook_KeyDown(object sender, KeyHookEventArgs e)
+        {
+            this.BeginInvoke(new Action(this.GlobalKeyboardHook_KeyDown));
+        }
+        private void GlobalKeyboardHook_KeyDown()
+        {
+            if (Interlocked.CompareExchange(ref this.m_stasis, 1, 0) == 1) return;
+
+            GenerateStasisField();
+            Interlocked.Exchange(ref this.m_stasis, 0);
+        }
 
         private void pnl_DragOver(object sender, DragEventArgs e)
         {
@@ -125,7 +140,6 @@ namespace TiX
             var frm = new frmUpload(data.List);
             frm.AutoStart = data.AutoStart;
             frm.Show(this);
-            frm.SetPosition(this);
         }
 
         private void pnl_DragEnter(object sender, DragEventArgs e)
@@ -177,20 +191,31 @@ namespace TiX
         }
 
 		private void GenerateStasisField()
-		{
-			this.Opacity = 0;
-			this.ShowInTaskbar = false;
-			//this.WindowState = FormWindowState.Minimized;
-			using (var stasis = new TiX.ScreenCapture.Stasisfield( ))
-                stasis.ShowDialog( );
-			//this.WindowState = FormWindowState.Normal;
-			this.Opacity = 255;
-			this.ShowInTaskbar = true;
-		}
-
-        private void btnStasisField_Click(object sender, EventArgs e)
         {
-			GenerateStasisField( );
-        }
+            this.Opacity = 0;
+			this.ShowInTaskbar = false;
+
+            Image cropedImage;
+            string targetTweetId;
+            string targetUserId;
+			using (var stasis = new TiX.ScreenCapture.Stasisfield( ))
+            {
+                stasis.ShowDialog( );
+                cropedImage   = stasis.CropedImage;
+                targetUserId  = stasis.TargetUserID;
+                targetTweetId = stasis.TargetTweetID;
+            }
+
+			this.ShowInTaskbar = true;
+			this.Opacity = 255;
+
+            using (cropedImage)
+            {
+                if (!string.IsNullOrEmpty(targetUserId) || !string.IsNullOrEmpty(targetTweetId))
+                    TweetModerator.Tweet(cropedImage, "캡처 화면 전송중", targetUserId, targetTweetId);
+                else
+                    TweetModerator.Tweet(cropedImage, "캡처 화면 전송중");
+            }
+		}
     }
 }

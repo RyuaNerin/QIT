@@ -84,6 +84,7 @@ namespace TiX
 		private void bgwAfter_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
 		{
 			this.ajax.Stop();
+            this.DialogResult = DialogResult.OK;
 			this.Close();
 		}
 	}

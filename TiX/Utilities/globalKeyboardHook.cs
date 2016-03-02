@@ -9,68 +9,26 @@ namespace TiX.Utilities
     
     public class KeyHookEventArgs : EventArgs
     {
-        public KeyHookEventArgs(HookKey hookkey)
+        public KeyHookEventArgs(Keys key)
         {
-            this.HookKey = hookkey;
+            this.Keys = key;
         }
-        public bool     Handled  { get; set; }
-        public HookKey  HookKey  { get; private set; }
-    }
-
-    public struct HookKey
-    {
-        public HookKey(Keys key)
-        {
-            this.Key = key;
-            this.Control = this.Shift = this.Alt = this.Window = false;
-        }
-        public HookKey(Keys key, bool control, bool shift, bool alt, bool window)
-        {
-            this.Key = key;
-            this.Control = control;
-            this.Shift = shift;
-            this.Alt = alt;
-            this.Window = window;
-        }
-        public Keys Key;
-        public bool Control;
-        public bool Shift;
-        public bool Alt;
-        public bool Window;
-
-        public override int GetHashCode()
-        {
-            return base.GetHashCode();
-        }
-
-        public override bool Equals(object obj)
-        {
-            return obj is HookKey ? this == (HookKey)obj : false;
-        }
-
-        public static bool operator ==(HookKey a, HookKey b)
-        {
-            return a.Key == b.Key && a.Control == b.Control && a.Shift == b.Shift && a.Alt == b.Alt && a.Window == b.Window;
-        }
-        public static bool operator !=(HookKey a, HookKey b)
-        {
-            return a.Key != b.Key || a.Control != b.Control || a.Shift != b.Shift || a.Alt != b.Alt || a.Window != b.Window;
-        }
+        public bool  Handled  { get; set; }
+        public Keys  Keys     { get; private set; }
     }
 
 	public class GlobalKeyboardHook : IDisposable
 	{
-        private List<HookKey> m_down = new List<HookKey>();
-        public IList<HookKey> Down { get { return this.m_down; } }
+        private List<Keys> m_down = new List<Keys>();
+        public IList<Keys> Down { get { return this.m_down; } }
 
-        private List<HookKey> m_up = new List<HookKey>();
-        public IList<HookKey> Up { get { return this.m_up; } }
+        private List<Keys> m_up = new List<Keys>();
+        public IList<Keys> Up { get { return this.m_up; } }
         
 		IntPtr m_hwnd = IntPtr.Zero;
-        bool m_control = false;
-        bool m_shift = false;
-        bool m_alt = false;
-        bool m_window = false;
+        Keys m_control = Keys.None;
+        Keys m_shift   = Keys.None;
+        Keys m_alt     = Keys.None;
 		
 		public event KeyHookEvent KeyDown;
 		public event KeyHookEvent KeyUp;
@@ -143,43 +101,38 @@ namespace TiX.Utilities
                         case Keys.ControlKey:
                         case Keys.LControlKey:
                         case Keys.RControlKey:
-                            this.m_control = d;
+                            this.m_control = d ? Keys.Control : Keys.None;
                             break;
 
                         case Keys.Shift:
                         case Keys.ShiftKey:
                         case Keys.LShiftKey:
                         case Keys.RShiftKey:
-                            this.m_shift = d;
+                            this.m_shift = d ? Keys.Shift : Keys.None;
                             break;
 
                         case Keys.Alt:
                         case Keys.Menu:
                         case Keys.RMenu:
                         case Keys.LMenu:
-                            this.m_alt = d;
-                            break;
-                                                        
-                        case Keys.LWin:
-                        case Keys.RWin:
-                            this.m_window = d;
+                            this.m_alt = d ? Keys.Alt : Keys.None;
                             break;
                     }
                 }
 
-                var hkey = new HookKey(key, this.m_control, this.m_shift, this.m_alt, this.m_window);
+                key = key | this.m_control | this.m_shift | this.m_alt;
 
-                if (this.KeyUp != null && this.Up.Contains(hkey))
+                if (this.KeyUp != null && this.Up.Contains(key))
                 {
-                    var arg = new KeyHookEventArgs(hkey);
+                    var arg = new KeyHookEventArgs(key);
                     KeyUp.Invoke(this, arg);
                     if (arg.Handled)
                         return new IntPtr(1);
                 }
 
-                if (this.KeyDown != null && this.Down.Contains(hkey))
+                if (this.KeyDown != null && this.Down.Contains(key))
                 {
-                    var arg = new KeyHookEventArgs(hkey);
+                    var arg = new KeyHookEventArgs(key);
                     KeyDown.Invoke(this, arg);
                     if (arg.Handled)
                         return new IntPtr(1);

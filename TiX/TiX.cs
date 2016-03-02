@@ -13,6 +13,8 @@ namespace TiX
 		public static string ProductName = String.Format("Quicx v{0}", Application.ProductVersion);
         public const  string UniqueName = "C0E6D64A-23D2-4676-93F7-F4B9D8CE25DF";
 
+        public static Form MainWindow { get; set; }
+
 		[STAThread]
 		static void Main( string[] args )
 		{
@@ -32,16 +34,13 @@ namespace TiX
                         frm = new frmPin();
                         instance.MainWindow = frm;
                         Application.Run(frm);
+
+                        if (frm.DialogResult != DialogResult.OK)
+                            return;
                     }
                     else
                     {
-                        if (args.Length == 0)
-                        {
-                            frm = new frmMain();
-                            instance.MainWindow = frm;
-                            Application.Run(frm);
-                        }
-                        else
+                        if (args.Length > 0)
                         {
                             if (args[0] == "stasis")
                             {
@@ -64,8 +63,15 @@ namespace TiX
                                 instance.MainWindow = frm;
                                 Application.Run(frm);
                             }
+
+                            return;
                         }
                     }
+
+                    frm = new frmMain();
+                    instance.MainWindow = frm;
+                    Program.MainWindow = frm;
+                    Application.Run(frm);
                 }
             }
 		}
