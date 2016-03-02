@@ -79,6 +79,7 @@ namespace TiX
             this.WindowState = FormWindowState.Minimized;
 			Thread.Sleep( 200 );
 			new TiX.ScreenCapture.Stasisfield().ShowDialog();
+			this.WindowState = FormWindowState.Normal;
         }
 
     }

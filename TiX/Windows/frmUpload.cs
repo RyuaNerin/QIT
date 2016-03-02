@@ -22,6 +22,7 @@ namespace TiX
         private Image m_image;
         private Image m_imageThumbnail;
         private byte[] m_rawData;
+		internal string MentionTo;
 
         //////////////////////////////////////////////////////////////////////////
 
@@ -40,12 +41,8 @@ namespace TiX
 
             this.Text = String.Format("{0} (1 / {1})", Program.ProductName, this.m_infos.Count);
         }
-        public frmUpload(DragDropInfo info) : this()
         {
-            this.m_infos = new List<DragDropInfo>();
-            this.m_infos.Add(info);
 
-            this.Text = String.Format("{0} (1 / 1)", Program.ProductName);
         }
 
         public void SetPosition(Form frm)
