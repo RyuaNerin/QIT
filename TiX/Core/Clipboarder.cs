@@ -12,8 +12,9 @@ namespace TiX
                 return Clipboard.GetImage();
             }
             catch
-            { }
-            return null;
+            { 
+				return null;
+			}
 		}
 	}
 }

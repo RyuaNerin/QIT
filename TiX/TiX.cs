@@ -43,9 +43,16 @@ namespace TiX
 					}
 					else
 					{
-						if ( args[0] == "Stasis" )
+						if ( args.Length == 1 )
 						{
 							Application.Run( new TiX.ScreenCapture.Stasisfield( ) );
+						}
+						else if ( args.Length == 3 )
+						{
+							var targetuserid = args[1];
+							var targettweetid = args[2];
+
+							Application.Run( new TiX.ScreenCapture.Stasisfield( targetuserid, targettweetid ));
 						}
 						else
 						{
