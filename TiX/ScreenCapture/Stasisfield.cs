@@ -15,6 +15,7 @@ namespace TiX.ScreenCapture
 		/// <returns>작업 성공 여부</returns>
 		public Stasisfield( )
 		{
+			flag = 0;
 			InitializeComponent( );
 
 			this.m_rect = SystemInformation.VirtualScreen;
@@ -44,18 +45,18 @@ namespace TiX.ScreenCapture
 
 			// 폼에 적용
 			this.BackgroundImage = stasisImageBlur;
-			
+
 			// 클릭 좌표 초기화
 			clickedLocation[0] = clickedLocation[1] = EmptyPoint;
 		}
 
-
-		public Stasisfield( string TargetUserID, string TargetTweetID ) : this()
+		public Stasisfield( string TargetUserID, string TargetTweetID ) : this( )
 		{
+			flag = 1;
 			this.TargetTweetID = TargetTweetID;
 			this.TargetUserID = TargetUserID;
 		}
-		
+
 		private Rectangle m_rect;
 		private bool isDone = false;
 		private bool isDrag = false;
@@ -64,6 +65,7 @@ namespace TiX.ScreenCapture
 		private Point[] clickedLocation = new Point[2]; // 마우스 다운 및 업 이벤트 발생 좌표
 		private Point EmptyPoint { get { return new Point( -1, -1 ); } }
 		private Pen p = new Pen(Color.Red, 1.0f);
+		private int flag;
 		private string TargetUserID;
 		private string TargetTweetID;
 
@@ -205,7 +207,15 @@ namespace TiX.ScreenCapture
 		/// <param name="image">트윗할 이미지</param>
 		private void Post( Image image )
 		{
-			TweetModerator.Tweet( image, "캡처 화면 전송중", TargetTweetID, TargetUserID );
+			switch ( flag )
+			{
+				case 1:
+					TweetModerator.Tweet( image, "캡처 화면 전송중", TargetUserID, TargetTweetID );
+					break;
+				default:
+					TweetModerator.Tweet( image, "캡처 화면 전송중" );
+					break;
+			}
 		}
 
 	}

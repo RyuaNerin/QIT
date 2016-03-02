@@ -12,7 +12,7 @@ namespace TiX
 
 		[STAThread]
 		static void Main( string[] args )
-		{
+		{			
 			const string mtxName = "Quicx_Twitter";
 			Mutex mtx = new Mutex(true, mtxName);
 
@@ -24,8 +24,7 @@ namespace TiX
                 // QIT
                 Settings.CKey = "lQJwJWJoFlbvr2UQnDbg";
                 Settings.CSecret = "DsuIRA1Ak9mmSCGl9wnNvjhmWJTmb9vZlRdQ7sMqXww";
-
-
+				
 				Twitter.TwitterAPI11.consumerToken = Settings.CKey;
 				Twitter.TwitterAPI11.consumerSecret = Settings.CSecret;
 
@@ -62,7 +61,7 @@ namespace TiX
 							var targetuserid = args[1];
 							var targettweetid = args[2];
 
-							var frm = new TiX.ScreenCapture.Stasisfield( targetuserid, targettweetid );
+							Application.Run( new TiX.ScreenCapture.Stasisfield( targetuserid, targettweetid ));
 						}
 						else
 						{
