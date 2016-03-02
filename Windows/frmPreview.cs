@@ -84,7 +84,7 @@ namespace Quicx
 				e.Graphics.DrawImage(
 					this._img,
 					rect,
-					new Rectangle(x, y, e.ClipRectangle.Width, e.ClipRectangle.Height),
+					new Rectangle(x, y, rect.Width, rect.Height),
 					GraphicsUnit.Pixel
 					);
 			}

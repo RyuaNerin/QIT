@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
 using System.Threading;
 using System.Windows.Forms;
 
@@ -7,30 +8,35 @@ namespace Quicx
 {
     public partial class frmSettings : Form
     {
+        private bool m_shellExists;
+
         public frmSettings()
         {
             InitializeComponent();
         }
         private void frmSettings_Load(object sender, EventArgs e)
         {
-            this.TopMost = Settings.isTopmost;
-            this.checkBox1.Checked = Settings.isTopmost;
-            this.checkBox2.Checked = Settings.isReversedCtrl;
-            this.checkBox3.Checked = Settings.isUniformityText;
-            this.checkBox5.Checked = Settings.isEnabledShell;
-        }
+            this.m_shellExists = File.Exists("QuicxRegEditor.exe");
+            this.chkEnableShell.Enabled = this.m_shellExists;
 
+            this.TopMost = Settings.isTopmost;
+            this.chkTopMost.Checked = Settings.isTopmost;
+            this.chkReversedCtrl.Checked = Settings.isReversedCtrl;
+            this.ctlUniformity.Checked = Settings.isUniformityText;
+            this.chkEnableShell.Checked = Settings.isEnabledShell;
+        }
 
         private void button2_Click(object sender, EventArgs e)
         {
-            Settings.isTopmost = this.checkBox1.Checked;
-            Settings.isReversedCtrl = this.checkBox2.Checked;
-            Settings.isUniformityText = this.checkBox3.Checked;
-            if (Settings.isEnabledShell != this.checkBox5.Checked)
+            Settings.isTopmost = this.chkTopMost.Checked;
+            Settings.isReversedCtrl = this.chkReversedCtrl.Checked;
+            Settings.isUniformityText = this.ctlUniformity.Checked;
+
+            if (this.m_shellExists && Settings.isEnabledShell != this.chkEnableShell.Checked)
             {
-                if (this.checkBox5.Checked)
+                if (this.chkEnableShell.Checked)
                 {
-                    MessageBox.Show("Quicx를 삭제하기 전에 본 옵션의 체크를 해제하십시오.", "경고");
+                    MessageBox.Show(this, "Quicx를 삭제하기 전에 본 옵션의 체크를 해제하십시오.", "경고", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     LaunchQuicxRegEditor(true);
                     Settings.isEnabledShell = true;
                 }

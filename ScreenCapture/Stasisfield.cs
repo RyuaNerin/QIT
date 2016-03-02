@@ -23,16 +23,18 @@ namespace Quicx.ScreenCapture
             this.Size = this.m_rect.Size;
 
             // 이미지 캡쳐
-            stasisImage = new Bitmap(this.m_rect.Width, this.m_rect.Height, PixelFormat.Format32bppArgb);
+            stasisImage = new Bitmap(this.m_rect.Width, this.m_rect.Height, PixelFormat.Format24bppRgb);
             using (Graphics g = Graphics.FromImage(stasisImage))
             {
                 g.CopyFromScreen(this.m_rect.Location, Point.Empty, this.m_rect.Size);
             }
 
             // 배경용 이미지 생성.
-            stasisImageBlur = new Bitmap(stasisImage);
+            stasisImageBlur = new Bitmap(this.m_rect.Width, this.m_rect.Height, PixelFormat.Format32bppArgb);
             using (Graphics g = Graphics.FromImage(stasisImageBlur))
             {
+                g.DrawImageUnscaledAndClipped(stasisImage, new Rectangle(0, 0, this.m_rect.Width, this.m_rect.Height));
+
                 // 뿌연 효과 적용
                 using (Brush b = new SolidBrush(Color.FromArgb(128, 255, 255, 255)))
                 {
