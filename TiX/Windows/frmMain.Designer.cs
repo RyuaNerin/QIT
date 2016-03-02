@@ -48,7 +48,7 @@
 			this.pnl.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.pnl.Location = new System.Drawing.Point(0, 0);
 			this.pnl.Name = "pnl";
-			this.pnl.Size = new System.Drawing.Size(224, 125);
+			this.pnl.Size = new System.Drawing.Size(224, 118);
 			this.pnl.TabIndex = 0;
 			this.pnl.DragDrop += new System.Windows.Forms.DragEventHandler(this.pnl_DragDrop);
 			this.pnl.DragEnter += new System.Windows.Forms.DragEventHandler(this.pnl_DragEnter);
@@ -105,7 +105,7 @@
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 12F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(224, 125);
+			this.ClientSize = new System.Drawing.Size(224, 118);
 			this.Controls.Add(this.pnl);
 			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
 			this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
