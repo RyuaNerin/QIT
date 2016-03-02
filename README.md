@@ -5,13 +5,14 @@
 - [륜](https://ryuanerin.kr/)과 [사긔](http://usagination.com)가 (사긔가 ((륜이 만든 QIT) 를 포크해서 만든 QITx) 를 개조한 Quicx) 를 QIT 와 통합해서 TiX 를 만들었습니다!
 
 #사용법
+
 - 최초 실행 시  AOuth인증을 진행합니다.
 
  - 브라우저를 통해 어플리케이션 승인 후 PIN코드를 어플리케이션에 입력해주십시오
 
 - 탐색기 혹은 브라우저에서 이미지를 QITx로 드래그하거나
 
-- 설정에서 윈도우 쉘 확장을 활성화한 후 이미지 파일을 우클릭하여 나오는 메뉴에서 'QITx로 트윗하기' 선택
+- 설정에서 **윈도우 쉘 확장**을 활성화한 후 이미지 파일을 우클릭하여 나오는 메뉴에서 'QITx로 트윗하기' 선택
 
 - QITx에서 추가된 기능들
 
@@ -23,4 +24,10 @@
 
 - TiX 에서 추가된 점
 
- - 술먹고 코딩해서 잘 모르겠습니다
+ - 그냥 이것저것 편의성들
+
+# LICENSE
+
+- [MIT LICENSE](LICENSE.txt)
+
+- [TiXShell : MS-LPL](https://code.msdn.microsoft.com/windowsapps/CppShellExtContextMenuHandl-410a709a)

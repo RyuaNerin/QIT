@@ -2,128 +2,98 @@
 using System.IO;
 using System.Text;
 using System.Windows.Forms;
+using System.Reflection;
+using System.Linq;
+using System.Runtime.InteropServices;
 
 namespace TiX
 {
-	static class Settings
+	public static class Settings
 	{
-		public static string	FilePath	= Path.Combine(Application.StartupPath, "Quicx.info");
+        private class Attr : Attribute
+        { }
 
-		public static string	CKey		= null;
-		public static string	CSecret		= null;
-		public static string	UToken		= null;
-		public static string	USecret		= null;
+		public static string	FilePath	= Path.Combine(Application.StartupPath, "TiX.ini");
+        
+		public const  string    CKey	= "lQJwJWJoFlbvr2UQnDbg";
+		public const  string    CSecret	= "DsuIRA1Ak9mmSCGl9wnNvjhmWJTmb9vZlRdQ7sMqXww";
 
-        public static bool isTopmost = false;
-        public static bool isReversedCtrl = false;
-        /// <summary>
-        /// 내용통일
-        /// </summary>
-        public static bool isUniformityText = false;
-        public static bool isEnabledShell = false;
-        public static string lastExecutablePath = null;
+        [Attr] public static string UToken              { get; set; }
+        [Attr] public static string	USecret             { get; set; }
+        [Attr] public static bool   Topmost             { get; set; }
+        [Attr] public static bool   ReversedCtrl        { get; set; }
+        [Attr] public static bool   UniformityText      { get; set; }
+        [Attr] public static bool   EnabledShell        { get; set; }
+        [Attr] public static string lastExecutablePath  { get; set; }
+
+        public readonly static PropertyInfo[] m_properties;
+        static Settings()
+        {
+            Twitter.TwitterAPI11.consumerToken  = Settings.CKey;
+            Twitter.TwitterAPI11.consumerSecret = Settings.CSecret;
+
+            Settings.m_properties = typeof(Settings).GetProperties().Where(e => e.GetCustomAttributes(false).Any(ee => ee is Attr)).ToArray();
+        }
 
 		public static void Load()
 		{
 			if (!File.Exists(Settings.FilePath))
 				return;
-			int		key;
-			int		len;
-			byte[]	buff;
 
-			try
-			{
-				using (Stream stream = new FileStream(Settings.FilePath, FileMode.Open, FileAccess.Read))
-				{
-					while (stream.Position < stream.Length)
-					{
-						key = stream.ReadByte();
-						len = stream.ReadByte() << 8 | stream.ReadByte();
-
-						if (len > 0)
-						{
-							buff = new byte[len];
-
-							stream.Read(buff, 0, len);
-
-							switch (key)
-							{
-								case 0:
-									Settings.UToken = Encoding.UTF8.GetString(buff);
-									break;
-
-								case 1:
-									Settings.USecret = Encoding.UTF8.GetString(buff);
-									break;
-
-                                case 4:
-                                    Settings.isTopmost = (buff[0] == 1);
-                                    break;
-
-                                case 5:
-                                    Settings.isReversedCtrl = (buff[0] == 1);
-                                    break;
-
-                                case 6:
-                                    Settings.isUniformityText = (buff[0] == 1);
-                                    break;
-
-                                case 7:
-                                    Settings.isEnabledShell = (buff[0] == 1);
-                                    break;
-
-                                case 8:
-                                    Settings.lastExecutablePath = Encoding.UTF8.GetString(buff);
-                                    break;
-							}
-						}
-					}
-				}
-			}
-			catch
-			{ }
+            string str;
+            foreach (var prop in m_properties)
+            {
+                str = NativeMethods.Get(FilePath, "TiX", prop.Name);
+                if (!string.IsNullOrEmpty(str))
+                    prop.SetValue(null, Str2Obj(str, prop.PropertyType), null);
+            }
 		}
 
 		public static void Save()
-		{
-			using (Stream stream = new FileStream(Settings.FilePath, FileMode.Create, FileAccess.Write))
-			{
-				Settings.Save(stream, 0, Settings.UToken);
-				Settings.Save(stream, 1, Settings.USecret);
-                Settings.Save(stream, 4, (byte)(Settings.isTopmost ? 1 : 0));
-                Settings.Save(stream, 5, (byte)(Settings.isReversedCtrl ? 1 : 0));
-                Settings.Save(stream, 6, (byte)(Settings.isUniformityText ? 1 : 0));
-                Settings.Save(stream, 7, (byte)(Settings.isEnabledShell ? 1 : 0));
-                Settings.Save(stream, 8, Settings.lastExecutablePath);
-			}
-		}
-		private static void Save(Stream stream, int key, string str)
-		{
-			if (!String.IsNullOrEmpty(str))
-			{
-				byte[] buff = Encoding.UTF8.GetBytes(str);
-				Settings.Save(stream, key, buff.Length, buff);
-			}
-			else
-			{
-				Settings.Save(stream, key, 0, null);
-			}
-		}
-		private static void Save(Stream stream, int key, byte buff)
-		{
-			Settings.Save(stream, key, 1, new byte[] { buff });
-		}
-		private static void Save(Stream stream, int key, int len, byte[] buff)
-		{
-			byte len0 = (byte)((len >> 8) & 0xFF);
-			byte len1 = (byte)((len >> 0) & 0xFF);
+        {
+            string val;
+            foreach (var prop in m_properties)
+            {
+                val = Obj2Str(prop.GetValue(null, null));
 
-			stream.WriteByte((byte)key);
-			stream.WriteByte(len0);
-			stream.WriteByte(len1);
-
-			if (buff != null && buff.Length > 0)
-				stream.Write(buff, 0, buff.Length);
+                if (val != null)
+                    NativeMethods.Set(FilePath, "TiX", prop.Name, val);
+            }
 		}
+
+        public static object Str2Obj(string val, Type toType)
+        {
+            if (toType == typeof(string)) return val;
+            if (toType == typeof(bool))   return val == "1";
+            return null;
+        }
+        public static string Obj2Str(object val)
+        {
+            if (val is string) return val as string;
+            if (val is bool)   return (bool)val ? "1" : "0";
+            return null;
+        }
+
+        private class NativeMethods
+        {
+            [DllImport("kernel32.dll", CharSet=CharSet.Unicode)]
+            private static extern uint GetPrivateProfileString(string lpAppName, string lpKeyName, string lpDefault, StringBuilder lpReturnedString, uint nSize, string lpFileName);
+
+            public static string Get(string path, string section, string key)
+            {
+                var sb = new StringBuilder(64);
+                GetPrivateProfileString(section, key, null, sb, 64, path);
+
+                return sb.ToString();
+            }
+
+            [DllImport("kernel32.dll", CharSet=CharSet.Unicode, SetLastError=true)]
+            [return: MarshalAs(UnmanagedType.Bool)]
+            private static extern bool WritePrivateProfileString(string lpAppName, string lpKeyName, string lpString, string lpFileName);
+            public static void Set(string path, string section, string key, string value)
+            {
+                WritePrivateProfileString(section, key, value, path);
+            }
+        }
 	}
 }

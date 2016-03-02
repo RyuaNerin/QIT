@@ -14,8 +14,8 @@ namespace TiX
             InitializeComponent();
 
             this.Text = Program.ProductName;
-            this.TopMost = Settings.isTopmost;
-            if (Settings.isReversedCtrl)
+            this.TopMost = Settings.Topmost;
+            if (Settings.ReversedCtrl)
                 label2.Text = "Ctrl을 눌러 내용 작성";
             else
                 label2.Text = "Ctrl을 눌러 바로 작성";
@@ -125,6 +125,7 @@ namespace TiX
             var frm = new frmUpload(data.List);
             frm.AutoStart = data.AutoStart;
             frm.Show(this);
+            frm.SetPosition(this);
         }
 
         private void pnl_DragEnter(object sender, DragEventArgs e)
@@ -167,8 +168,8 @@ namespace TiX
                 using (var frm = new frmSettings())
                     frm.ShowDialog();
 
-                this.TopMost = Settings.isTopmost;
-                if (Settings.isReversedCtrl)
+                this.TopMost = Settings.Topmost;
+                if (Settings.ReversedCtrl)
                     label2.Text = "Ctrl을 눌러 [내용] 작성";
                 else
                     label2.Text = "Ctrl을 눌러 [바로] 작성";

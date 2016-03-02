@@ -66,12 +66,17 @@ namespace TiX
 
 		private void bgwAfter_DoWork(object sender, DoWorkEventArgs e)
 		{
+            string token, secret;
+
 			Twitter.TwitterAPI11.OAuth.access_token(
 				this.t,
 				this.s,
 				(string)e.Argument,
-				out Settings.UToken,
-				out Settings.USecret);
+				out token,
+				out secret);
+
+            Settings.UToken  = token;
+            Settings.USecret = secret;
 
 			Settings.Save();
 		}

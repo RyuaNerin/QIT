@@ -19,31 +19,31 @@ namespace TiX
             this.m_shellExists = File.Exists("QuicxRegEditor.exe");
             this.chkEnableShell.Enabled = this.m_shellExists;
 
-            this.TopMost = Settings.isTopmost;
-            this.chkTopMost.Checked = Settings.isTopmost;
-            this.chkReversedCtrl.Checked = Settings.isReversedCtrl;
-            this.ctlUniformity.Checked = Settings.isUniformityText;
-            this.chkEnableShell.Checked = Settings.isEnabledShell;
+            this.TopMost = Settings.Topmost;
+            this.chkTopMost.Checked = Settings.Topmost;
+            this.chkReversedCtrl.Checked = Settings.ReversedCtrl;
+            this.ctlUniformity.Checked = Settings.UniformityText;
+            this.chkEnableShell.Checked = Settings.EnabledShell;
         }
 
         private void button2_Click(object sender, EventArgs e)
         {
-            Settings.isTopmost = this.chkTopMost.Checked;
-            Settings.isReversedCtrl = this.chkReversedCtrl.Checked;
-            Settings.isUniformityText = this.ctlUniformity.Checked;
+            Settings.Topmost = this.chkTopMost.Checked;
+            Settings.ReversedCtrl = this.chkReversedCtrl.Checked;
+            Settings.UniformityText = this.ctlUniformity.Checked;
 
-            if (this.m_shellExists && Settings.isEnabledShell != this.chkEnableShell.Checked)
+            if (this.m_shellExists && Settings.EnabledShell != this.chkEnableShell.Checked)
             {
                 if (this.chkEnableShell.Checked)
                 {
                     MessageBox.Show(this, "Quicx를 삭제하기 전에 본 옵션의 체크를 해제하십시오.", "경고", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     LaunchQuicxRegEditor(true);
-                    Settings.isEnabledShell = true;
+                    Settings.EnabledShell = true;
                 }
                 else
                 {
                     LaunchQuicxRegEditor(false);
-                    Settings.isEnabledShell = false;
+                    Settings.EnabledShell = false;
                 }
             }
             Settings.Save();

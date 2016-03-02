@@ -65,7 +65,7 @@ namespace TiX
                 var rect = e.ClipRectangle;
                 int x, y;
 
-                if (this._img.Width < this.Width)
+                if (this._img.Width < this.pic.Width)
                 {
                     rect.X = (rect.Width - this._img.Width) / 2;
                     x = 0;
@@ -73,7 +73,7 @@ namespace TiX
                 else
                     x = this._location.X;
 
-                if (this._img.Height < this.Height)
+                if (this._img.Height < this.pic.Height)
                 {
                     rect.Y = (rect.Height - this._img.Height) / 2;
                     y = 0;

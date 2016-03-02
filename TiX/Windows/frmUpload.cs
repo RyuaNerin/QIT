@@ -32,9 +32,11 @@ namespace TiX
             this.ajax.Left = this.txtText.Left + this.txtText.Width / 2 - 16;
             this.ajax.Top = this.txtText.Top + this.txtText.Height / 2 - 16;
         }
-        public frmUpload(IList<DragDropInfo> infos) : this()
+        public frmUpload(IList<DragDropInfo> infos, bool mainWnd = false) : this()
         {
             this.m_infos = infos;
+
+            this.ShowInTaskbar = mainWnd;
 
             this.Text = String.Format("{0} (1 / {1})", Program.ProductName, this.m_infos.Count);
         }
@@ -44,6 +46,15 @@ namespace TiX
             this.m_infos.Add(info);
 
             this.Text = String.Format("{0} (1 / 1)", Program.ProductName);
+        }
+
+        public void SetPosition(Form frm)
+        {
+            if (frm != null)
+            {
+                this.Left = frm.Left + (frm.Width  - this.Width)  / 2;
+                this.Top  = frm.Top  + (frm.Height - this.Height) / 2;
+            }
         }
 
         public bool AutoStart { get; set; }
@@ -131,14 +142,14 @@ namespace TiX
                         this.m_image.Height,
                         this.m_ratio);
 
-                if (this.AutoStart && (!Settings.isUniformityText || this.m_index > 0))
+                if (this.AutoStart && (!Settings.UniformityText || this.m_index > 0))
                 {
                     // 자동 트윗이거나,
                     // 내용 통일이 아니거나,
                     // 내용 통일이고 index 가 0 이 아닐때 자동트윗
                     this.Tweet();
                 }
-                else if (Settings.isUniformityText && this.m_index > 0)
+                else if (Settings.UniformityText && this.m_index > 0)
                     this.Tweet();
 
                 this.txtText.Focus();
