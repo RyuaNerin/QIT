@@ -85,6 +85,7 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="ShellExtension.cs" />
+    <Compile Include="SimplePSD\NativeMethods.cs" />
     <Compile Include="Utilities\globalKeyboardHook.cs" />
     <Compile Include="Utilities\ImageResize.cs" />
     <Compile Include="Utilities\InstanceHelper.cs" />
@@ -140,7 +141,6 @@
     <Compile Include="SimplePSD\PSDImageResource.cs" />
     <Compile Include="SimplePSD\PSDResolutionInfo.cs" />
     <Compile Include="SimplePSD\PSDThumbNail.cs" />
-    <Compile Include="SimplePSD\WinInvoke32.cs" />
     <Compile Include="Core\HttpCommunicator\twitterApi.cs" />
     <Compile Include="Core\HttpCommunicator\twitterApi11.cs" />
     <EmbeddedResource Include="Windows\frmMain.resx">

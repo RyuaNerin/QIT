@@ -65,6 +65,14 @@ namespace TiX.Windows
                 this.Left = frmMain.Instance.Left + (frmMain.Instance.Width  - this.Width)  / 2;
                 this.Top  = frmMain.Instance.Top  + (frmMain.Instance.Height - this.Height) / 2;
             }
+            else
+            {
+                var screen = Screen.FromHandle(this.Handle).Bounds;
+
+                this.Left = screen.Left + (screen.Width  - this.Width)  / 2;
+                this.Top  = screen.Top  + (screen.Height - this.Height) / 2;
+            }
+
 
             StartNew();
         }

@@ -1,18 +1,16 @@
+// http://www.codeproject.com/csharp/simplepsd.asp
+
 using System;
-using System.IO;
-using System.Text;
 using System.Drawing;
-using System.Drawing.Imaging;
-using System.Windows.Forms;
+using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 
 namespace SimplePsd
 {
 	/// <summary>
 	/// Main class is for opening Adobe Photoshop files
 	/// </summary>
-	public class CPSD
+	public sealed class CPSD : IDisposable
 	{
 
 		private PSDHeaderInfo       m_HeaderInfo;
@@ -45,14 +43,31 @@ namespace SimplePsd
 		}
 
 		~CPSD()
-		{
-			try
-			{
-				Marshal.FreeHGlobal(this.m_hBitmap);
-			}
-			catch
-			{ }
+        {
+            this.Dispose(false);
 		}
+
+        private bool m_disposed;
+        public void Dispose()
+        {
+            this.Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+        private void Dispose(bool disposing)
+        {
+            if (this.m_disposed) return;
+            this.m_disposed = true;
+
+            if (disposing)
+            {
+                try
+                {
+                    NativeMethods.DeleteObject(this.m_hBitmap);
+                }
+                catch
+                { }
+            }
+        }
 		
 		public void Load(string strPathName)
 		{
@@ -556,49 +571,49 @@ namespace SimplePsd
 
 		private void CreateDIBSection(int cx, int cy, int ppm_x, int ppm_y, short BitCount)
 		{
-			IntPtr hDC = WinInvoke32.GetDC(IntPtr.Zero);
+			IntPtr hDC = NativeMethods.GetDC(IntPtr.Zero);
 		
 			if(hDC.Equals(IntPtr.Zero)) return;
 
 			IntPtr pvBits = IntPtr.Zero;
-			BITMAPINFO BitmapInfo = new BITMAPINFO();
-			BitmapInfo.bmiHeader = new BITMAPINFOHEADER();
+			NativeMethods.BITMAPINFO BitmapInfo = new NativeMethods.BITMAPINFO();
+			BitmapInfo.bmiHeader = new NativeMethods.BITMAPINFOHEADER();
 
 			BitmapInfo.bmiHeader.biSize               = 40;
 			BitmapInfo.bmiHeader.biWidth              = cx;
 			BitmapInfo.bmiHeader.biHeight             = cy;
 			BitmapInfo.bmiHeader.biPlanes             = 1;
 			BitmapInfo.bmiHeader.biBitCount           = BitCount;
-			BitmapInfo.bmiHeader.biCompression        = WinInvoke32.BI_RGB;
+			BitmapInfo.bmiHeader.biCompression        = NativeMethods.BI_RGB;
 			BitmapInfo.bmiHeader.biSizeImage          = 0;
 			BitmapInfo.bmiHeader.biXPelsPerMeter      = ppm_x; 
 			BitmapInfo.bmiHeader.biYPelsPerMeter      = ppm_y;
 			BitmapInfo.bmiHeader.biClrImportant       = 0;
 			BitmapInfo.bmiHeader.biClrUsed            = 0;
 
-			this.m_hBitmap = WinInvoke32.CreateDIBSection(hDC, ref BitmapInfo, 0, pvBits, IntPtr.Zero, 0);
+			this.m_hBitmap = NativeMethods.CreateDIBSection(hDC, ref BitmapInfo, 0, pvBits, IntPtr.Zero, 0);
 
 			if(this.m_hBitmap.Equals(IntPtr.Zero))  
 			{
-				WinInvoke32.ReleaseDC(IntPtr.Zero, hDC);
+				NativeMethods.ReleaseDC(IntPtr.Zero, hDC);
 				return;
 			}
 			else
 			{
-				IntPtr hdcMemory = WinInvoke32.CreateCompatibleDC(hDC);
-				IntPtr hbmpOld = WinInvoke32.SelectObject( hdcMemory, this.m_hBitmap );
-				RECT rc;
+				IntPtr hdcMemory = NativeMethods.CreateCompatibleDC(hDC);
+				IntPtr hbmpOld = NativeMethods.SelectObject( hdcMemory, this.m_hBitmap );
+				NativeMethods.RECT rc;
 	
 				rc.left = rc.top = 0;
 				rc.right = cx;
 				rc.bottom = cy;
-				IntPtr hBrush = WinInvoke32.GetStockObject(WinInvoke32.WHITE_BRUSH);
-				WinInvoke32.FillRect(hdcMemory, ref rc, hBrush);
-				WinInvoke32.SelectObject(hdcMemory, hbmpOld);
-				WinInvoke32.DeleteDC(hdcMemory);
+				IntPtr hBrush = NativeMethods.GetStockObject(NativeMethods.WHITE_BRUSH);
+				NativeMethods.FillRect(hdcMemory, ref rc, hBrush);
+				NativeMethods.SelectObject(hdcMemory, hbmpOld);
+				NativeMethods.DeleteDC(hdcMemory);
 			}
 
-			WinInvoke32.ReleaseDC(IntPtr.Zero, hDC);
+			NativeMethods.ReleaseDC(IntPtr.Zero, hDC);
 		}
 
 		private void ProccessBuffer(byte[] pData)
@@ -620,8 +635,8 @@ namespace SimplePsd
 				case 8:		// Duotone
 					#region
 					{
-						hdcMemory = WinInvoke32.CreateCompatibleDC(IntPtr.Zero);
-						hbmpOld = WinInvoke32.SelectObject(hdcMemory, hBitmap);
+						hdcMemory = NativeMethods.CreateCompatibleDC(IntPtr.Zero);
+						hbmpOld = NativeMethods.SelectObject(hdcMemory, hBitmap);
 
 						int nCounter = 0;
 						int nValue = 0;
@@ -647,13 +662,13 @@ namespace SimplePsd
 								else if(nValue < 0) nValue = 0;
 
 								nColor = ColorTranslator.ToWin32(Color.FromArgb(nValue, nValue, nValue));
-								WinInvoke32.SetPixel(hdcMemory, nCol, nRow, nColor);
+								NativeMethods.SetPixel(hdcMemory, nCol, nRow, nColor);
 							
 								nCounter += bytesPerPixelPerChannel;
 							}
 						}
-						WinInvoke32.SelectObject(hdcMemory, hbmpOld);
-						WinInvoke32.DeleteDC(hdcMemory);
+						NativeMethods.SelectObject(hdcMemory, hbmpOld);
+						NativeMethods.DeleteDC(hdcMemory);
 					}
 					#endregion
 					break;
@@ -661,8 +676,8 @@ namespace SimplePsd
 				case 2: // Indexed
 					#region
 					{
-						hdcMemory = WinInvoke32.CreateCompatibleDC(IntPtr.Zero);
-						hbmpOld = WinInvoke32.SelectObject(hdcMemory, hBitmap);
+						hdcMemory = NativeMethods.CreateCompatibleDC(IntPtr.Zero);
+						hbmpOld = NativeMethods.SelectObject(hdcMemory, hBitmap);
 						// pData holds the indices of loop through the palette and set the correct RGB
 						// 8bpp are supported
 						if(this.m_ColorModeData.nLength==768 && this.m_nColourCount>0)
@@ -683,7 +698,7 @@ namespace SimplePsd
 								nBlue = (int)this.m_ColorModeData.ColourData[nIndex + 2 * 256];
 
 								nColor = ColorTranslator.ToWin32(Color.FromArgb(nRed, nGreen, nBlue));
-								WinInvoke32.SetPixel(hdcMemory, nCol, nRow, nColor);
+								NativeMethods.SetPixel(hdcMemory, nCol, nRow, nColor);
 								nCol++;
 								if(this.m_HeaderInfo.nWidth <= nCol)
 								{
@@ -693,8 +708,8 @@ namespace SimplePsd
 							}
 						}
 
-						WinInvoke32.SelectObject(hdcMemory, hbmpOld);
-						WinInvoke32.DeleteDC(hdcMemory);
+						NativeMethods.SelectObject(hdcMemory, hbmpOld);
+						NativeMethods.DeleteDC(hdcMemory);
 					}
 					#endregion
 					break;
@@ -702,8 +717,8 @@ namespace SimplePsd
 				case 3:	// RGB
 					#region
 					{
-						hdcMemory = WinInvoke32.CreateCompatibleDC(IntPtr.Zero);
-						hbmpOld = WinInvoke32.SelectObject(hdcMemory, hBitmap);
+						hdcMemory = NativeMethods.CreateCompatibleDC(IntPtr.Zero);
+						hbmpOld = NativeMethods.SelectObject(hdcMemory, hBitmap);
 
 						int nBytesToRead = this.m_HeaderInfo.nBitsPerPixel / 8;
 						if (nBytesToRead == 2)
@@ -732,7 +747,7 @@ namespace SimplePsd
 							nBlue = BitConverter.ToInt32(ColorValue, 0);
 
 							nColor = ColorTranslator.ToWin32(Color.FromArgb(nRed, nGreen, nBlue));
-							WinInvoke32.SetPixel(hdcMemory, nCol, nRow, nColor);
+							NativeMethods.SetPixel(hdcMemory, nCol, nRow, nColor);
 							nCol++;
 							if (this.m_HeaderInfo.nWidth <= nCol)
 							{
@@ -741,8 +756,8 @@ namespace SimplePsd
 							}
 						}
 
-						WinInvoke32.SelectObject(hdcMemory, hbmpOld);
-						WinInvoke32.DeleteDC(hdcMemory);
+						NativeMethods.SelectObject(hdcMemory, hbmpOld);
+						NativeMethods.DeleteDC(hdcMemory);
 					}
 					#endregion
 					break;
@@ -750,8 +765,8 @@ namespace SimplePsd
 				case 4:	// CMYK
 					#region
 					{
-						hdcMemory = WinInvoke32.CreateCompatibleDC(IntPtr.Zero);
-						hbmpOld = WinInvoke32.SelectObject(hdcMemory, hBitmap);
+						hdcMemory = NativeMethods.CreateCompatibleDC(IntPtr.Zero);
+						hbmpOld = NativeMethods.SelectObject(hdcMemory, hBitmap);
 
 						double C, M, Y, K;
 						double exC, exM, exY, exK;
@@ -792,7 +807,7 @@ namespace SimplePsd
 							crPixel = CMYKToRGB(C, M, Y, K);
 
 							nColor = ColorTranslator.ToWin32(crPixel);
-							WinInvoke32.SetPixel(hdcMemory, nCol, nRow, nColor);
+							NativeMethods.SetPixel(hdcMemory, nCol, nRow, nColor);
 							nCol++;
 							if (this.m_HeaderInfo.nWidth <= nCol)
 							{
@@ -801,8 +816,8 @@ namespace SimplePsd
 							}
 						}
 
-						WinInvoke32.SelectObject(hdcMemory, hbmpOld);
-						WinInvoke32.DeleteDC(hdcMemory);
+						NativeMethods.SelectObject(hdcMemory, hbmpOld);
+						NativeMethods.DeleteDC(hdcMemory);
 					}
 					#endregion
 					break;
@@ -810,8 +825,8 @@ namespace SimplePsd
 				case 7:		// Multichannel
 					#region
 					{
-						hdcMemory = WinInvoke32.CreateCompatibleDC(IntPtr.Zero);
-						hbmpOld = WinInvoke32.SelectObject(hdcMemory, hBitmap);
+						hdcMemory = NativeMethods.CreateCompatibleDC(IntPtr.Zero);
+						hbmpOld = NativeMethods.SelectObject(hdcMemory, hBitmap);
 
 						double C, M, Y, K;
 						double exC, exM, exY, exK;
@@ -860,7 +875,7 @@ namespace SimplePsd
 								crPixel = CMYKToRGB(C, M, Y, K);
 
 								nColor = ColorTranslator.ToWin32(crPixel);
-								WinInvoke32.SetPixel(hdcMemory, nCol, nRow, nColor);
+								NativeMethods.SetPixel(hdcMemory, nCol, nRow, nColor);
 								nCol++;
 								if (this.m_HeaderInfo.nWidth <= nCol)
 								{
@@ -870,8 +885,8 @@ namespace SimplePsd
 							}
 						}
 
-						WinInvoke32.SelectObject(hdcMemory, hbmpOld);
-						WinInvoke32.DeleteDC(hdcMemory);
+						NativeMethods.SelectObject(hdcMemory, hbmpOld);
+						NativeMethods.DeleteDC(hdcMemory);
 					}
 					#endregion
 					break;
@@ -879,8 +894,8 @@ namespace SimplePsd
 				case 9:	// Lab
 					#region
 					{
-						hdcMemory = WinInvoke32.CreateCompatibleDC(IntPtr.Zero);
-						hbmpOld = WinInvoke32.SelectObject(hdcMemory, hBitmap);
+						hdcMemory = NativeMethods.CreateCompatibleDC(IntPtr.Zero);
+						hbmpOld = NativeMethods.SelectObject(hdcMemory, hBitmap);
 
 						int L, a, b;
 
@@ -921,7 +936,7 @@ namespace SimplePsd
 							crPixel = LabToRGB(L, a, b);
 
 							nColor = ColorTranslator.ToWin32(crPixel);
-							WinInvoke32.SetPixel(hdcMemory, nCol, nRow, nColor);
+							NativeMethods.SetPixel(hdcMemory, nCol, nRow, nColor);
 							nCol++;
 							if(this.m_HeaderInfo.nWidth <= nCol)
 							{
@@ -930,8 +945,8 @@ namespace SimplePsd
 							}
 						}
 
-						WinInvoke32.SelectObject(hdcMemory, hbmpOld);
-						WinInvoke32.DeleteDC(hdcMemory);
+						NativeMethods.SelectObject(hdcMemory, hbmpOld);
+						NativeMethods.DeleteDC(hdcMemory);
 					}
 					#endregion
 					break;

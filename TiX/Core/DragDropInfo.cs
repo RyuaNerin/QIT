@@ -93,11 +93,13 @@ namespace TiX.Core
 
                 if (Path.GetExtension(path).ToLower() == ".psd")
                 {
-                    SimplePsd.CPSD psd = new SimplePsd.CPSD();
-                    using (var file = File.OpenRead(path))
-                        psd.Load(file);
+                    using (var psd = new SimplePsd.CPSD())
+                    {
+                        using (var file = File.OpenRead(path))
+                            psd.Load(file);
 
-                    img = Image.FromHbitmap(psd.HBitmap);
+                        img = Image.FromHbitmap(psd.HBitmap);
+                    }
                 }
                 else
                     img = Image.FromFile(path);

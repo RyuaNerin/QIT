@@ -11,7 +11,7 @@ namespace TiX.Windows
         private static class NativeMethods
         {
             [DllImport("user32")]
-            public static extern UInt32 SendMessage(IntPtr hWnd, UInt32 msg, UInt32 wParam, UInt32 lParam);
+            public static extern IntPtr SendMessage(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
 
             internal const int BCM_FIRST = 0x1600; //Normal button
             internal const int BCM_SETSHIELD = (BCM_FIRST + 0x000C);
@@ -83,9 +83,9 @@ namespace TiX.Windows
             if (!this.m_admin)
             {
                 if (Settings.EnabledShell != this.chkEnableShell.Checked)
-                    NativeMethods.SendMessage(this.btnOK.Handle, NativeMethods.BCM_SETSHIELD, 0, 1);
+                    NativeMethods.SendMessage(this.btnOK.Handle, NativeMethods.BCM_SETSHIELD, IntPtr.Zero, new IntPtr(1));
                 else
-                    NativeMethods.SendMessage(this.btnOK.Handle, NativeMethods.BCM_SETSHIELD, 0, 0);
+                    NativeMethods.SendMessage(this.btnOK.Handle, NativeMethods.BCM_SETSHIELD, IntPtr.Zero, new IntPtr(0));
             }
         }
     }

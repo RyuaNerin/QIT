@@ -79,18 +79,19 @@ namespace TiX
                         byteList = shell.GetOrSend(data);
                         if (byteList == null) return; 
                     }
-
-                    string[] str;
-                    int j;
+                    
+                    var fileList = new List<string>();
                     for (i = 0; i < byteList.Count; ++i)
+                        fileList.AddRange(Encoding.UTF8.GetString(byteList[i]).Split('\n'));
+
+                    for (i = 0; i < fileList.Count; ++i)
                     {
-                        str = Encoding.UTF8.GetString(byteList[i]).Split('\n');
-                        for (j = 0; j < str.Length; ++j)
-                        {
-                            if (!File.Exists(str[j])) continue;
-                            lst.Add(DragDropInfo.Create(str[j]));
-                        }
+                        if (!File.Exists(fileList[i])) continue;
+
+                        lst.Add(DragDropInfo.Create(fileList[i]));
                     }
+
+                    fileList.Sort();
                 }
                 else
                 {

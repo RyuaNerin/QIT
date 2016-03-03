@@ -7,16 +7,16 @@ namespace SimplePsd
 	/// This class shall keep the Win32 APIs being used in 
 	/// the program.
 	/// </summary>
-	public class WinInvoke32
+	public static class NativeMethods
 	{
 
 		#region Class Variables
 		public const int BI_RGB = 0;
 		public const int WHITE_BRUSH = 0;
-		#endregion		
+		#endregion
 		
 		#region Class Functions
-		
+        		
 		[DllImport("gdi32.dll",EntryPoint="DeleteDC")]
 		public static extern IntPtr DeleteDC(IntPtr hDc);
 
@@ -49,45 +49,36 @@ namespace SimplePsd
 		
 		#endregion
 
-		#region Public Constructor
-		public WinInvoke32()
-		{
-			// 
-			// TODO: Add constructor logic here
-			//
-		}
-		#endregion
-	}
+        [StructLayout(LayoutKind.Sequential, Pack=1)]
+        public struct BITMAPINFOHEADER
+        {
+            public Int32 biSize;
+            public Int32 biWidth;
+            public Int32 biHeight;
+            public short biPlanes;
+            public short biBitCount;
+            public Int32 biCompression;
+            public Int32 biSizeImage;
+            public Int32 biXPelsPerMeter;
+            public Int32 biYPelsPerMeter;
+            public Int32 biClrUsed;
+            public Int32 biClrImportant;
+        }
 
-	[StructLayout(LayoutKind.Sequential, Pack=1)]
-	public struct BITMAPINFOHEADER
-	{
-		public Int32 biSize;
-		public Int32 biWidth;
-		public Int32 biHeight;
-		public short biPlanes;
-		public short biBitCount;
-		public Int32 biCompression;
-		public Int32 biSizeImage;
-		public Int32 biXPelsPerMeter;
-		public Int32 biYPelsPerMeter;
-		public Int32 biClrUsed;
-		public Int32 biClrImportant;
-	} 
- 
-	[StructLayout(LayoutKind.Sequential, Pack=1)]
-	public struct BITMAPINFO
-	{
-		public BITMAPINFOHEADER bmiHeader;
-		public Int32[] bmiColors;
-	}
+        [StructLayout(LayoutKind.Sequential, Pack=1)]
+        public struct BITMAPINFO
+        {
+            public BITMAPINFOHEADER bmiHeader;
+            public Int32[] bmiColors;
+        }
 
-	[StructLayout(LayoutKind.Sequential, Pack=1)]
-	public struct RECT
-	{
-		public int left;
-		public int right;
-		public int top;
-		public int bottom;
+        [StructLayout(LayoutKind.Sequential, Pack=1)]
+        public struct RECT
+        {
+            public int left;
+            public int right;
+            public int top;
+            public int bottom;
+        }
 	}
 }
