@@ -24,8 +24,7 @@ namespace TiX.Windows
                 label2.Text = "Ctrl을 눌러 [내용] 작성";
             else
                 label2.Text = "Ctrl을 눌러 [바로] 작성";
-
-
+				
             manager = new GlobalKeyboardHook();
 			manager.Down.Add(Keys.C | Keys.Control | Keys.Shift);
             manager.KeyDown += GlobalKeyboardHook_KeyDown;
