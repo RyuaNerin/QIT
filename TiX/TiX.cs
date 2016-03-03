@@ -115,6 +115,7 @@ namespace TiX
                     {
                         frm = new frmPin();
                         Application.Run(instance.MainWindow = frm);
+                        frm.Dispose();
 
                         if (frm.DialogResult != DialogResult.OK)
                             return;
