@@ -33,9 +33,9 @@
             this.picImage = new System.Windows.Forms.PictureBox();
             this.lblLength = new System.Windows.Forms.Label();
             this.txtText = new System.Windows.Forms.TextBox();
-            this.ajax = new TiX.Windows.AjaxControl();
             this.lblImageSize = new System.Windows.Forms.Label();
             this.bgwResize = new System.ComponentModel.BackgroundWorker();
+            this.ajax = new TiX.Windows.AjaxControl();
             ((System.ComponentModel.ISupportInitialize)(this.picImage)).BeginInit();
             this.SuspendLayout();
             // 
@@ -78,15 +78,6 @@
             this.txtText.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtText_KeyDown);
             this.txtText.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.txtText_KeyPress);
             // 
-            // ajax
-            // 
-            this.ajax.is16 = false;
-            this.ajax.Location = new System.Drawing.Point(176, 42);
-            this.ajax.Name = "ajax";
-            this.ajax.Size = new System.Drawing.Size(32, 32);
-            this.ajax.TabIndex = 7;
-            this.ajax.Visible = false;
-            // 
             // lblImageSize
             // 
             this.lblImageSize.Location = new System.Drawing.Point(82, 13);
@@ -98,6 +89,15 @@
             // 
             this.bgwResize.DoWork += new System.ComponentModel.DoWorkEventHandler(this.bgwResize_DoWork);
             this.bgwResize.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.bgwResize_RunWorkerCompleted);
+            // 
+            // ajax
+            // 
+            this.ajax.is16 = false;
+            this.ajax.Location = new System.Drawing.Point(176, 42);
+            this.ajax.Name = "ajax";
+            this.ajax.Size = new System.Drawing.Size(32, 32);
+            this.ajax.TabIndex = 7;
+            this.ajax.Visible = false;
             // 
             // frmUpload
             // 

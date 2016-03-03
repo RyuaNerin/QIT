@@ -28,6 +28,7 @@
 		/// </summary>
 		private void InitializeComponent( )
 		{
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Stasisfield));
             this.SuspendLayout();
             // 
             // Stasisfield
@@ -39,6 +40,7 @@
             this.DoubleBuffered = true;
             this.Font = new System.Drawing.Font("Consolas", 12F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Italic))), System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.Name = "Stasisfield";
             this.ShowInTaskbar = false;

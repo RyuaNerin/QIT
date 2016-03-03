@@ -37,6 +37,7 @@ namespace TiX
                 { }
             }
 
+            Settings.EnabledShell = true;
             Settings.Shells = shells;
             Settings.Save();
         }
