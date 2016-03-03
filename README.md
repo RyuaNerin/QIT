@@ -1,3 +1,5 @@
+![TiX](Tix-256.png)
+
 # TiX (QIT > QITx > Quicx)
 
 - 쉽게 사진을 트윗해주는 프로그램입니다!
