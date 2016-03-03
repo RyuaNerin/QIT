@@ -83,15 +83,13 @@ namespace TiX
                     var fileList = new List<string>();
                     for (i = 0; i < byteList.Count; ++i)
                         fileList.AddRange(Encoding.UTF8.GetString(byteList[i]).Split('\n'));
+                    fileList.Sort();
 
                     for (i = 0; i < fileList.Count; ++i)
                     {
                         if (!File.Exists(fileList[i])) continue;
-
                         lst.Add(DragDropInfo.Create(fileList[i]));
                     }
-
-                    fileList.Sort();
                 }
                 else
                 {
