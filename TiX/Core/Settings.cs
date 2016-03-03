@@ -63,15 +63,19 @@ namespace TiX.Core
 
         public static object Str2Obj(string val, Type toType)
         {
-            if (toType == typeof(string)) return val;
             if (toType == typeof(bool))   return val == "1";
-            return "";
+            if (toType == typeof(string))
+            {
+                var str = val as string;
+                return !string.IsNullOrEmpty(str) ? str : null;
+            }
+            return null;
         }
         public static string Obj2Str(object val)
         {
             if (val is string) return val as string;
             if (val is bool)   return (bool)val ? "1" : "0";
-            return null;
+            return "";
         }
 
         private class NativeMethods

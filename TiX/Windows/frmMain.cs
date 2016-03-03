@@ -125,7 +125,8 @@ namespace TiX.Windows
 
                 if (data.List.Count > 0)
                 {
-                    data.AutoStart = ((e.KeyState & 8) == 8);
+                    //               (Settings.ReversedCtrl && ((e.KeyState & 8) != 8)) || (!Settings.ReversedCtrl && ((e.KeyState & 8) == 8))
+                    data.AutoStart = (Settings.ReversedCtrl && ((e.KeyState & 8) != 8)) || ((e.KeyState & 8) != 8);
                     data.IAsyncResult = this.BeginInvoke(new Action<CallbackData>(this.Callback), data);
                 }
             }

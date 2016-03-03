@@ -23,6 +23,22 @@ namespace TiX.Windows
 			this.ajax.Top = this.pnl.Height / 2 - 8;
 		}
 
+        protected override void WndProc(ref Message m)
+        {
+            if (m.Msg == 0x031D) // WM_CLIPBOARDUPDATE
+            {
+                var str = Clipboard.GetText();
+                int i;
+                if (str.Length == 7 && int.TryParse(str, out i))
+                {
+                    this.txtPin.Text = str;
+                    this.Activate();
+                }
+            }
+
+            base.WndProc(ref m);
+        }
+
 		private void bgwBefore_DoWork(object sender, DoWorkEventArgs e)
 		{
 			Twitter.TwitterAPI11.OAuth.request_token(null, out this.t, out this.s);
