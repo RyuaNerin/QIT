@@ -20,7 +20,10 @@ namespace TiX
 		{
             Form frm;
 
-            using (var instance = new InstanceHelper(UniqueName))
+			//args = new string[] { "Stasis" }; // 정지장 생성 테스트용
+			//args = new string[] { "Stasis", "hsky_Lauren", "705274228010954752" }; // 정지장 멘션 테스트용
+
+			using (var instance = new InstanceHelper(UniqueName))
             {
                 if (instance.Check())
                 {
@@ -42,15 +45,37 @@ namespace TiX
                     {
                         if (args.Length > 0)
                         {
-                            if (args[0] == "stasis")
+                            if (args[0] == "Stasis")
                             {
-                                frm = new Stasisfield();
-                                instance.MainWindow = frm;
-                                Application.Run(frm);
-                            }
-                            else
-                            {
-                                var lst = new List<DragDropInfo>();
+								if(args.Length == 3)
+								{
+									frm = new Stasisfield( args[1], args[2] );
+								}
+								else
+								{
+									frm = new Stasisfield();
+								}
+								instance.MainWindow = frm;
+								Application.Run( frm );
+
+								var cropedImage = ((Stasisfield)frm).CropedImage;
+								using ( cropedImage )
+								{ 
+									if ( args.Length == 3 )
+									{
+										var targetUsername = args[1];
+										var targetTweetId = args[2];
+										TweetModerator.Tweet( cropedImage, "캡처 화면 전송중", targetUsername, targetTweetId );
+									}
+									else
+									{
+										TweetModerator.Tweet( cropedImage, "캡처 화면 전송중" );
+									}
+								}
+							}
+							else
+							{
+								var lst = new List<DragDropInfo>();
 
                                 string UnifiedStr = string.Empty;
                                 for (int i = 0; i < args.Length; ++i)
@@ -77,3 +102,4 @@ namespace TiX
 		}
 	}
 }
+

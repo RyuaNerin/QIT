@@ -154,6 +154,7 @@ namespace TiX.ScreenCapture
 		/// 두 개의 좌표로 Rectangle객체를 구합니다.
 		/// 원래 인터넷에서 긁어와서 쓰려했는데 쉬발롬이 이상한걸 올려놔서 뭐가 문젠지 한참 고민했네
 		/// 노가다 하지마세요 사긔님 ;ㅅ;
+		/// 역시 갓코더님
 		/// </summary>
 		/// <param name="p1"></param>
 		/// <param name="p2"></param>

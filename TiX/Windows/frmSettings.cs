@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Threading;
 using System.Windows.Forms;
@@ -76,11 +77,31 @@ namespace TiX
 
         private void btnStasisField_Click(object sender, EventArgs e)
         {
-            this.WindowState = FormWindowState.Minimized;
-			Thread.Sleep( 200 );
-			new TiX.ScreenCapture.Stasisfield().ShowDialog();
-			this.WindowState = FormWindowState.Normal;
-        }
+			this.Opacity = 0;
+			this.ShowInTaskbar = false;
 
-    }
+			Image cropedImage;
+			string targetTweetId;
+			string targetUserId;
+			using ( var stasis = new TiX.ScreenCapture.Stasisfield( ) )
+			{
+				stasis.ShowDialog( );
+				cropedImage = stasis.CropedImage;
+				targetUserId = stasis.TargetUserID;
+				targetTweetId = stasis.TargetTweetID;
+			}
+
+			this.ShowInTaskbar = true;
+			this.Opacity = 255;
+
+			using ( cropedImage )
+			{
+				if ( !string.IsNullOrEmpty( targetUserId ) || !string.IsNullOrEmpty( targetTweetId ) )
+					TweetModerator.Tweet( cropedImage, "캡처 화면 전송중", targetUserId, targetTweetId );
+				else
+					TweetModerator.Tweet( cropedImage, "캡처 화면 전송중" );
+			}
+		}
+
+	}
 }

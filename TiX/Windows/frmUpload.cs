@@ -357,13 +357,21 @@ namespace TiX
 
                 var stream = req.GetRequestStream();
                 using (var writer = new StreamWriter(stream, Encoding.UTF8) { AutoFlush = true, NewLine = "\r\n" })
-                {
-                    writer.WriteLine(boundary2);
-                    writer.WriteLine("Content-Disposition: form-data; name=\"status\"");
-                    writer.WriteLine();
-                    writer.WriteLine(e.Argument as string);
+				{
+					writer.WriteLine( boundary2 );
+					writer.WriteLine( "Content-Disposition: form-data; name=\"status\"" );
+					writer.WriteLine( );
+					writer.WriteLine( e.Argument as string );
 
-                    writer.WriteLine(boundary2);
+					if(!string.IsNullOrEmpty(MentionTo))
+					{
+						writer.WriteLine( boundary2 );
+						writer.WriteLine( "Content-Disposition: form-data; name=\"in_reply_to_status_id\"" );
+						writer.WriteLine( );
+						writer.WriteLine( MentionTo as string );
+					}
+
+					writer.WriteLine(boundary2);
                     writer.WriteLine("Content-Type: application/octet-stream");
                     writer.WriteLine("Content-Disposition: form-data; name=\"media[]\"; filename=\"img.{0}\"", this.m_extension);
                     writer.WriteLine();
