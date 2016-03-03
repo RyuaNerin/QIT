@@ -1,4 +1,4 @@
-![TiX](Tix-256.png)
+![TiX](https://raw.githubusercontent.com/RyuaNerin/QIT/master/TiX-256.png)
 
 # TiX (QIT > QITx > Quicx)
 
