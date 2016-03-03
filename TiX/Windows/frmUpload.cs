@@ -16,13 +16,14 @@ namespace TiX.Windows
     public partial class frmUpload : Form
     {
         private IList<DragDropInfo> m_infos;
-        private int m_index = -1;
-        private double m_ratio;
-        private string m_extension;
-        private Image m_image;
-        private Image m_imageThumbnail;
-        private byte[] m_rawData;
-		internal string MentionTo;
+        private int     m_index = -1;
+        private double  m_ratio;
+        private string  m_extension;
+        private Image   m_image;
+        private Image   m_imageThumbnail;
+        private byte[]  m_rawData;
+
+		internal string InReplyToStatusId { get; set; }
 
         //////////////////////////////////////////////////////////////////////////
 
@@ -366,12 +367,12 @@ namespace TiX.Windows
 					writer.WriteLine( );
 					writer.WriteLine( e.Argument as string );
 
-					if(!string.IsNullOrEmpty(MentionTo))
+					if(!string.IsNullOrEmpty(InReplyToStatusId))
 					{
 						writer.WriteLine( boundary2 );
 						writer.WriteLine( "Content-Disposition: form-data; name=\"in_reply_to_status_id\"" );
 						writer.WriteLine( );
-						writer.WriteLine( MentionTo as string );
+						writer.WriteLine(InReplyToStatusId);
 					}
 
 					writer.WriteLine(boundary2);

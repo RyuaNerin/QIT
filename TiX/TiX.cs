@@ -20,12 +20,12 @@ namespace TiX
 		[STAThread]
 		static void Main( string[] args )
 		{
-            if (args.Length == 1 && args[0] == "install")
+            if (args.Length == 1 && args[0].Equals("install", StringComparison.CurrentCultureIgnoreCase))
             {
                 Console.Write(ShellExtension.Install());
                 return;
             }
-            if (args.Length == 2 && args[0] == "uninstall")
+            if (args.Length == 2 && args[0].Equals("uninstall", StringComparison.CurrentCultureIgnoreCase))
             {
                 ShellExtension.Uninstall(args[1]);
                 return;
@@ -36,16 +36,37 @@ namespace TiX
 
             int i;
 
-            if (args.Length == 1 && args[0] == "stasis")
+            if (args.Length >= 1 && args[0].Equals("stasis", StringComparison.CurrentCultureIgnoreCase))
             {
-                Application.Run(new Stasisfield());
+                //args = new string[] { "Stasis" }; // 정지장 생성 테스트용
+                //args = new string[] { "Stasis", "hsky_Lauren", "705274228010954752" }; // 정지장 멘션 테스트용
+
+                Stasisfield stasisForm;
+
+                if (args.Length == 3)
+                    stasisForm = new Stasisfield(args[1], args[2]);
+                else
+                    stasisForm = new Stasisfield();
+
+                Application.Run(stasisForm);
+                var cropedImage = stasisForm.CropedImage;
+
+                if (cropedImage != null)
+                {
+                    if (args.Length == 3)
+                        TweetModerator.Tweet(cropedImage, "캡처 화면 전송중", args[1], args[2]);
+                    else
+                        TweetModerator.Tweet(cropedImage, "캡처 화면 전송중");
+                }
+
+
                 return;
             }
             else if (args.Length >= 1)
             {
                 var lst = new List<DragDropInfo>();
 
-                if (args.Length >= 2 && args[0] == "shell")
+                if (args.Length >= 2 && args[0].Equals("shell", StringComparison.CurrentCultureIgnoreCase))
                 {
                     var data = Encoding.UTF8.GetBytes(string.Join("\n", args, 1, args.Length - 1));
 

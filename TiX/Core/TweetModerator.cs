@@ -22,8 +22,8 @@ namespace TiX
 			{
 				frm.AutoStart = false;
 				frm.Text = title;
-				frm.TweetString = "@" + TargetUserID;
-				frm.MentionTo = TargetTweetID;
+				frm.TweetString = string.Format("@{0} ", TargetUserID);
+				frm.InReplyToStatusId = TargetTweetID;
 				frm.ShowDialog();
 			}
 		}
