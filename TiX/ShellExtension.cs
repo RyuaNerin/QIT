@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Windows.Forms;
 using Microsoft.Win32;
+using TiX.Core;
 
 namespace TiX
 {

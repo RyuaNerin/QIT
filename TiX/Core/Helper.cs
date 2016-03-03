@@ -1,23 +1,20 @@
 ﻿using System;
 using System.Text;
 
-namespace TiX
+namespace TiX.Core
 {
 	public static class Helper
 	{
-		private static Random rnd = new Random(DateTime.Now.Millisecond);
-		public static Random Random { get { return rnd; } }
+		private readonly static Random rnd = new Random(DateTime.Now.Millisecond);
 
-		//////////////////////////////////////////////////////////////////////////
-
-		private static readonly char[] chars =
+		private readonly static char[] chars =
 		{
-// 			'A', 'B', 'C', 'D', 'E',
-// 			'F', 'G', 'H', 'I', 'J',
-// 			'K', 'J', 'K', 'L', 'M',
-// 			'N', 'O', 'P', 'Q', 'R',
-// 			'S', 'T', 'U', 'V', 'W',
-// 			'X', 'Y', 'Z',
+ 			'A', 'B', 'C', 'D', 'E',
+ 			'F', 'G', 'H', 'I', 'J',
+ 			'K', 'J', 'K', 'L', 'M',
+ 			'N', 'O', 'P', 'Q', 'R',
+ 			'S', 'T', 'U', 'V', 'W',
+ 			'X', 'Y', 'Z',
 			'a', 'b', 'c', 'd', 'e',
 			'f', 'g', 'h', 'i', 'j',
 			'k', 'l', 'm', 'n', 'o',
@@ -30,14 +27,14 @@ namespace TiX
 
 		public static string CreateString()
 		{
-			return CreateString(20);
+			return CreateString(40);
 		}
 		public static string CreateString(int length)
 		{
 			StringBuilder stringBuilder = new StringBuilder(length + 1);
 
 			for (int i = 0; i < length; i++)
-				stringBuilder.Append(Helper.chars[Helper.Random.Next(0, chars.Length)]);
+				stringBuilder.Append(Helper.chars[Helper.rnd.Next(0, chars.Length)]);
 
 			return stringBuilder.ToString();
 		}

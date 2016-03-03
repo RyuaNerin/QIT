@@ -6,7 +6,7 @@ using System.Net;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
-namespace TiX
+namespace TiX.Core
 {
 	public class DragDropInfo
     {

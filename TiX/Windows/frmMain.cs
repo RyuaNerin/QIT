@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Windows.Forms;
-using TiX.Utilities;
-using System.Threading;
 using System.Drawing;
+using System.IO;
+using System.Threading;
+using System.Windows.Forms;
+using TiX.Core;
+using TiX.Utilities;
 
 namespace TiX.Windows
 {
@@ -35,12 +36,17 @@ namespace TiX.Windows
 		private void FrmMain_KeyDown( object sender, System.Windows.Forms.KeyEventArgs e )
 		{
 			if ( e.Modifiers == Keys.Control && e.KeyCode == Keys.V )
-			{
-				using (var clipImage = Clipboarder.getClipboardImage())
+            {
+                try
                 {
-                    if (clipImage == null) return;
-                    TweetModerator.Tweet(clipImage, "클립보드 이미지 전송중");
+                    using (var clipImage = Clipboard.GetImage())
+                    {
+                        if (clipImage == null) return;
+                        TweetModerator.Tweet(clipImage, "클립보드 이미지 전송중");
+                    }
                 }
+                catch
+                { }
 			}
 		}
 

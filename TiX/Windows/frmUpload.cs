@@ -8,6 +8,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
+using TiX.Core;
 using TiX.Utilities;
 using Twitter;
 
@@ -300,7 +301,7 @@ namespace TiX.Windows
 
             try
             {
-                string boundary  = Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString("N");
+                string boundary  = Helper.CreateString();
                 string boundary2 = "--" + boundary;
 
                 //////////////////////////////////////////////////
@@ -367,7 +368,8 @@ namespace TiX.Windows
 					writer.WriteLine( );
 					writer.WriteLine( e.Argument as string );
 
-					if(!string.IsNullOrEmpty(InReplyToStatusId))
+                    int i;
+					if (!string.IsNullOrEmpty(InReplyToStatusId) && int.TryParse(InReplyToStatusId, out i))
 					{
 						writer.WriteLine( boundary2 );
 						writer.WriteLine( "Content-Disposition: form-data; name=\"in_reply_to_status_id\"" );

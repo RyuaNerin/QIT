@@ -1,12 +1,12 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
-using System.Reflection;
-using System.Linq;
-using System.Runtime.InteropServices;
 
-namespace TiX
+namespace TiX.Core
 {
 	public static class Settings
 	{

@@ -1,9 +1,8 @@
 ﻿using System;
-using System.Diagnostics;
-using System.IO;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
 using System.Windows.Forms;
+using TiX.Core;
 
 namespace TiX.Windows
 {

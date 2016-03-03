@@ -1,7 +1,7 @@
 ﻿using System.Drawing;
 using TiX.Windows;
 
-namespace TiX
+namespace TiX.Core
 {
 	class TweetModerator
 	{
