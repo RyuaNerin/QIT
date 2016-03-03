@@ -2,7 +2,7 @@
 using System.ComponentModel;
 using System.Windows.Forms;
 
-namespace TiX
+namespace TiX.Windows
 {
 	public partial class frmPin : Form
 	{

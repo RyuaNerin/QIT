@@ -84,12 +84,12 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="ShellExtension.cs" />
     <Compile Include="Utilities\globalKeyboardHook.cs" />
     <Compile Include="Utilities\ImageResize.cs" />
     <Compile Include="Utilities\InstanceHelper.cs" />
-    <Compile Include="Windows\AjaxControl.cs">
-      <SubType>Component</SubType>
-    </Compile>
+    <Compile Include="Utilities\ShellHelper.cs" />
+    <Compile Include="Windows\AjaxControl.cs" />
     <Compile Include="Core\DragDropInfo.cs" />
     <Compile Include="Windows\frmMain.cs">
       <SubType>Form</SubType>
@@ -144,9 +144,6 @@
     <Compile Include="SimplePSD\WinInvoke32.cs" />
     <Compile Include="Core\HttpCommunicator\twitterApi.cs" />
     <Compile Include="Core\HttpCommunicator\twitterApi11.cs" />
-    <EmbeddedResource Include="Windows\AjaxControl.resx">
-      <DependentUpon>AjaxControl.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="Windows\frmMain.resx">
       <DependentUpon>frmMain.cs</DependentUpon>
     </EmbeddedResource>

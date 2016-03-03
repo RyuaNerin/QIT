@@ -9,7 +9,7 @@ namespace TiX.Utilities
 {
     public static class ImageResize
     {
-        private const int MaxSize = 3145728; //2883584;	// 약 2.75 MB
+        private const int MaxSize = 2936012; // 2.8 MiB
         
         public static void ResizeImage(ref Image image, ref byte[] rawData, ref double ratio, ref string extension)
         {

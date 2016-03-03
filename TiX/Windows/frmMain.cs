@@ -6,14 +6,17 @@ using TiX.Utilities;
 using System.Threading;
 using System.Drawing;
 
-namespace TiX
+namespace TiX.Windows
 {
     public partial class frmMain : Form
     {
+        public static Form Instance { get; private set; }
+
         private static GlobalKeyboardHook manager;
         public frmMain()
         {
             InitializeComponent();
+            frmMain.Instance = this;
 
             this.Text = Program.ProductName;
             this.TopMost = Settings.Topmost;
@@ -70,7 +73,7 @@ namespace TiX
                     allow = false;
                     for (int i = 0; i < paths.Length; ++i)
                     {
-                        if (Array.IndexOf<string>(frmMain.AllowExtension, Path.GetExtension(paths[i]).ToLower()) >= 0)
+                        if (Array.IndexOf<string>(Program.AllowExtension, Path.GetExtension(paths[i]).ToLower()) >= 0)
                         {
                             allow = true;
                             break;
@@ -81,8 +84,6 @@ namespace TiX
                 if (allow) e.Effect = DragDropEffects.Move;
             }
         }
-
-        public static readonly string[] AllowExtension = { ".bmp", ".emf", ".exif", ".gif", ".ico", ".jpg", ".jpeg", ".png", ".tif", ".tiff", ".wmf", ".psd" };
 
         private void pnl_DragDrop(object sender, DragEventArgs e)
         {
@@ -105,7 +106,7 @@ namespace TiX
                             return;
 
                     for (int i = 0; i < paths.Length; ++i)
-                        if (Array.IndexOf<string>(frmMain.AllowExtension, Path.GetExtension(paths[i]).ToLower()) >= 0)
+                        if (Array.IndexOf<string>(Program.AllowExtension, Path.GetExtension(paths[i]).ToLower()) >= 0)
                             data.List.Add(DragDropInfo.Create(paths[i]));
                 }
                 else
@@ -156,7 +157,7 @@ namespace TiX
 
                     for (int i = 0; i < paths.Length; ++i)
                     {
-                        if (Array.IndexOf<string>(frmMain.AllowExtension, Path.GetExtension(paths[i]).ToLower()) < 0)
+                        if (Array.IndexOf<string>(Program.AllowExtension, Path.GetExtension(paths[i]).ToLower()) < 0)
                         {
                             allow = false;
                             break;
@@ -209,12 +210,15 @@ namespace TiX
 			this.ShowInTaskbar = true;
 			this.Opacity = 255;
 
-            using (cropedImage)
+            if (cropedImage != null)
             {
-                if (!string.IsNullOrEmpty(targetUserId) || !string.IsNullOrEmpty(targetTweetId))
-                    TweetModerator.Tweet(cropedImage, "캡처 화면 전송중", targetUserId, targetTweetId);
-                else
-                    TweetModerator.Tweet(cropedImage, "캡처 화면 전송중");
+                using (cropedImage)
+                {
+                    if (!string.IsNullOrEmpty(targetUserId) || !string.IsNullOrEmpty(targetTweetId))
+                        TweetModerator.Tweet(cropedImage, "캡처 화면 전송중", targetUserId, targetTweetId);
+                    else
+                        TweetModerator.Tweet(cropedImage, "캡처 화면 전송중");
+                }
             }
 		}
     }

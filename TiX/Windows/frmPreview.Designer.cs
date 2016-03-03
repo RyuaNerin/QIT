@@ -1,4 +1,4 @@
-﻿namespace TiX
+﻿namespace TiX.Windows
 {
 	partial class frmPreview
 	{

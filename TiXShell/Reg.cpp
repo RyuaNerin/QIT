@@ -278,6 +278,8 @@ HRESULT RegisterShellExtContextMenuHandler(
         }
     }
 
+
+
     // Create the key HKCR\<File Type>\shellex\ContextMenuHandlers\{<CLSID>}
     hr = StringCchPrintf(szSubkey, ARRAYSIZE(szSubkey), 
         L"%s\\shellex\\TiX\\%s", pszFileType, szCLSID);

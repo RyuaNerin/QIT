@@ -134,17 +134,17 @@ STDAPI DllRegisterServer(void)
         hr = FALSE;
 
         hr = hr || RegisterShellExtContextMenuHandler(L".bmp",  CLSID_FileContextMenuExt, L"TiX.Shell");
-//         hr = hr || RegisterShellExtContextMenuHandler(L".emf",  CLSID_FileContextMenuExt, L"TiX.Shell");
-//         hr = hr || RegisterShellExtContextMenuHandler(L".exif", CLSID_FileContextMenuExt, L"TiX.Shell");
-//         hr = hr || RegisterShellExtContextMenuHandler(L".gif",  CLSID_FileContextMenuExt, L"TiX.Shell");
-//         hr = hr || RegisterShellExtContextMenuHandler(L".ico",  CLSID_FileContextMenuExt, L"TiX.Shell");
-//         hr = hr || RegisterShellExtContextMenuHandler(L".jpg",  CLSID_FileContextMenuExt, L"TiX.Shell");
-//         hr = hr || RegisterShellExtContextMenuHandler(L".jpeg", CLSID_FileContextMenuExt, L"TiX.Shell");
-//         hr = hr || RegisterShellExtContextMenuHandler(L".png",  CLSID_FileContextMenuExt, L"TiX.Shell");
-//         hr = hr || RegisterShellExtContextMenuHandler(L".tif",  CLSID_FileContextMenuExt, L"TiX.Shell");
-//         hr = hr || RegisterShellExtContextMenuHandler(L".tiff", CLSID_FileContextMenuExt, L"TiX.Shell");
-//         hr = hr || RegisterShellExtContextMenuHandler(L".wmf",  CLSID_FileContextMenuExt, L"TiX.Shell");
-//         hr = hr || RegisterShellExtContextMenuHandler(L".psd",  CLSID_FileContextMenuExt, L"TiX.Shell");
+        hr = hr || RegisterShellExtContextMenuHandler(L".emf",  CLSID_FileContextMenuExt, L"TiX.Shell");
+        hr = hr || RegisterShellExtContextMenuHandler(L".exif", CLSID_FileContextMenuExt, L"TiX.Shell");
+        hr = hr || RegisterShellExtContextMenuHandler(L".gif",  CLSID_FileContextMenuExt, L"TiX.Shell");
+        hr = hr || RegisterShellExtContextMenuHandler(L".ico",  CLSID_FileContextMenuExt, L"TiX.Shell");
+        hr = hr || RegisterShellExtContextMenuHandler(L".jpg",  CLSID_FileContextMenuExt, L"TiX.Shell");
+        hr = hr || RegisterShellExtContextMenuHandler(L".jpeg", CLSID_FileContextMenuExt, L"TiX.Shell");
+        hr = hr || RegisterShellExtContextMenuHandler(L".png",  CLSID_FileContextMenuExt, L"TiX.Shell");
+        hr = hr || RegisterShellExtContextMenuHandler(L".tif",  CLSID_FileContextMenuExt, L"TiX.Shell");
+        hr = hr || RegisterShellExtContextMenuHandler(L".tiff", CLSID_FileContextMenuExt, L"TiX.Shell");
+        hr = hr || RegisterShellExtContextMenuHandler(L".wmf",  CLSID_FileContextMenuExt, L"TiX.Shell");
+        hr = hr || RegisterShellExtContextMenuHandler(L".psd",  CLSID_FileContextMenuExt, L"TiX.Shell");
     }
 
     return hr;
@@ -174,18 +174,18 @@ STDAPI DllUnregisterServer(void)
         hr = FALSE;
 
         // Unregister the context menu handler.
-        hr = hr || UnregisterShellExtContextMenuHandler(L".bmp", CLSID_FileContextMenuExt);
-//         hr = hr || UnregisterShellExtContextMenuHandler(L".emf", CLSID_FileContextMenuExt);
-//         hr = hr || UnregisterShellExtContextMenuHandler(L".exif", CLSID_FileContextMenuExt);
-//         hr = hr || UnregisterShellExtContextMenuHandler(L".gif", CLSID_FileContextMenuExt);
-//         hr = hr || UnregisterShellExtContextMenuHandler(L".ico", CLSID_FileContextMenuExt);
-//         hr = hr || UnregisterShellExtContextMenuHandler(L".jpg", CLSID_FileContextMenuExt);
-//         hr = hr || UnregisterShellExtContextMenuHandler(L".jpeg", CLSID_FileContextMenuExt);
-//         hr = hr || UnregisterShellExtContextMenuHandler(L".png", CLSID_FileContextMenuExt);
-//         hr = hr || UnregisterShellExtContextMenuHandler(L".tif", CLSID_FileContextMenuExt);
-//         hr = hr || UnregisterShellExtContextMenuHandler(L".tiff", CLSID_FileContextMenuExt);
-//         hr = hr || UnregisterShellExtContextMenuHandler(L".wmf", CLSID_FileContextMenuExt);
-//         hr = hr || UnregisterShellExtContextMenuHandler(L".psd", CLSID_FileContextMenuExt);
+        hr = hr || UnregisterShellExtContextMenuHandler(L".bmp",  CLSID_FileContextMenuExt);
+        hr = hr || UnregisterShellExtContextMenuHandler(L".emf",  CLSID_FileContextMenuExt);
+        hr = hr || UnregisterShellExtContextMenuHandler(L".exif", CLSID_FileContextMenuExt);
+        hr = hr || UnregisterShellExtContextMenuHandler(L".gif",  CLSID_FileContextMenuExt);
+        hr = hr || UnregisterShellExtContextMenuHandler(L".ico",  CLSID_FileContextMenuExt);
+        hr = hr || UnregisterShellExtContextMenuHandler(L".jpg",  CLSID_FileContextMenuExt);
+        hr = hr || UnregisterShellExtContextMenuHandler(L".jpeg", CLSID_FileContextMenuExt);
+        hr = hr || UnregisterShellExtContextMenuHandler(L".png",  CLSID_FileContextMenuExt);
+        hr = hr || UnregisterShellExtContextMenuHandler(L".tif",  CLSID_FileContextMenuExt);
+        hr = hr || UnregisterShellExtContextMenuHandler(L".tiff", CLSID_FileContextMenuExt);
+        hr = hr || UnregisterShellExtContextMenuHandler(L".wmf",  CLSID_FileContextMenuExt);
+        hr = hr || UnregisterShellExtContextMenuHandler(L".psd",  CLSID_FileContextMenuExt);
     }
 
     return hr;

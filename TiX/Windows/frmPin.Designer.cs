@@ -1,4 +1,4 @@
-﻿namespace TiX
+﻿namespace TiX.Windows
 {
 	partial class frmPin
 	{
@@ -33,7 +33,7 @@
             this.bgwBefore = new System.ComponentModel.BackgroundWorker();
             this.bgwAfter = new System.ComponentModel.BackgroundWorker();
             this.pnl = new System.Windows.Forms.Panel();
-            this.ajax = new TiX.AjaxControl();
+            this.ajax = new TiX.Windows.AjaxControl();
             this.pnl.SuspendLayout();
             this.SuspendLayout();
             // 

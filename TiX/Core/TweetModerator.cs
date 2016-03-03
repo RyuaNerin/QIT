@@ -1,4 +1,5 @@
 ﻿using System.Drawing;
+using TiX.Windows;
 
 namespace TiX
 {

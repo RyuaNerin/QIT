@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Drawing;
-using System.Drawing.Imaging;
 using System.Drawing.Drawing2D;
-using System.Threading;
+using System.Drawing.Imaging;
 using System.Windows.Forms;
 
 namespace TiX.ScreenCapture
@@ -35,7 +34,7 @@ namespace TiX.ScreenCapture
 			using ( Graphics g = Graphics.FromImage( m_captureBlur ) )
 			{
 				g.DrawImageUnscaledAndClipped( m_capture, new Rectangle( 0, 0, this.m_screenRect.Width, this.m_screenRect.Height ) );
-
+                
 				// 뿌연 효과 적용
 				using ( Brush b = new SolidBrush( Color.FromArgb( 128, 255, 255, 255 ) ) )
 				{
@@ -59,6 +58,7 @@ namespace TiX.ScreenCapture
 		private static readonly Point EmptyPoint = new Point(-1, -1); 
 
 		private Rectangle   m_screenRect;
+        private Rectangle   m_rect;
 		private bool        m_done          = false;
 		private bool        m_drag          = false;
 		private Image       m_captureBlur   = null;                     // 정지장이 생성되는 시점의 화면 화상입니다.
@@ -85,12 +85,9 @@ namespace TiX.ScreenCapture
 			if ( m_done )
 			{
 				this.Hide( );
-
-				var src = GetSizeFromLocation(m_location[0], m_location[1]);
-				if ( CropAvailable( m_location[0], m_location[1], src ) )
-				{
-                    this.CropedImage = CropImage(m_capture, src);
-				}
+                
+                if (GetSizeFromLocation(m_location[0], m_location[1]))
+                    this.CropedImage = CropImage(m_capture, this.m_rect);
 			}
 		}
 
@@ -98,11 +95,11 @@ namespace TiX.ScreenCapture
 		#region 마우스 클릭 이벤트
 		private void Stasisfield_MouseMove( object sender, MouseEventArgs e )
 		{
-			if ( m_drag )
-			{
+// 			if ( m_drag )
+// 			{
 				m_location[1] = e.Location;
 				this.Invalidate( );
-            }
+            //}
 		}
 		private void Stasisfield_MouseDown( object sender, MouseEventArgs e )
 		{
@@ -123,9 +120,18 @@ namespace TiX.ScreenCapture
 		{
 			if ( e.KeyCode == Keys.Escape )
 			{
-				this.m_done = false;
-				this.m_drag = false;
-				this.Close( );
+                if (m_drag)
+                {
+                    this.m_done = false;
+                    this.m_drag = false;
+                    this.Invalidate();
+                }
+                else
+                {
+				    this.m_done = false;
+				    this.m_drag = false;
+				    this.Close( );
+                }
 			}
 		}
 		#endregion
@@ -134,23 +140,27 @@ namespace TiX.ScreenCapture
 		{
             base.OnPaint(e);
 
-			var src = GetSizeFromLocation(m_location[0], m_location[1]);
+            if (!this.m_drag)
+            {
+                e.Graphics.DrawString(string.Format("{0}x{1}", m_location[1].X, m_location[1].Y), this.Font, Brushes.Black, new Point(5, 5));
+            }
+            else
+            {
+                if (GetSizeFromLocation(m_location[0], m_location[1]))
+                {
+                    // 이미지 밝게 다시 그리기
+                    e.Graphics.DrawImage(this.m_capture, this.m_rect, this.m_rect, GraphicsUnit.Pixel);
 
-			if ( CropAvailable( m_location[0], m_location[1], src ) )
-			{
-				// 이미지 밝게 다시 그리기
-				var cropedImage = CropImage(m_capture, src);
-				e.Graphics.DrawImage( cropedImage, src );
+                    // 빨간펜 선생님
+                    e.Graphics.DrawRectangle(Pens.Red, this.m_rect);
+                }
 
-				// 빨간펜 선생님
-				e.Graphics.DrawRectangle(Pens.Red, GetSizeFromLocation( m_location[0], m_location[1] ) );
-
-                e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
-				e.Graphics.DrawString(string.Format("{0}x{1} - {2}x{3}", src.Left, src.Top, src.Right, src.Bottom), this.Font, Brushes.Black, Point.Empty);
-			}
+                e.Graphics.DrawString(string.Format("{0}x{1} - {2}x{3}", this.m_rect.Left, this.m_rect.Top, this.m_rect.Right, this.m_rect.Bottom), this.Font, Brushes.Black, new Point(5, 5));
+            }
 		}
 
-		/// <summary>
+        /// <summary>
+        /// 유효한 CropImage를 생성할 수 있는 상태인지 검사하고
 		/// 두 개의 좌표로 Rectangle객체를 구합니다.
 		/// 원래 인터넷에서 긁어와서 쓰려했는데 쉬발롬이 이상한걸 올려놔서 뭐가 문젠지 한참 고민했네
 		/// 노가다 하지마세요 사긔님 ;ㅅ;
@@ -158,28 +168,21 @@ namespace TiX.ScreenCapture
 		/// <param name="p1"></param>
 		/// <param name="p2"></param>
 		/// <returns></returns>
-		private Rectangle GetSizeFromLocation( Point p1, Point p2 )
-		{
-			return new Rectangle(
-				Math.Min( p1.X, p2.X ),
-				Math.Min( p1.Y, p2.Y ),
-				Math.Abs( p1.X - p2.X ),
-				Math.Abs( p1.Y - p2.Y ) );
-		}
+		private bool GetSizeFromLocation(Point p1, Point p2)
+        {
+            if (p1 != EmptyPoint && p2 != EmptyPoint)
+            {
+			    this.m_rect = new Rectangle(
+				    Math.Min( p1.X, p2.X ),
+				    Math.Min( p1.Y, p2.Y ),
+				    Math.Abs( p1.X - p2.X ),
+				    Math.Abs( p1.Y - p2.Y ) );
 
-		/// <summary>
-		/// 유효한 CropImage를 생성할 수 있는 상태인지 검사합니다.
-		/// </summary>
-		/// <param name="p1">MouseDown 이벤트가 발생한 위치입니다.</param>
-		/// <param name="p2">MouseUp 이벤트가 발생한 위치입니다.</param>
-		/// <param name="src">이미지 크기 사각형</param>
-		/// <returns></returns>
-		private bool CropAvailable( Point p1, Point p2, Rectangle src )
-		{
-			if ( p1 != EmptyPoint && p2 != EmptyPoint && src.Width > 0 && src.Height > 0 )
-				return true;
-			else
-				return false;
+                if (this.m_rect.Width > 0 && this.m_rect.Height > 0)
+                    return true;
+            }
+
+            return false;
 		}
 
 		/// <summary>

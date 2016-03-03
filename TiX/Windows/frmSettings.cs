@@ -1,24 +1,33 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using System.Threading;
+using System.Runtime.InteropServices;
+using System.Security.Principal;
 using System.Windows.Forms;
 
-namespace TiX
+namespace TiX.Windows
 {
     public partial class frmSettings : Form
     {
-        private bool m_shellExists;
+        private static class NativeMethods
+        {
+            [DllImport("user32")]
+            public static extern UInt32 SendMessage(IntPtr hWnd, UInt32 msg, UInt32 wParam, UInt32 lParam);
+
+            internal const int BCM_FIRST = 0x1600; //Normal button
+            internal const int BCM_SETSHIELD = (BCM_FIRST + 0x000C);
+        }
+
+        private bool    m_admin;
 
         public frmSettings()
         {
             InitializeComponent();
+
+            this.m_admin = IsAdministrator();
         }
         private void frmSettings_Load(object sender, EventArgs e)
         {
-            this.m_shellExists = File.Exists("QuicxRegEditor.exe");
-            this.chkEnableShell.Enabled = this.m_shellExists;
-
             this.TopMost = Settings.Topmost;
             this.chkTopMost.Checked = Settings.Topmost;
             this.chkReversedCtrl.Checked = Settings.ReversedCtrl;
@@ -26,61 +35,59 @@ namespace TiX
             this.chkEnableShell.Checked = Settings.EnabledShell;
         }
 
-        private void button2_Click(object sender, EventArgs e)
+        public static bool IsAdministrator()
+        {
+            using (var identity = WindowsIdentity.GetCurrent())
+            {
+                if (identity == null) return false;
+
+                var principal = new WindowsPrincipal(identity);
+                return principal.IsInRole(WindowsBuiltInRole.Administrator);
+            }
+        }
+
+        private void btnOK_Click(object sender, EventArgs e)
         {
             Settings.Topmost = this.chkTopMost.Checked;
             Settings.ReversedCtrl = this.chkReversedCtrl.Checked;
             Settings.UniformityText = this.ctlUniformity.Checked;
 
-            if (this.m_shellExists && Settings.EnabledShell != this.chkEnableShell.Checked)
+            if (Settings.EnabledShell != this.chkEnableShell.Checked)
             {
                 if (this.chkEnableShell.Checked)
                 {
-                    MessageBox.Show(this, "Quicx를 삭제하기 전에 본 옵션의 체크를 해제하십시오.", "경고", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    LaunchQuicxRegEditor(true);
-                    Settings.EnabledShell = true;
+                    MessageBox.Show(this, "TiX를 삭제하기 전에 본 옵션의 체크를 해제하십시오.", "경고", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    ShellExtension.Install(this.m_admin);
                 }
                 else
                 {
-                    LaunchQuicxRegEditor(false);
-                    Settings.EnabledShell = false;
+                    ShellExtension.Uninstall(this.m_admin);
                 }
             }
             Settings.Save();
             this.Close();
         }
 
-        public static void LaunchQuicxRegEditor(bool add)
-        {
-            Process p = new Process();
-            p.StartInfo.FileName = "QuicxRegEditor.exe";
-            p.StartInfo.Arguments = (add) ? "add" : "remove";
-            p.Start();
-        }
-
-        private void button1_Click(object sender, EventArgs e)
+        private void btnCancel_Click(object sender, EventArgs e)
         {
             this.Close();
         }
 
-        private void label1_Click(object sender, EventArgs e)
+        private void lblCopyRight_Click(object sender, EventArgs e)
         {
-            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo { UseShellExecute = true, FileName = "\"https://github.com/RyuaNerin/QIT\"" });
+            using (System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo { UseShellExecute = true, FileName = "\"https://github.com/RyuaNerin/QIT\"" }))
+            { }
         }
 
-        private void button3_Click(object sender, EventArgs e)
+        private void chkEnableShell_CheckedChanged(object sender, EventArgs e)
         {
-            Settings.UToken = Settings.USecret = string.Empty;
-            Application.Exit();
+            if (!this.m_admin)
+            {
+                if (Settings.EnabledShell != this.chkEnableShell.Checked)
+                    NativeMethods.SendMessage(this.btnOK.Handle, NativeMethods.BCM_SETSHIELD, 0, 1);
+                else
+                    NativeMethods.SendMessage(this.btnOK.Handle, NativeMethods.BCM_SETSHIELD, 0, 0);
+            }
         }
-
-        private void btnStasisField_Click(object sender, EventArgs e)
-        {
-            this.WindowState = FormWindowState.Minimized;
-			Thread.Sleep( 200 );
-			new TiX.ScreenCapture.Stasisfield().ShowDialog();
-			this.WindowState = FormWindowState.Normal;
-        }
-
     }
 }

@@ -11,7 +11,7 @@ using System.Windows.Forms;
 using TiX.Utilities;
 using Twitter;
 
-namespace TiX
+namespace TiX.Windows
 {
     public partial class frmUpload : Form
     {
@@ -30,16 +30,10 @@ namespace TiX
         {
             InitializeComponent();
 
-            this.ajax.Left = this.txtText.Left + this.txtText.Width / 2 - 16;
-            this.ajax.Top = this.txtText.Top + this.txtText.Height / 2 - 16;
+            this.ajax.Left = this.txtText.Left + this.txtText.Width  / 2 - 16;
+            this.ajax.Top  = this.txtText.Top  + this.txtText.Height / 2 - 16;
 
             this.ShowInTaskbar = mainWnd;
-
-            if (Program.MainWindow != null)
-            {
-                this.Left = Program.MainWindow.Left + (Program.MainWindow.Width  - this.Width)  / 2;
-                this.Top  = Program.MainWindow.Top  + (Program.MainWindow.Height - this.Height) / 2;
-            }
         }
         public frmUpload(IList<DragDropInfo> infos, bool mainWnd = false) : this(mainWnd)
         {
@@ -64,6 +58,12 @@ namespace TiX
 
         private void frmUpload_Shown(object sender, EventArgs e)
         {
+            if (frmMain.Instance != null)
+            {
+                this.Left = frmMain.Instance.Left + (frmMain.Instance.Width  - this.Width)  / 2;
+                this.Top  = frmMain.Instance.Top  + (frmMain.Instance.Height - this.Height) / 2;
+            }
+
             StartNew();
         }
 
@@ -104,6 +104,8 @@ namespace TiX
 
             ImageResize.ResizeImage(ref this.m_image, ref this.m_rawData, ref this.m_ratio, ref this.m_extension);
          
+            //////////////////////////////////////////////////
+            // Thumbnail
             var ratio = Math.Min(64d / this.m_image.Width, 64d / this.m_image.Height);
             var newWidth  = (int)(this.m_image.Width  * ratio);
             var newHeight = (int)(this.m_image.Height * ratio);
@@ -114,6 +116,7 @@ namespace TiX
                 graphics.DrawImage(this.m_image, 0, 0, newWidth, newHeight);
 
             this.m_imageThumbnail = newImage;
+            //////////////////////////////////////////////////
 
             e.Result = 0;
         }

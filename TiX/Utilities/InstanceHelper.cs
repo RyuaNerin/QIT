@@ -9,6 +9,7 @@ namespace TiX.Utilities
     {
         private const uint CustomMsg = 0x7A8F;
 
+        private readonly string m_uniqueName;
         public InstanceHelper(string uniqueName)
         {
             this.m_uniqueName = uniqueName;
@@ -29,12 +30,17 @@ namespace TiX.Utilities
             this.m_disposed = true;
 
             this.DestroyWindow();
+
+            if (this.m_mutex != null)
+            {
+                this.m_mutex.Close();
+                this.m_mutex = null;
+            }
         }
-        
-        private string m_uniqueName;
-        private IntPtr m_customHwnd;
-        private Mutex m_mutex;
+
         private NativeMethods.WndProc m_customProc;
+        private IntPtr  m_customHwnd;
+        private Mutex   m_mutex;
 
         public Form MainWindow { get; set; }
 
@@ -61,7 +67,7 @@ namespace TiX.Utilities
 
         private void CreateWindow()
         {
-            this.m_customProc = new NativeMethods.WndProc(this.CustomProc);
+            this.m_customProc       = new NativeMethods.WndProc(this.CustomProc);
 
             var wndClass			= new NativeMethods.WNDCLASS();
             wndClass.lpszClassName	= this.m_uniqueName;

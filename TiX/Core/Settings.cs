@@ -13,7 +13,7 @@ namespace TiX
         private class Attr : Attribute
         { }
 
-		public static string	FilePath	= Path.Combine(Application.StartupPath, "TiX.ini");
+		public readonly static string FilePath = Path.Combine(Application.StartupPath, "TiX.ini");
         
 		public const  string    CKey	= "lQJwJWJoFlbvr2UQnDbg";
 		public const  string    CSecret	= "DsuIRA1Ak9mmSCGl9wnNvjhmWJTmb9vZlRdQ7sMqXww";
@@ -24,7 +24,7 @@ namespace TiX
         [Attr] public static bool   ReversedCtrl        { get; set; }
         [Attr] public static bool   UniformityText      { get; set; }
         [Attr] public static bool   EnabledShell        { get; set; }
-        [Attr] public static string lastExecutablePath  { get; set; }
+        [Attr] public static string Shells              { get; set; }
 
         public readonly static PropertyInfo[] m_properties;
         static Settings()
@@ -65,7 +65,7 @@ namespace TiX
         {
             if (toType == typeof(string)) return val;
             if (toType == typeof(bool))   return val == "1";
-            return null;
+            return "";
         }
         public static string Obj2Str(object val)
         {
