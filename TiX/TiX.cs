@@ -34,6 +34,8 @@ namespace TiX
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
+            Settings.Load();
+
             int i;
 
             if (args.Length >= 1 && args[0].Equals("stasis", StringComparison.CurrentCultureIgnoreCase))
@@ -108,9 +110,7 @@ namespace TiX
             using (var instance = new InstanceHelper(UniqueName))
             {
                 if (instance.Check())
-                {
-                    Settings.Load();
-                    
+                {                    
                     if (String.IsNullOrEmpty(Settings.UToken))
                     {
                         frm = new frmPin();
