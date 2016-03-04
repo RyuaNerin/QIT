@@ -14,7 +14,7 @@ namespace TiX.Core
 
         public static bool IsAvailable(DragEventArgs e)
         {
-            return e != null ? false :
+            return e == null ? false :
                 (
                     e.Data.GetDataPresent(DataFormats.FileDrop) ||
 					e.Data.GetDataPresent(DataFormats.Bitmap) ||
