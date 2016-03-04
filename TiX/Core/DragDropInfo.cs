@@ -12,9 +12,9 @@ namespace TiX.Core
     {
         public enum DataTypes { File, Image, IDataObject }
 
-        public static bool isAvailable(DragEventArgs e)
+        public static bool IsAvailable(DragEventArgs e)
         {
-            return
+            return e != null ? false :
                 (
                     e.Data.GetDataPresent(DataFormats.FileDrop) ||
 					e.Data.GetDataPresent(DataFormats.Bitmap) ||
@@ -91,7 +91,7 @@ namespace TiX.Core
             {
                 var path = (string)this.m_object;
 
-                if (Path.GetExtension(path).ToLower() == ".psd")
+                if (Path.GetExtension(path).Equals(".psd", StringComparison.CurrentCultureIgnoreCase))
                 {
                     using (var psd = new SimplePsd.CPSD())
                     {

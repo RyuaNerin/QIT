@@ -40,24 +40,27 @@ namespace TiX.Utilities
                     extension = "jpg";
 
                     codec = ImageCodecInfo.GetImageDecoders().First(e => e.FormatID == ImageFormat.Jpeg.Guid);
-                    param = new EncoderParameters(1);
+                    using (param = new EncoderParameters(1))
+                    {
+                        long quality = 90;
+                        if (image.PropertyIdList.Any(e => e == 0x5010)) quality = image.PropertyItems.First(e => e.Id == 0x5010).Value[0];
 
-                    long quality = 90;
-                    if (image.PropertyIdList.Any(e => e == 0x5010)) quality = image.PropertyItems.First(e => e.Id == 0x5010).Value[0];
+                        param.Param[0] = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality, quality);
 
-                    param.Param[0] = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality, quality);
-
-                    ResizeJpg(ref bitmap, buffer, codec, param);
+                        ResizeJpg(ref bitmap, buffer, codec, param);
+                    }
                 }
                 else
                 {
                     extension = "png";
 
                     codec = ImageCodecInfo.GetImageDecoders().First(e => e.FormatID == ImageFormat.Png.Guid);
-                    param = new EncoderParameters(1);
-                    param.Param[0] = new EncoderParameter(Encoder.ColorDepth, Bitmap.GetPixelFormatSize(image.PixelFormat));
+                    using (param = new EncoderParameters(1))
+                    {
+                        param.Param[0] = new EncoderParameter(Encoder.ColorDepth, Bitmap.GetPixelFormatSize(image.PixelFormat));
 
-                    ResizePng(ref bitmap, buffer, codec, param);
+                        ResizePng(ref bitmap, buffer, codec, param);
+                    }
                 }
 
                 rawData = buffer.ToArray();

@@ -16,6 +16,7 @@
 			if (disposing && (components != null))
 			{
 				components.Dispose();
+                this.Clear();
 			}
 			base.Dispose(disposing);
 		}
@@ -93,7 +94,7 @@
             // 
             // ajax
             // 
-            this.ajax.is16 = false;
+            this.ajax.Is16 = false;
             this.ajax.Location = new System.Drawing.Point(176, 42);
             this.ajax.Name = "ajax";
             this.ajax.Size = new System.Drawing.Size(32, 32);

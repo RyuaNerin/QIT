@@ -8,7 +8,7 @@ namespace TiX.Windows
     internal class AjaxControl : Control
     {
         private int _size = 16;
-        public bool is16
+        public bool Is16
         {
             get
             {
@@ -87,18 +87,5 @@ namespace TiX.Windows
                 Thread.Sleep(50);
             }
         }
-
-        private void InitializeComponent()
-        {
-            this.SuspendLayout();
-            this.ResumeLayout(false);
-
-        }
-
-        private void AjaxControl_MouseUp(object sender, MouseEventArgs e)
-        {
-
-        }
-
     }
 }

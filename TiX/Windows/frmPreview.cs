@@ -6,11 +6,7 @@ namespace TiX.Windows
 {
 	public partial class frmPreview : Form
 	{
-		static frmPreview()
-		{
-			frmPreview.s = new Size(250, 250);
-		}
-		static Size s;
+		static Size s = new Size(250, 250);
 
 		//////////////////////////////////////////////////////////////////////////
 
@@ -164,13 +160,8 @@ namespace TiX.Windows
 		}
 		private void SetLocationMax()
 		{
-			try
-			{
-				this._locationMax.X = this._img.Width - this.m_client.Width;
-				this._locationMax.Y = this._img.Height - this.m_client.Height;
-			}
-			catch
-			{ }
+            this._locationMax.X = this._img.Width - this.m_client.Width;
+            this._locationMax.Y = this._img.Height - this.m_client.Height;
 		}
 
 		private void pic_MouseDoubleClick(object sender, MouseEventArgs e)

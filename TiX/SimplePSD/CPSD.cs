@@ -12,7 +12,6 @@ namespace SimplePsd
 	/// </summary>
 	public sealed class CPSD : IDisposable
 	{
-
 		private PSDHeaderInfo       m_HeaderInfo;
 		private PSDColorModeData    m_ColorModeData;
 		private PSDImageResource    m_ImageResource;
@@ -60,22 +59,19 @@ namespace SimplePsd
 
             if (disposing)
             {
-                try
-                {
-                    NativeMethods.DeleteObject(this.m_hBitmap);
-                }
-                catch
-                { }
+                NativeMethods.DeleteObject(this.m_hBitmap);
             }
         }
 		
 		public void Load(string strPathName)
 		{
-			this.Load(new BigEndianBinaryReader(new FileStream(strPathName, FileMode.Open, FileAccess.Read, FileShare.Read)));
+            using (var reader = new BigEndianBinaryReader(new FileStream(strPathName, FileMode.Open, FileAccess.Read, FileShare.Read)))
+			    this.Load(reader);
 		}
 		public void Load(Stream stream)
-		{
-			this.Load(new BigEndianBinaryReader(stream));
+        {
+            using (var reader = new BigEndianBinaryReader(stream))
+                this.Load(reader);
 		}
 		private void Load(BigEndianBinaryReader stream)
 		{
@@ -98,7 +94,8 @@ namespace SimplePsd
 			// Set Position to the beginning of the stream.
 			byte [] Signature  = stream.ReadBytes(4);
 			byte [] Version    = stream.ReadBytes(2);
-			byte [] Reserved   = stream.ReadBytes(6);
+			//byte [] Reserved   = stream.ReadBytes(6);
+            stream.ReadBytes(6);
 
 			if (Enumerable.SequenceEqual(Signature, Signature_8BPS))
 			{
@@ -579,11 +576,11 @@ namespace SimplePsd
 			NativeMethods.BITMAPINFO BitmapInfo = new NativeMethods.BITMAPINFO();
 			BitmapInfo.bmiHeader = new NativeMethods.BITMAPINFOHEADER();
 
-			BitmapInfo.bmiHeader.biSize               = 40;
+            BitmapInfo.bmiHeader.Init();
 			BitmapInfo.bmiHeader.biWidth              = cx;
 			BitmapInfo.bmiHeader.biHeight             = cy;
 			BitmapInfo.bmiHeader.biPlanes             = 1;
-			BitmapInfo.bmiHeader.biBitCount           = BitCount;
+			BitmapInfo.bmiHeader.biBitCount           = (ushort)BitCount;
 			BitmapInfo.bmiHeader.biCompression        = NativeMethods.BI_RGB;
 			BitmapInfo.bmiHeader.biSizeImage          = 0;
 			BitmapInfo.bmiHeader.biXPelsPerMeter      = ppm_x; 

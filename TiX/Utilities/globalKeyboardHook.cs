@@ -5,8 +5,6 @@ using System.Windows.Forms;
 
 namespace TiX.Utilities
 {
-    public delegate void KeyHookEvent(object sender, KeyHookEventArgs e);
-    
     public class KeyHookEventArgs : EventArgs
     {
         public KeyHookEventArgs(Keys key)
@@ -30,8 +28,8 @@ namespace TiX.Utilities
         Keys m_shift   = Keys.None;
         Keys m_alt     = Keys.None;
 		
-		public event KeyHookEvent KeyDown;
-		public event KeyHookEvent KeyUp;
+		public event EventHandler<KeyHookEventArgs> KeyDown;
+		public event EventHandler<KeyHookEventArgs> KeyUp;
 
 		NativeMethods.keyboardHookProc khp;
 
@@ -164,7 +162,8 @@ namespace TiX.Utilities
 			[DllImport("user32.dll")]
 			public static extern IntPtr SetWindowsHookEx(int idHook, keyboardHookProc callback, IntPtr hInstance, uint threadId);
 
-			[DllImport("user32.dll")]
+            [DllImport("user32.dll")]
+            [return: MarshalAs(UnmanagedType.Bool)]
 			public static extern bool UnhookWindowsHookEx(IntPtr hInstance);
 
 			[DllImport("user32.dll")]

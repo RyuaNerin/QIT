@@ -106,6 +106,8 @@ namespace Limitation
 
         private static string ToString(IDictionary<string, object> dic)
         {
+            if (dic == null) return null;
+
             var sb = new StringBuilder();
 
             if (dic.Count > 0)
@@ -125,6 +127,8 @@ namespace Limitation
 
         public static string ToString(object values)
         {
+            if (values == null) return null;
+
             var sb = new StringBuilder();
 
             string name;

@@ -38,7 +38,6 @@ namespace TiX.Utilities
             }
         }
 
-        private NativeMethods.WndProc m_customProc;
         private IntPtr  m_customHwnd;
         private Mutex   m_mutex;
 
@@ -67,11 +66,9 @@ namespace TiX.Utilities
 
         private void CreateWindow()
         {
-            this.m_customProc       = new NativeMethods.WndProc(this.CustomProc);
-
             var wndClass			= new NativeMethods.WNDCLASS();
             wndClass.lpszClassName	= this.m_uniqueName;
-            wndClass.lpfnWndProc	= Marshal.GetFunctionPointerForDelegate(this.m_customProc);
+            wndClass.lpfnWndProc	= this.CustomProc;
 
             var resRegister	= NativeMethods.RegisterClass(ref wndClass);
             var resError	= Marshal.GetLastWin32Error();
@@ -141,23 +138,27 @@ namespace TiX.Utilities
                 IntPtr lParam);
 
             [DllImport("user32.dll", SetLastError = true)]
+            [return: MarshalAs(UnmanagedType.Bool)]
             public static extern bool DestroyWindow(
                 IntPtr hWnd);
 
             //////////////////////////////////////////////////
 
-            [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+            [StructLayout(LayoutKind.Sequential)]
             public struct WNDCLASS
             {
                 public int		style;
-                public IntPtr	lpfnWndProc;
+                [MarshalAs(UnmanagedType.FunctionPtr)]
+                public WndProc	lpfnWndProc;
                 public int		cbClsExtra;
                 public int		cbWndExtra;
                 public IntPtr	hInstance;
                 public IntPtr	hIcon;
                 public IntPtr	hCursor;
                 public IntPtr	hbrBackground;
+                [MarshalAs(UnmanagedType.LPTStr)]
                 public string	lpszMenuName;
+                [MarshalAs(UnmanagedType.LPTStr)]
                 public string	lpszClassName;
             }
 

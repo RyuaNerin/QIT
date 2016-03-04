@@ -7,7 +7,7 @@ namespace SimplePsd
 	/// This class shall keep the Win32 APIs being used in 
 	/// the program.
 	/// </summary>
-	public static class NativeMethods
+	internal static class NativeMethods
 	{
 
 		#region Class Variables
@@ -16,12 +16,14 @@ namespace SimplePsd
 		#endregion
 		
 		#region Class Functions
-        		
-		[DllImport("gdi32.dll",EntryPoint="DeleteDC")]
-		public static extern IntPtr DeleteDC(IntPtr hDc);
 
-		[DllImport("gdi32.dll",EntryPoint="DeleteObject")]
-		public static extern IntPtr DeleteObject(IntPtr hDc);
+        [DllImport("gdi32.dll", EntryPoint="DeleteDC")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+		public static extern bool DeleteDC(IntPtr hDc);
+
+        [DllImport("gdi32.dll", EntryPoint="DeleteObject")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+		public static extern bool DeleteObject(IntPtr hDc);
 
 		[DllImport ("gdi32.dll",EntryPoint="CreateCompatibleDC")]
 		public static extern IntPtr CreateCompatibleDC(IntPtr hdc);
@@ -30,46 +32,60 @@ namespace SimplePsd
 		public static extern IntPtr SelectObject(IntPtr hdc,IntPtr bmp);
 
 		[DllImport("gdi32.dll", EntryPoint="CreateDIBSection")]
-		public static extern IntPtr CreateDIBSection(IntPtr hDC, ref BITMAPINFO pBitmapInfo, int un, IntPtr lplpVoid, IntPtr handle, int offset);
+		public static extern IntPtr CreateDIBSection(IntPtr hDC, [In] ref BITMAPINFO pBitmapInfo, int un, IntPtr lplpVoid, IntPtr handle, int offset);
 		
 		[DllImport("gdi32.dll", EntryPoint="GetStockObject")]
 		public static extern IntPtr  GetStockObject(int fnObject);
 
 		[DllImport("gdi32.dll", EntryPoint="SetPixel")]
-		public static extern IntPtr SetPixel(IntPtr hDC, int x, int y, int nColor);
+		public static extern uint SetPixel(IntPtr hDC, int x, int y, int nColor);
 
 		[DllImport("user32.dll",EntryPoint="GetDC")]
 		public static extern IntPtr GetDC(IntPtr ptr);
 
 		[DllImport("user32.dll",EntryPoint="ReleaseDC")]
-		public static extern IntPtr ReleaseDC(IntPtr hWnd,IntPtr hDc);
+		public static extern int ReleaseDC(IntPtr hWnd,IntPtr hDc);
 	
 		[DllImport("user32.dll", EntryPoint="FillRect")]
-		public static extern int FillRect(IntPtr hDC, ref RECT lprc, IntPtr hbr);
+		public static extern int FillRect(IntPtr hDC, [In] ref RECT lprc, IntPtr hbr);
 		
 		#endregion
 
         [StructLayout(LayoutKind.Sequential, Pack=1)]
         public struct BITMAPINFOHEADER
         {
-            public Int32 biSize;
-            public Int32 biWidth;
-            public Int32 biHeight;
-            public short biPlanes;
-            public short biBitCount;
-            public Int32 biCompression;
-            public Int32 biSizeImage;
-            public Int32 biXPelsPerMeter;
-            public Int32 biYPelsPerMeter;
-            public Int32 biClrUsed;
-            public Int32 biClrImportant;
+            public void Init()
+            {
+                this.biSize = (uint)Marshal.SizeOf(this);
+            }
+
+            public uint     biSize;
+            public int      biWidth;
+            public int      biHeight;
+            public ushort   biPlanes;
+            public ushort   biBitCount;
+            public uint     biCompression;
+            public uint     biSizeImage;
+            public int      biXPelsPerMeter;
+            public int      biYPelsPerMeter;
+            public uint     biClrUsed;
+            public uint     biClrImportant;
         }
 
         [StructLayout(LayoutKind.Sequential, Pack=1)]
         public struct BITMAPINFO
         {
             public BITMAPINFOHEADER bmiHeader;
-            public Int32[] bmiColors;
+            public RGBQUAD[] bmiColors;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct RGBQUAD
+        {
+            public byte rgbBlue;
+            public byte rgbGreen;
+            public byte rgbRed;
+            public byte rgbReserved;
         }
 
         [StructLayout(LayoutKind.Sequential, Pack=1)]

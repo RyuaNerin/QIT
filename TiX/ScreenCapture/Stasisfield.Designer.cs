@@ -15,7 +15,9 @@
 		{
 			if ( disposing && ( components != null ) )
 			{
-				components.Dispose( );
+                components.Dispose();
+                this.m_captureBlur.Dispose();
+                this.m_capture.Dispose();
 			}
 			base.Dispose( disposing );
 		}
@@ -47,7 +49,6 @@
             this.Text = "Stasisfield";
             this.TopMost = true;
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Stasisfield_FormClosing);
-            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.Stasisfield_FormClosed);
             this.Shown += new System.EventHandler(this.Stasisfield_Shown);
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Stasisfield_KeyDown);
             this.MouseDown += new System.Windows.Forms.MouseEventHandler(this.Stasisfield_MouseDown);

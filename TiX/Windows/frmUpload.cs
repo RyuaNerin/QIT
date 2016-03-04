@@ -128,12 +128,10 @@ namespace TiX.Windows
             var newWidth  = (int)(this.m_image.Width  * ratio);
             var newHeight = (int)(this.m_image.Height * ratio);
 
-            var newImage = new Bitmap(newWidth, newHeight);
+            this.m_imageThumbnail = new Bitmap(newWidth, newHeight);
 
-            using (var graphics = Graphics.FromImage(newImage))
+            using (var graphics = Graphics.FromImage(this.m_imageThumbnail))
                 graphics.DrawImage(this.m_image, 0, 0, newWidth, newHeight);
-
-            this.m_imageThumbnail = newImage;
             //////////////////////////////////////////////////
 
             e.Result = 0;
@@ -177,22 +175,12 @@ namespace TiX.Windows
 
         private void frmUpload_Enter(object sender, EventArgs e)
         {
-            try
-            {
-                this.txtText.Focus();
-            }
-            catch
-            { }
+            this.txtText.Focus();
         }
 
         private void frmUpload_Activated(object sender, EventArgs e)
         {
-            try
-            {
-                this.txtText.Focus();
-            }
-            catch
-            { }
+            this.txtText.Focus();
         }
 
         //////////////////////////////////////////////////////////////////////////

@@ -70,7 +70,7 @@
             // 
             // ajax
             // 
-            this.ajax.is16 = true;
+            this.ajax.Is16 = true;
             this.ajax.Location = new System.Drawing.Point(68, 19);
             this.ajax.Name = "ajax";
             this.ajax.Size = new System.Drawing.Size(16, 16);

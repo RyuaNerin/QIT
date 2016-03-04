@@ -59,13 +59,7 @@ namespace TiX.ScreenCapture
 		private Point[]     m_location      = new Point[2];             // 마우스 다운 및 업 이벤트 발생 좌표
 
         public Image  CropedImage   { get; private set; }
-
-		private void Stasisfield_FormClosed( object sender, FormClosedEventArgs e )
-		{
-			this.m_captureBlur.Dispose( );
-			this.m_capture.Dispose( );
-		}
-
+        
 		private void Stasisfield_Shown( object sender, EventArgs e )
 		{
 			this.Location = new Point( this.m_screenRect.Left, this.m_screenRect.Top );

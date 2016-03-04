@@ -54,7 +54,7 @@ namespace TiX.Windows
         {
             e.Effect = DragDropEffects.None;
 
-            if (DragDropInfo.isAvailable(e))
+            if (DragDropInfo.IsAvailable(e))
             {
                 bool allow = true;
 

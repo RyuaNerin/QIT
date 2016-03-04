@@ -10,7 +10,7 @@ namespace TiX.Core
 {
 	public static class Settings
 	{
-        private class Attr : Attribute
+        private sealed class Attr : Attribute
         { }
 
 		public readonly static string FilePath = Path.Combine(Application.StartupPath, "TiX.ini");
@@ -23,7 +23,7 @@ namespace TiX.Core
         [Attr] public static bool   EnabledShell        { get; set; }
         [Attr] public static string Shells              { get; set; }
 
-        public readonly static PropertyInfo[] m_properties;
+        private readonly static PropertyInfo[] m_properties;
         static Settings()
         {
             Settings.m_properties = typeof(Settings).GetProperties().Where(e => e.GetCustomAttributes(false).Any(ee => ee is Attr)).ToArray();
@@ -72,11 +72,10 @@ namespace TiX.Core
             return "";
         }
 
-        private class NativeMethods
+        private static class NativeMethods
         {
             [DllImport("kernel32.dll", CharSet=CharSet.Unicode)]
             private static extern uint GetPrivateProfileString(string lpAppName, string lpKeyName, string lpDefault, StringBuilder lpReturnedString, uint nSize, string lpFileName);
-
             public static string Get(string path, string section, string key)
             {
                 var sb = new StringBuilder(64);
