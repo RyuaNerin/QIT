@@ -141,8 +141,7 @@
     <Compile Include="SimplePSD\PSDImageResource.cs" />
     <Compile Include="SimplePSD\PSDResolutionInfo.cs" />
     <Compile Include="SimplePSD\PSDThumbNail.cs" />
-    <Compile Include="Core\HttpCommunicator\twitterApi.cs" />
-    <Compile Include="Core\HttpCommunicator\twitterApi11.cs" />
+    <Compile Include="Limitation\OAuth.cs" />
     <EmbeddedResource Include="Windows\frmMain.resx">
       <DependentUpon>frmMain.cs</DependentUpon>
     </EmbeddedResource>

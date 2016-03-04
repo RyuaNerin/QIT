@@ -90,9 +90,11 @@ namespace TiX.Utilities
                     hwnd = NativeMethods.FindWindow(this.m_uniqueName, null);
                     if (hwnd != IntPtr.Zero)
                     {
-                        SendData(hwnd, data);
-                        succ = true;
-                        break;
+                        if (SendData(hwnd, data))
+                        {
+                            succ = true;
+                            break;
+                        }
                     }
                     Thread.Sleep(50);
                 } while (endTime < DateTime.UtcNow);
@@ -159,7 +161,7 @@ namespace TiX.Utilities
             return NativeMethods.DefWindowProc(hwnd, msg, wParam, lParam);
         }
 
-		private void SendData(IntPtr hwnd, byte[] data)
+		private bool SendData(IntPtr hwnd, byte[] data)
 		{
             var lpData = IntPtr.Zero;
 			try
@@ -178,7 +180,8 @@ namespace TiX.Utilities
 
                     Marshal.StructureToPtr(copydata, lParam, true);
 
-                    NativeMethods.SendMessage(hwnd, NativeMethods.WM_COPYDATA, CustomParam, lParam);
+                    if (NativeMethods.SendMessage(hwnd, NativeMethods.WM_COPYDATA, CustomParam, lParam) == CustomParam)
+                        return true;
                 }
                 catch
                 { }
@@ -193,6 +196,8 @@ namespace TiX.Utilities
 			{
 				if (lpData != IntPtr.Zero) Marshal.FreeHGlobal(lpData);
 			}
+
+            return false;
 		}
 
         private static class NativeMethods

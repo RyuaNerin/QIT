@@ -14,9 +14,6 @@ namespace TiX.Core
         { }
 
 		public readonly static string FilePath = Path.Combine(Application.StartupPath, "TiX.ini");
-        
-		public const  string    CKey	= "lQJwJWJoFlbvr2UQnDbg";
-		public const  string    CSecret	= "DsuIRA1Ak9mmSCGl9wnNvjhmWJTmb9vZlRdQ7sMqXww";
 
         [Attr] public static string UToken              { get; set; }
         [Attr] public static string	USecret             { get; set; }
@@ -29,9 +26,6 @@ namespace TiX.Core
         public readonly static PropertyInfo[] m_properties;
         static Settings()
         {
-            Twitter.TwitterAPI11.consumerToken  = Settings.CKey;
-            Twitter.TwitterAPI11.consumerSecret = Settings.CSecret;
-
             Settings.m_properties = typeof(Settings).GetProperties().Where(e => e.GetCustomAttributes(false).Any(ee => ee is Attr)).ToArray();
         }
 

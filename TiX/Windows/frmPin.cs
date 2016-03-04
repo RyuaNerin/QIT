@@ -7,7 +7,7 @@ namespace TiX.Windows
 {
 	public partial class frmPin : Form
 	{
-		string t, s;
+		string m_token, m_secret;
 
 		public frmPin()
 		{
@@ -15,12 +15,12 @@ namespace TiX.Windows
 		}
 
 		private void frmPin_Load(object sender, EventArgs e)
-		{
+        {
+            this.ajax.Left = this.pnl.Width  / 2 - 8;
+            this.ajax.Top  = this.pnl.Height / 2 - 8;
+
 			this.ajax.Start();
 			this.bgwBefore.RunWorkerAsync();
-
-			this.ajax.Left = this.pnl.Width / 2 - 8;
-			this.ajax.Top = this.pnl.Height / 2 - 8;
 		}
 
         protected override void WndProc(ref Message m)
@@ -41,12 +41,21 @@ namespace TiX.Windows
 
 		private void bgwBefore_DoWork(object sender, DoWorkEventArgs e)
 		{
-			Twitter.TwitterAPI11.OAuth.request_token(null, out this.t, out this.s);
+            Program.Twitter.UserToken  = null;
+            Program.Twitter.UserSecret = null;
+            e.Result = Program.Twitter.RequestToken(out this.m_token, out this.m_secret);
 		}
 
 		private void bgwBefore_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
 		{
-			System.Diagnostics.Process.Start("explorer", String.Format("\"https://api.twitter.com/oauth/authorize?oauth_token={0}\"", this.t));
+            if (e.Result == null || (bool)e.Result == false)
+            {
+                MessageBox.Show(this, "문제가 발생했어요 :(", Program.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                this.Close();
+                return;
+            }
+
+			System.Diagnostics.Process.Start("explorer", String.Format("\"https://api.twitter.com/oauth/authorize?oauth_token={0}\"", this.m_token));
 
 			this.ajax.Stop();
 			this.txtPin.Enabled = true;
@@ -82,20 +91,29 @@ namespace TiX.Windows
         }
 
 		private void bgwAfter_DoWork(object sender, DoWorkEventArgs e)
-		{
-            string token, secret;
+        {
+            if (e.Result == null || (bool)e.Result == false)
+            {
+                MessageBox.Show(this, "문제가 발생했어요 :(", Program.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                this.Close();
+                return;
+            }
 
-			Twitter.TwitterAPI11.OAuth.access_token(
-				this.t,
-				this.s,
-				(string)e.Argument,
-				out token,
-				out secret);
+            Program.Twitter.UserToken  = this.m_token;
+            Program.Twitter.UserSecret = this.m_secret;
+            if (Program.Twitter.AccessToken((string)e.Argument, out this.m_token, out this.m_secret))
+            {
+                Settings.UToken  = this.m_token;
+                Settings.USecret = this.m_secret;
 
-            Settings.UToken  = token;
-            Settings.USecret = secret;
+                Settings.Save();
 
-			Settings.Save();
+                e.Result = true;
+            }
+            else
+            {
+                e.Result = false;
+            }
 		}
 
 		private void bgwAfter_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)

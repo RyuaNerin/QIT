@@ -44,10 +44,10 @@ namespace TiX.Core
             info.DataType = DataTypes.Image;
             return info;
 		}
-		public static DragDropInfo Create( DragEventArgs e )
+		public static DragDropInfo Create( IDataObject e )
         {
             var info = new DragDropInfo();
-            info.m_object = e.Data;
+            info.m_object = e;
             info.DataType = DataTypes.IDataObject;
             return info;
 		}

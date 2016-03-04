@@ -29,24 +29,13 @@
 		private void InitializeComponent()
 		{
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmPin));
-            this.txtPin = new System.Windows.Forms.TextBox();
             this.bgwBefore = new System.ComponentModel.BackgroundWorker();
             this.bgwAfter = new System.ComponentModel.BackgroundWorker();
             this.pnl = new System.Windows.Forms.Panel();
+            this.txtPin = new System.Windows.Forms.TextBox();
             this.ajax = new TiX.Windows.AjaxControl();
             this.pnl.SuspendLayout();
             this.SuspendLayout();
-            // 
-            // txtPin
-            // 
-            this.txtPin.Enabled = false;
-            this.txtPin.Location = new System.Drawing.Point(12, 12);
-            this.txtPin.MaxLength = 8;
-            this.txtPin.Name = "txtPin";
-            this.txtPin.Size = new System.Drawing.Size(124, 23);
-            this.txtPin.TabIndex = 1;
-            this.txtPin.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-            this.txtPin.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtPin_KeyDown);
             // 
             // bgwBefore
             // 
@@ -67,6 +56,17 @@
             this.pnl.Name = "pnl";
             this.pnl.Size = new System.Drawing.Size(148, 47);
             this.pnl.TabIndex = 3;
+            // 
+            // txtPin
+            // 
+            this.txtPin.Enabled = false;
+            this.txtPin.Location = new System.Drawing.Point(12, 12);
+            this.txtPin.MaxLength = 8;
+            this.txtPin.Name = "txtPin";
+            this.txtPin.Size = new System.Drawing.Size(124, 23);
+            this.txtPin.TabIndex = 1;
+            this.txtPin.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.txtPin.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtPin_KeyDown);
             // 
             // ajax
             // 
@@ -101,10 +101,10 @@
 
 		#endregion
 
-		private System.Windows.Forms.TextBox txtPin;
-		private AjaxControl ajax;
-		private System.ComponentModel.BackgroundWorker bgwBefore;
+        private System.ComponentModel.BackgroundWorker bgwBefore;
 		private System.ComponentModel.BackgroundWorker bgwAfter;
 		private System.Windows.Forms.Panel pnl;
+        private AjaxControl ajax;
+        private System.Windows.Forms.TextBox txtPin;
 	}
 }

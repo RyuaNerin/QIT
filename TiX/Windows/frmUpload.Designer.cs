@@ -57,7 +57,7 @@
             // 
             // lblLength
             // 
-            this.lblLength.Location = new System.Drawing.Point(249, 13);
+            this.lblLength.Location = new System.Drawing.Point(249, 9);
             this.lblLength.Name = "lblLength";
             this.lblLength.Size = new System.Drawing.Size(62, 15);
             this.lblLength.TabIndex = 5;
@@ -67,12 +67,13 @@
             // txtText
             // 
             this.txtText.ForeColor = System.Drawing.SystemColors.WindowText;
-            this.txtText.Location = new System.Drawing.Point(82, 32);
+            this.txtText.Location = new System.Drawing.Point(82, 28);
             this.txtText.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.txtText.MaxLength = 140;
             this.txtText.Multiline = true;
             this.txtText.Name = "txtText";
-            this.txtText.Size = new System.Drawing.Size(229, 45);
+            this.txtText.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.txtText.Size = new System.Drawing.Size(229, 49);
             this.txtText.TabIndex = 6;
             this.txtText.TextChanged += new System.EventHandler(this.txtText_TextChanged);
             this.txtText.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtText_KeyDown);

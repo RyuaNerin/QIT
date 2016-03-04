@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.IO;
 using System.Threading;
 using System.Windows.Forms;
 using TiX.Core;
@@ -25,45 +24,33 @@ namespace TiX.Windows
                 label2.Text = "Ctrl을 눌러 [내용] 작성";
             else
                 label2.Text = "Ctrl을 눌러 [바로] 작성";
-				
+
             manager = new GlobalKeyboardHook();
 			manager.Down.Add(Keys.C | Keys.Control | Keys.Shift);
             manager.KeyDown += GlobalKeyboardHook_KeyDown;
-
-			this.KeyDown += FrmMain_KeyDown;
         }
 
-		private void FrmMain_KeyDown( object sender, System.Windows.Forms.KeyEventArgs e )
-		{
-			if ( e.Modifiers == Keys.Control && e.KeyCode == Keys.V )
+        private void frmMain_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            Settings.Save();
+        }
+
+        private void frmMain_MouseUp(object sender, System.Windows.Forms.MouseEventArgs e)
+        {
+            if (e.Button == System.Windows.Forms.MouseButtons.Right)
             {
-                try
-                {
-                    using (var clipImage = Clipboard.GetImage())
-                    {
-                        if (clipImage == null) return;
-                        TweetModerator.Tweet(clipImage, "클립보드 이미지 전송중");
-                    }
-                }
-                catch
-                { }
-			}
-		}
+                using (var frm = new frmSettings())
+                    frm.ShowDialog();
 
-        private long m_stasis = 0;
-        private void GlobalKeyboardHook_KeyDown(object sender, KeyHookEventArgs e)
-        {
-            this.BeginInvoke(new Action(this.GlobalKeyboardHook_KeyDown));
-        }
-        private void GlobalKeyboardHook_KeyDown()
-        {
-            if (Interlocked.CompareExchange(ref this.m_stasis, 1, 0) == 1) return;
-
-            GenerateStasisField();
-            Interlocked.Exchange(ref this.m_stasis, 0);
+                this.TopMost = Settings.Topmost;
+                if (Settings.ReversedCtrl)
+                    label2.Text = "Ctrl을 눌러 [내용] 작성";
+                else
+                    label2.Text = "Ctrl을 눌러 [바로] 작성";
+            }
         }
 
-        private void pnl_DragOver(object sender, DragEventArgs e)
+        private void frmMain_DragOverOrEnter(object sender, DragEventArgs e)
         {
             e.Effect = DragDropEffects.None;
 
@@ -78,94 +65,9 @@ namespace TiX.Windows
                     allow = false;
                     for (int i = 0; i < paths.Length; ++i)
                     {
-                        if (Array.IndexOf<string>(Program.AllowExtension, Path.GetExtension(paths[i]).ToLower()) >= 0)
+                        if (Program.CheckFile(paths[i]))
                         {
                             allow = true;
-                            break;
-                        }
-                    }
-                }
-
-                if (allow) e.Effect = DragDropEffects.Move;
-            }
-        }
-
-        private void pnl_DragDrop(object sender, DragEventArgs e)
-        {
-            try
-            {                
-                var data = new CallbackData();
-
-                // Local Files
-                if (e.Data.GetDataPresent(DataFormats.FileDrop))
-                {
-                    string[] paths = (string[])e.Data.GetData(DataFormats.FileDrop);
-
-                    if (paths.Length > 10)
-                        if (MessageBox.Show(
-                            this,
-                            String.Format("정말 {0} 개의 이미지를 트윗하시겠습니까?", paths.Length),
-                            Program.ProductName,
-                            MessageBoxButtons.YesNo,
-                            MessageBoxIcon.Question) == DialogResult.No)
-                            return;
-
-                    for (int i = 0; i < paths.Length; ++i)
-                        if (Array.IndexOf<string>(Program.AllowExtension, Path.GetExtension(paths[i]).ToLower()) >= 0)
-                            data.List.Add(DragDropInfo.Create(paths[i]));
-                }
-                else
-                {
-                    DragDropInfo info = DragDropInfo.Create(e);
-                    if (info != null)
-                        data.List.Add(info);
-                    else
-                        info.Dispose();
-                }
-
-                if (data.List.Count > 0)
-                {
-                    //               (Settings.ReversedCtrl && ((e.KeyState & 8) != 8)) || (!Settings.ReversedCtrl && ((e.KeyState & 8) == 8))
-                    data.AutoStart = (Settings.ReversedCtrl && ((e.KeyState & 8) != 8)) || ((e.KeyState & 8) != 8);
-                    data.IAsyncResult = this.BeginInvoke(new Action<CallbackData>(this.Callback), data);
-                }
-            }
-            catch
-            { }
-        }
-
-        private class CallbackData
-        {
-            public bool AutoStart;
-            public List<DragDropInfo> List = new List<DragDropInfo>();
-            public IAsyncResult IAsyncResult;
-        }
-        private void Callback(CallbackData data)
-        {
-            this.EndInvoke(data.IAsyncResult);
-
-            var frm = new frmUpload(data.List);
-            frm.AutoStart = data.AutoStart;
-            frm.Show(this);
-        }
-
-        private void pnl_DragEnter(object sender, DragEventArgs e)
-        {
-            e.Effect = DragDropEffects.None;
-
-            if (DragDropInfo.isAvailable(e))
-            {
-                bool allow = true;
-
-                if (e.Data.GetDataPresent(DataFormats.FileDrop))
-                {
-                    string[] paths = (string[])e.Data.GetData(DataFormats.FileDrop);
-
-                    for (int i = 0; i < paths.Length; ++i)
-                    {
-                        if (Array.IndexOf<string>(Program.AllowExtension, Path.GetExtension(paths[i]).ToLower()) < 0)
-                        {
-                            allow = false;
                             break;
                         }
                     }
@@ -175,57 +77,74 @@ namespace TiX.Windows
                     e.Effect = DragDropEffects.Move;
             }
         }
-
-        private void frmMain_FormClosing(object sender, FormClosingEventArgs e)
+        private void frmMain_DragDrop(object sender, DragEventArgs e)
         {
-            Settings.Save();
+            //              (Settings.ReversedCtrl && ((e.KeyState & 8) != 8)) || (!Settings.ReversedCtrl && ((e.KeyState & 8) == 8))
+            var autoStart = (Settings.ReversedCtrl && ((e.KeyState & 8) != 8)) || ((e.KeyState & 8) == 8);
+
+            TweetModerator.Tweet(e.Data, autoStart);
         }
 
-        private void pnl_MouseUp(object sender, System.Windows.Forms.MouseEventArgs e)
+        private void frmMain_KeyDown(object sender, KeyEventArgs e)
         {
-
-            if (e.Button == System.Windows.Forms.MouseButtons.Right)
-            {
-                using (var frm = new frmSettings())
-                    frm.ShowDialog();
-
-                this.TopMost = Settings.Topmost;
-                if (Settings.ReversedCtrl)
-                    label2.Text = "Ctrl을 눌러 [내용] 작성";
-                else
-                    label2.Text = "Ctrl을 눌러 [바로] 작성";
-            }
+            if (e.Modifiers == Keys.Control && e.KeyCode == Keys.V)
+                TweetModerator.Tweet(Clipboard.GetDataObject(), false, "클립보드 이미지 전송중");
         }
+        
+        private long m_stasis = 0;
+        private void GlobalKeyboardHook_KeyDown(object sender, KeyHookEventArgs e)
+        {
+            if (Interlocked.CompareExchange(ref this.m_stasis, 1, 0) == 1) return;
 
-		private void GenerateStasisField()
+            this.BeginInvoke(new Action(this.GlobalKeyboardHook_KeyDown));
+        }
+        private void GlobalKeyboardHook_KeyDown()
+        {
+            GenerateStasisField();
+            Interlocked.Exchange(ref this.m_stasis, 0);
+        }
+        private void GenerateStasisField()
         {
             this.Opacity = 0;
-			this.ShowInTaskbar = false;
+            this.ShowInTaskbar = false;
 
             Image cropedImage;
-            string targetTweetId;
-            string targetUserId;
-			using (var stasis = new TiX.ScreenCapture.Stasisfield( ))
+            using (var stasis = new TiX.ScreenCapture.Stasisfield())
             {
-                stasis.ShowDialog( );
+                stasis.ShowDialog();
                 cropedImage   = stasis.CropedImage;
-                targetUserId  = stasis.TargetUserID;
-                targetTweetId = stasis.TargetTweetID;
             }
 
-			this.ShowInTaskbar = true;
-			this.Opacity = 255;
+            this.ShowInTaskbar = true;
+            this.Opacity = 255;
 
             if (cropedImage != null)
-            {
-                using (cropedImage)
-                {
-                    if (!string.IsNullOrEmpty(targetUserId) || !string.IsNullOrEmpty(targetTweetId))
-                        TweetModerator.Tweet(cropedImage, "캡처 화면 전송중", targetUserId, targetTweetId);
-                    else
-                        TweetModerator.Tweet(cropedImage, "캡처 화면 전송중");
-                }
-            }
-		}
+                TweetModerator.Tweet(cropedImage, false, "캡처 화면 전송중");
+        }
+        
+        internal class CallbackData
+        {
+            public List<DragDropInfo> List = new List<DragDropInfo>();
+            public bool         Callback;
+            public IAsyncResult IAsyncResult;
+            public bool         AutoStart;
+            public string       DefaultText;
+            public string       InReplyToStatusId;
+        }
+        internal static void Callback(CallbackData data)
+        {
+            if (data.Callback)
+                frmMain.Instance.EndInvoke(data.IAsyncResult);
+            
+            var frm = new frmUpload(data.List);
+            frm.AutoStart           = data.AutoStart;
+            frm.TweetString         = data.DefaultText;
+            frm.InReplyToStatusId   = data.InReplyToStatusId;
+
+            if (frmMain.Instance != null)
+                frm.Show(frmMain.Instance);
+            else
+                Application.Run(frm);
+        }
     }
 }

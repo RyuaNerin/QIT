@@ -48,12 +48,6 @@ namespace TiX.ScreenCapture
 			m_location[0] = m_location[1] = EmptyPoint;
 		}
 
-		public Stasisfield( string TargetUserID, string TargetTweetID ) : this( )
-		{
-			this.TargetTweetID = TargetTweetID;
-			this.TargetUserID = TargetUserID;
-		}
-
 		private static readonly Point EmptyPoint = new Point(-1, -1); 
 
 		private Rectangle   m_screenRect;
@@ -64,8 +58,6 @@ namespace TiX.ScreenCapture
 		private Image       m_capture       = null;                     // 정지장이 생성되는 시점의 화면 화상입니다.
 		private Point[]     m_location      = new Point[2];             // 마우스 다운 및 업 이벤트 발생 좌표
 
-		public string TargetUserID  { get; private set; } 
-		public string TargetTweetID { get; private set; } 
         public Image  CropedImage   { get; private set; }
 
 		private void Stasisfield_FormClosed( object sender, FormClosedEventArgs e )
@@ -86,7 +78,18 @@ namespace TiX.ScreenCapture
 				this.Hide( );
                 
                 if (GetSizeFromLocation(m_location[0], m_location[1]))
-                    this.CropedImage = CropImage(m_capture, this.m_rect);
+                {
+                    this.CropedImage = new Bitmap(this.m_rect.Width, this.m_rect.Height);
+                    using (var g = Graphics.FromImage(this.CropedImage))
+                    {
+                        g.DrawImage(
+                            this.m_capture,
+                            new Rectangle(0, 0, this.m_rect.Width, this.m_rect.Height),
+                            this.m_rect,
+                            GraphicsUnit.Pixel
+                        );
+                    }
+                }
 			}
 		}
 
@@ -94,11 +97,8 @@ namespace TiX.ScreenCapture
 		#region 마우스 클릭 이벤트
 		private void Stasisfield_MouseMove( object sender, MouseEventArgs e )
 		{
-// 			if ( m_drag )
-// 			{
-				m_location[1] = e.Location;
-				this.Invalidate( );
-            //}
+            m_location[1] = e.Location;
+            this.Invalidate();
 		}
 		private void Stasisfield_MouseDown( object sender, MouseEventArgs e )
 		{
@@ -183,30 +183,6 @@ namespace TiX.ScreenCapture
             }
 
             return false;
-		}
-
-		/// <summary>
-		/// 이미지를 잘라요
-		/// </summary>
-		/// <param name="image">원본 이미지</param>
-		/// <param name="src">자를 크기</param>
-		/// <returns></returns>
-		private Image CropImage( Image image, Rectangle src )
-		{
-			var dest = new Rectangle(0, 0, src.Width, src.Height);
-
-			Image cropedImage = new Bitmap(src.Width, src.Height);
-			using ( Graphics g = Graphics.FromImage( cropedImage ) )
-			{
-				g.DrawImage(
-					image,
-					dest,
-					src,
-					GraphicsUnit.Pixel
-				);
-			}
-
-			return cropedImage;
 		}
 	}
 }

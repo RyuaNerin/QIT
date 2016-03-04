@@ -10,7 +10,6 @@ using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using TiX.Core;
 using TiX.Utilities;
-using Twitter;
 
 namespace TiX.Windows
 {
@@ -85,6 +84,15 @@ namespace TiX.Windows
             {
                 this.Close();
                 return;
+            }
+
+            if (string.IsNullOrEmpty(this.TweetString))
+            {
+                this.txtText.Text = this.TweetString;
+            }
+            else if (!Settings.UniformityText)
+            {
+                this.txtText.Text = "";
             }
 
             this.Text = String.Format("{0} ({1} / {2})", Program.ProductName, this.m_index + 1, this.m_infos.Count);
@@ -216,7 +224,7 @@ namespace TiX.Windows
         private bool m_isOver90p = false;
         private bool m_tweetable = true;
 
-        private static Regex m_regex = new Regex("/^(https?:\\/\\/)?([\\da-z\\.-]+)\\.([a-z\\.]{2,6})([\\/\\w \\.-]*)*\\/?$/", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static Regex m_regex = new Regex(@"https?:\/\/(-\.)?([^\s\/?\.#-]+\.?)+(\/[^\s]*)?", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private void txtText_TextChanged(object sender, EventArgs e)
         {
             try
@@ -312,61 +320,8 @@ namespace TiX.Windows
                 string boundary  = Helper.CreateString();
                 string boundary2 = "--" + boundary;
 
-                //////////////////////////////////////////////////
-
-                string URL, oauth_nonce, oauth_timestamp, hash_parameter, oauth_signature;
-
-                URL = "https://api.twitter.com/1.1/statuses/update_with_media.json";
-
-                oauth_nonce = TwitterAPI.UrlEncode(TwitterAPI.GetNonce());
-                oauth_timestamp = TwitterAPI.UrlEncode(TwitterAPI.GenerateTimeStamp());
-
-                hash_parameter = String.Format(
-                    "oauth_consumer_key={0}&oauth_nonce={1}&oauth_signature_method=HMAC-SHA1&oauth_timestamp={2}&oauth_token={3}&oauth_version=1.0",
-                    Settings.CKey,
-                    oauth_nonce,
-                    oauth_timestamp,
-                    Settings.UToken
-                );
-
-                using (HMACSHA1 oCrypt = new HMACSHA1())
-                {
-                    oCrypt.Key = Encoding.UTF8.GetBytes(
-                        string.Format(
-                            "{0}&{1}",
-                            TwitterAPI.UrlEncode(Settings.CSecret),
-                            TwitterAPI.UrlEncode(Settings.USecret)
-                        )
-                    );
-
-                    oauth_signature = Convert.ToBase64String(
-                        oCrypt.ComputeHash(
-                            Encoding.UTF8.GetBytes(
-                                String.Format(
-                                    "POST&{0}&{1}",
-                                    TwitterAPI.UrlEncode(URL),
-                                    TwitterAPI.UrlEncode(hash_parameter)
-                                )
-                            )
-                        )
-                    );
-
-                    oCrypt.Clear();
-                }
-
-                hash_parameter = String.Format(
-                    "OAuth oauth_signature=\"{0}\",oauth_nonce=\"{1}\",oauth_timestamp=\"{2}\",oauth_consumer_key=\"{3}\",oauth_token=\"{4}\",oauth_version=\"1.0\",oauth_signature_method=\"HMAC-SHA1\"",
-                    TwitterAPI.UrlEncode(oauth_signature),
-                    oauth_nonce,
-                    oauth_timestamp,
-                    Settings.CKey,
-                    Settings.UToken
-                );
-
-                var req = WebRequest.Create(URL) as HttpWebRequest;
+                var req = Program.Twitter.CreateWebRequest("POST", "https://api.twitter.com/1.1/statuses/update_with_media.json");
                 req.ContentType = "multipart/form-data; charset=utf-8; boundary=" + boundary;
-                req.Headers.Set("Authorization", hash_parameter);
-                req.Method = "POST";
 
                 var stream = req.GetRequestStream();
                 using (var writer = new StreamWriter(stream, Encoding.UTF8) { AutoFlush = true, NewLine = "\r\n" })

@@ -37,20 +37,22 @@ namespace TiX.Windows
 			frmPreview.s = this.ClientSize;
 		}
 
-
 		//////////////////////////////////////////////////////////////////////////
 
 		Image	_img;
 		Point	_location = new Point(0, 0);
 		Point	_locationMax;
+        Rectangle m_client;
 
 		bool	_viewOriginal = false;
 
-		private void pic_Paint(object sender, PaintEventArgs e)
-		{
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            base.OnPaint(e);
+
 			RawTrans(e.Graphics, e.ClipRectangle);
 
-			if (this.pic.Width >= this._img.Width && this.pic.Height >= this._img.Height)
+			if (this.m_client.Width >= this._img.Width && this.m_client.Height >= this._img.Height)
 			{
 				e.Graphics.DrawImageUnscaledAndClipped(
 					this._img,
@@ -65,7 +67,7 @@ namespace TiX.Windows
                 var rect = e.ClipRectangle;
                 int x, y;
 
-                if (this._img.Width < this.pic.Width)
+                if (this._img.Width < this.m_client.Width)
                 {
                     rect.X = (rect.Width - this._img.Width) / 2;
                     x = 0;
@@ -73,7 +75,7 @@ namespace TiX.Windows
                 else
                     x = this._location.X;
 
-                if (this._img.Height < this.pic.Height)
+                if (this._img.Height < this.m_client.Height)
                 {
                     rect.Y = (rect.Height - this._img.Height) / 2;
                     y = 0;
@@ -156,14 +158,16 @@ namespace TiX.Windows
 
             this.CheckPosition();
 
-			this.pic.Invalidate();
+			this.Invalidate();
+
+            this.m_client = this.ClientRectangle;
 		}
 		private void SetLocationMax()
 		{
 			try
 			{
-				this._locationMax.X = this._img.Width - this.pic.Width;
-				this._locationMax.Y = this._img.Height - this.pic.Height;
+				this._locationMax.X = this._img.Width - this.m_client.Width;
+				this._locationMax.Y = this._img.Height - this.m_client.Height;
 			}
 			catch
 			{ }
@@ -176,7 +180,7 @@ namespace TiX.Windows
             this.CheckPosition();
 
 			this._location = new Point(0, 0);
-			this.pic.Invalidate();
+			this.Invalidate();
 		}
 
 		private void pic_MouseDown(object sender, MouseEventArgs e)
@@ -194,22 +198,22 @@ namespace TiX.Windows
 			if (!this._isDown)
 				return;
 
-			this._location.X = this._location.X + (int)((this._mousePointX - e.X) * 1.0d * this._img.Width / this.pic.Width);
-			this._location.Y = this._location.Y + (int)((this._mousePointY - e.Y) * 1.0d * this._img.Height / this.pic.Height);
+			this._location.X = this._location.X + (int)((this._mousePointX - e.X) * 1.0d * this._img.Width  / this.m_client.Width);
+			this._location.Y = this._location.Y + (int)((this._mousePointY - e.Y) * 1.0d * this._img.Height / this.m_client.Height);
 
 			this._mousePointX = e.X;
 			this._mousePointY = e.Y;
 
 			this.CheckPosition();
 
-			this.pic.Invalidate();
+			this.Invalidate();
 		}
 
 		private void pic_MouseUp(object sender, MouseEventArgs e)
 		{
 			this._isDown = false;
 
-			this.pic.Invalidate();
+			this.Invalidate();
 		}
 
 		private void CheckPosition()
@@ -244,7 +248,7 @@ namespace TiX.Windows
 
 			this.CheckPosition();
 
-			this.pic.Invalidate();
+			this.Invalidate();
 		}
 	}
 }

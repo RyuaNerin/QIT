@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Text;
 using System.Windows.Forms;
+using Limitation;
 using TiX.Core;
 using TiX.ScreenCapture;
 using TiX.Utilities;
@@ -16,7 +18,21 @@ namespace TiX
         public const  string UniqueName = "C0E6D64A-23D2-4676-93F7-F4B9D8CE25DF";
         public const  string ShellName  = "C0E6D64A-23D2-4676-93F7-F4B9D8CE25DE";
 
+        public static readonly OAuth Twitter = new OAuth("lQJwJWJoFlbvr2UQnDbg", "DsuIRA1Ak9mmSCGl9wnNvjhmWJTmb9vZlRdQ7sMqXww");
+
         public static readonly string[] AllowExtension = { ".bmp", ".emf", ".exif", ".gif", ".ico", ".jpg", ".jpeg", ".png", ".tif", ".tiff", ".wmf", ".psd" };
+        public static bool CheckFile(string path)
+        {
+            if (!File.Exists(path)) return false;
+
+            var ext = Path.GetExtension(path).ToLower();
+
+            for (int i = 0; i < AllowExtension.Length; ++i)
+                if (AllowExtension[i] == ext)
+                    return true;
+
+            return false;
+        }
 
 		[STAThread]
 		static void Main( string[] args )
@@ -36,6 +52,8 @@ namespace TiX
             Application.SetCompatibleTextRenderingDefault(false);
 
             Settings.Load();
+            Program.Twitter.UserToken  = Settings.UToken;
+            Program.Twitter.UserSecret = Settings.USecret;
 
             int i;
 
@@ -44,24 +62,20 @@ namespace TiX
                 //args = new string[] { "Stasis" }; // 정지장 생성 테스트용
                 //args = new string[] { "Stasis", "hsky_Lauren", "705274228010954752" }; // 정지장 멘션 테스트용
 
-                Stasisfield stasisForm;
-
-                if (args.Length == 3)
-                    stasisForm = new Stasisfield(args[1], args[2]);
-                else
-                    stasisForm = new Stasisfield();
-
-                Application.Run(stasisForm);
-                var cropedImage = stasisForm.CropedImage;
+                Image cropedImage;
+                using (var stasisForm = new Stasisfield())
+                {
+                    Application.Run(stasisForm);
+                    cropedImage = stasisForm.CropedImage;
+                }
 
                 if (cropedImage != null)
                 {
                     if (args.Length == 3)
-                        TweetModerator.Tweet(cropedImage, "캡처 화면 전송중", args[1], args[2]);
+                        TweetModerator.Tweet(cropedImage, false, "캡처 화면 전송중", args[1], args[2]);
                     else
-                        TweetModerator.Tweet(cropedImage, "캡처 화면 전송중");
+                        TweetModerator.Tweet(cropedImage, false, "캡처 화면 전송중");
                 }
-
 
                 return;
             }
