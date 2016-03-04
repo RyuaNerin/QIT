@@ -32,8 +32,8 @@
             this.bgwBefore = new System.ComponentModel.BackgroundWorker();
             this.bgwAfter = new System.ComponentModel.BackgroundWorker();
             this.pnl = new System.Windows.Forms.Panel();
-            this.txtPin = new System.Windows.Forms.TextBox();
             this.ajax = new TiX.Windows.AjaxControl();
+            this.txtPin = new System.Windows.Forms.TextBox();
             this.pnl.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -57,6 +57,15 @@
             this.pnl.Size = new System.Drawing.Size(148, 47);
             this.pnl.TabIndex = 3;
             // 
+            // ajax
+            // 
+            this.ajax.Is16 = true;
+            this.ajax.Location = new System.Drawing.Point(68, 19);
+            this.ajax.Name = "ajax";
+            this.ajax.Size = new System.Drawing.Size(16, 16);
+            this.ajax.TabIndex = 2;
+            this.ajax.Visible = false;
+            // 
             // txtPin
             // 
             this.txtPin.Enabled = false;
@@ -67,15 +76,6 @@
             this.txtPin.TabIndex = 1;
             this.txtPin.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             this.txtPin.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtPin_KeyDown);
-            // 
-            // ajax
-            // 
-            this.ajax.Is16 = true;
-            this.ajax.Location = new System.Drawing.Point(68, 19);
-            this.ajax.Name = "ajax";
-            this.ajax.Size = new System.Drawing.Size(16, 16);
-            this.ajax.TabIndex = 2;
-            this.ajax.Visible = false;
             // 
             // frmPin
             // 
@@ -92,6 +92,7 @@
             this.Name = "frmPin";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "핀번호 입력";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.frmPin_FormClosing);
             this.Load += new System.EventHandler(this.frmPin_Load);
             this.pnl.ResumeLayout(false);
             this.pnl.PerformLayout();

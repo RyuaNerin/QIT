@@ -1,5 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Security.Permissions;
 using System.Windows.Forms;
 using TiX.Core;
@@ -8,6 +10,17 @@ namespace TiX.Windows
 {
 	public partial class frmPin : Form
 	{
+        private static class NativeMethods
+        {
+            [DllImport("user32.dll", SetLastError=true)]
+            [return: MarshalAs(UnmanagedType.Bool)]
+            public static extern bool AddClipboardFormatListener(IntPtr hwnd);
+
+            [DllImport("user32.dll", SetLastError=true)]
+            [return: MarshalAs(UnmanagedType.Bool)]
+            public static extern bool RemoveClipboardFormatListener(IntPtr hwnd);
+        }
+
 		string m_token, m_secret;
 
 		public frmPin()
@@ -23,6 +36,11 @@ namespace TiX.Windows
 			this.ajax.Start();
 			this.bgwBefore.RunWorkerAsync();
 		}
+
+        private void frmPin_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            NativeMethods.RemoveClipboardFormatListener(this.Handle);
+        }
 
         [SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.UnmanagedCode)]
         protected override void WndProc(ref Message m)
@@ -57,7 +75,11 @@ namespace TiX.Windows
                 return;
             }
 
-			System.Diagnostics.Process.Start("explorer", String.Format("\"https://api.twitter.com/oauth/authorize?oauth_token={0}\"", this.m_token));
+            NativeMethods.AddClipboardFormatListener(this.Handle);
+
+            var url = String.Format("\"https://api.twitter.com/oauth/authorize?oauth_token={0}\"", this.m_token);
+			using (var proc = Process.Start(new ProcessStartInfo { FileName = url, UseShellExecute = true }))
+            { }
 
 			this.ajax.Stop();
 			this.txtPin.Enabled = true;
@@ -68,8 +90,10 @@ namespace TiX.Windows
         {
             if (e.KeyCode == Keys.Enter)
             {
+                NativeMethods.RemoveClipboardFormatListener(this.Handle);
+                
                 this.txtPin.Enabled = false;
-
+                
                 this.ajax.Start();
                 this.bgwAfter.RunWorkerAsync(this.txtPin.Text);
             }
@@ -94,6 +118,29 @@ namespace TiX.Windows
 
 		private void bgwAfter_DoWork(object sender, DoWorkEventArgs e)
         {
+            Program.Twitter.UserToken  = this.m_token;
+            Program.Twitter.UserSecret = this.m_secret;
+
+            try
+            {
+                if (Program.Twitter.AccessToken((string)e.Argument, out this.m_token, out this.m_secret))
+                {
+                    Settings.UToken  = this.m_token;
+                    Settings.USecret = this.m_secret;
+
+                    Settings.Save();
+
+                    e.Result = true;
+                }
+            }
+            catch
+            {
+            }
+		}
+
+		private void bgwAfter_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+		{
+
             if (e.Result == null || (bool)e.Result == false)
             {
                 MessageBox.Show(this, "문제가 발생했어요 :(", Program.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -101,25 +148,6 @@ namespace TiX.Windows
                 return;
             }
 
-            Program.Twitter.UserToken  = this.m_token;
-            Program.Twitter.UserSecret = this.m_secret;
-            if (Program.Twitter.AccessToken((string)e.Argument, out this.m_token, out this.m_secret))
-            {
-                Settings.UToken  = this.m_token;
-                Settings.USecret = this.m_secret;
-
-                Settings.Save();
-
-                e.Result = true;
-            }
-            else
-            {
-                e.Result = false;
-            }
-		}
-
-		private void bgwAfter_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
-		{
 			this.ajax.Stop();
             this.DialogResult = DialogResult.OK;
 			this.Close();

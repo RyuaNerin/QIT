@@ -125,7 +125,7 @@ namespace TiX
             {
                 if (instance.Check())
                 {                    
-                    if (String.IsNullOrEmpty(Settings.UToken))
+                    if (String.IsNullOrEmpty(Settings.UToken) | String.IsNullOrEmpty(Settings.USecret))
                     {
                         frm = new frmPin();
                         Application.Run(instance.MainWindow = frm);

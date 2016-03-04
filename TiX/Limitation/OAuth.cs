@@ -243,6 +243,7 @@ namespace Limitation
                 var buff = Encoding.UTF8.GetBytes(OAuth.ToString(obj));
 
                 var req = CreateWebRequest("POST", "https://api.twitter.com/oauth/access_token", obj);
+                req.ContentLength = buff.Length;
                 req.GetRequestStream().Write(buff, 0, buff.Length);
 
                 using (var res = req.GetResponse())
