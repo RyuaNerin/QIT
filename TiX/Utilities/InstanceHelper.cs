@@ -89,8 +89,13 @@ namespace TiX.Utilities
 
         private IntPtr CustomProc(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam)
         {
-            if (msg == CustomMsg && this.MainWindow != null)
-                this.MainWindow.Invoke(new Action(this.MainWindow.Activate));
+            try
+            {
+                if (msg == CustomMsg && this.MainWindow != null)
+                    this.MainWindow.Invoke(new Action(this.MainWindow.Activate));
+            }
+            catch
+            { }
 
             return NativeMethods.DefWindowProc(hWnd, msg, wParam, lParam);
         }

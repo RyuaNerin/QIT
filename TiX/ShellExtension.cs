@@ -97,7 +97,7 @@ namespace TiX
                 {
                     using (var key = Registry.ClassesRoot.CreateSubKey(regPath))
                     {
-                        key.SetValue(null, "TiX 로 트윗하기", RegistryValueKind.ExpandString);
+                        key.SetValue(null, "T&iX 로 트윗하기 (I)", RegistryValueKind.ExpandString);
                         key.SetValue("Icon", iconPath, RegistryValueKind.ExpandString);
 
                         using (var command = key.CreateSubKey("command"))

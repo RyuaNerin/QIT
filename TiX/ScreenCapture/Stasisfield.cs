@@ -85,6 +85,9 @@ namespace TiX.ScreenCapture
                     }
                 }
 			}
+
+            this.m_captureBlur.Dispose();
+            this.m_capture.Dispose();
 		}
 
 

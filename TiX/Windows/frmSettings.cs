@@ -80,13 +80,13 @@ namespace TiX.Windows
 
         private void chkEnableShell_CheckedChanged(object sender, EventArgs e)
         {
-//             if (!this.m_admin)
-//             {
+            if (!this.m_admin)
+            {
                 if (Settings.EnabledShell != this.chkEnableShell.Checked)
                     NativeMethods.SendMessage(this.btnOK.Handle, NativeMethods.BCM_SETSHIELD, IntPtr.Zero, new IntPtr(1));
                 else
                     NativeMethods.SendMessage(this.btnOK.Handle, NativeMethods.BCM_SETSHIELD, IntPtr.Zero, new IntPtr(0));
-            //}
+            }
         }
     }
 }

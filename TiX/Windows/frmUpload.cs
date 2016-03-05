@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.IO;
-using System.Net;
-using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
@@ -71,8 +69,7 @@ namespace TiX.Windows
                 this.Left = screen.Left + (screen.Width  - this.Width)  / 2;
                 this.Top  = screen.Top  + (screen.Height - this.Height) / 2;
             }
-
-
+            
             StartNew();
         }
 
@@ -86,33 +83,51 @@ namespace TiX.Windows
                 return;
             }
 
-            if (string.IsNullOrEmpty(this.TweetString))
+            try
             {
-                this.txtText.Text = this.TweetString;
+                if (string.IsNullOrEmpty(this.TweetString))
+                {
+                    this.txtText.Text = this.TweetString;
+                }
+                else if (!Settings.UniformityText)
+                {
+                    this.txtText.Text = "";
+                }
+
+                this.Text = String.Format("{0} ({1} / {2})", Program.ProductName, this.m_index + 1, this.m_infos.Count);
+
+                this.txtText.Enabled = false;
+                this.ajax.Start();
+                this.bgwResize.RunWorkerAsync();
             }
-            else if (!Settings.UniformityText)
+            catch
             {
-                this.txtText.Text = "";
             }
-
-            this.Text = String.Format("{0} ({1} / {2})", Program.ProductName, this.m_index + 1, this.m_infos.Count);
-
-            this.txtText.Enabled = false;
-            this.ajax.Start();
-            this.bgwResize.RunWorkerAsync();
         }
         private void Clear()
         {
             this.m_rawData = null;
 
             if (this.m_image != null)
+            {
                 this.m_image.Dispose();
+                this.m_image = null;
+            }
 
             if (this.m_imageThumbnail != null)
+            {
                 this.m_imageThumbnail.Dispose();
+                this.m_imageThumbnail = null;
+            }
 
-            this.lblImageSize.Text = string.Empty;
-            this.picImage.Image = null;
+            try
+            {
+                this.lblImageSize.Text = string.Empty;
+                this.picImage.Image = null;
+            }
+            catch
+            {
+            }
         }
 
         private void bgwResize_DoWork(object sender, DoWorkEventArgs e)
@@ -146,41 +161,59 @@ namespace TiX.Windows
             }
             else
             {
-                this.ajax.Stop();
-                this.txtText.Enabled = true;
-
-                this.picImage.Image = this.m_imageThumbnail;
-
-                this.lblImageSize.Text =
-                    String.Format(
-                        "{0} {1} x {2} ({3:##0.0} %)",
-                        this.m_extension.ToUpper(),
-                        this.m_image.Width,
-                        this.m_image.Height,
-                        this.m_ratio);
-
-                if (this.AutoStart && (!Settings.UniformityText || this.m_index > 0))
+                try
                 {
-                    // 자동 트윗이거나,
-                    // 내용 통일이 아니거나,
-                    // 내용 통일이고 index 가 0 이 아닐때 자동트윗
-                    this.Tweet();
-                }
-                else if (Settings.UniformityText && this.m_index > 0)
-                    this.Tweet();
+                    this.ajax.Stop();
+                    this.txtText.Enabled = true;
 
-                this.txtText.Focus();
+                    this.picImage.Image = this.m_imageThumbnail;
+
+                    this.lblImageSize.Text =
+                    String.Format(
+                            "{0} {1} x {2} ({3:##0.0} %)",
+                            this.m_extension.ToUpper(),
+                            this.m_image.Width,
+                            this.m_image.Height,
+                            this.m_ratio);
+
+                    if (this.AutoStart && (!Settings.UniformityText || this.m_index > 0))
+                    {
+                        // 자동 트윗이거나,
+                        // 내용 통일이 아니거나,
+                        // 내용 통일이고 index 가 0 이 아닐때 자동트윗
+                        this.Tweet();
+                    }
+                    else if (Settings.UniformityText && this.m_index > 0)
+                        this.Tweet();
+
+                    this.txtText.Focus();
+                }
+                catch
+                {
+                }
             }
         }
 
         private void frmUpload_Enter(object sender, EventArgs e)
         {
-            this.txtText.Focus();
+            try
+            {
+                this.txtText.Focus();
+            }
+            catch
+            {
+            }
         }
 
         private void frmUpload_Activated(object sender, EventArgs e)
         {
-            this.txtText.Focus();
+            try
+            {
+                this.txtText.Focus();
+            }
+            catch
+            {
+            }
         }
 
         //////////////////////////////////////////////////////////////////////////
@@ -202,7 +235,7 @@ namespace TiX.Windows
 
         private void frmUpload_FormClosed(object sender, FormClosedEventArgs e)
         {
-            Clear();
+            this.Clear();
             this.Dispose();
         }
 
@@ -250,6 +283,8 @@ namespace TiX.Windows
         private bool m_handledText = false;
         private void txtText_KeyDown(object sender, KeyEventArgs e)
         {
+            if (this.IsDisposed) return;
+
             bool isHandled = false;
             if (!e.Control && (e.KeyCode == Keys.Enter || e.KeyCode == Keys.Return))
             {
@@ -350,16 +385,22 @@ namespace TiX.Windows
 
         private void bgwTweet_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            this.ajax.Stop();
+            try
+            {
+                this.ajax.Stop();
 
-            if ((bool)e.Result == false)
-            {
-                this.txtText.Enabled = true;
-                this.txtText.Focus();
+                if ((bool)e.Result == false)
+                {
+                    this.txtText.Enabled = true;
+                    this.txtText.Focus();
+                }
+                else
+                {
+                    this.StartNew();
+                }
             }
-            else
+            catch
             {
-                this.StartNew();
             }
         }
 

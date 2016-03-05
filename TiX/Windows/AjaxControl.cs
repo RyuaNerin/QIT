@@ -29,10 +29,10 @@ namespace TiX.Windows
 
         protected override void Dispose(bool disposing)
         {
-            base.Dispose(disposing);
-
             lock (this._sync)
                 this.bAjax = false;
+
+            base.Dispose(disposing);
         }
 
         protected override void OnPaint(PaintEventArgs e)
@@ -82,7 +82,13 @@ namespace TiX.Windows
             {
                 this.iAjax = (this.iAjax + 1) % 24;
 
-                this.Invalidate();
+                try
+                {
+                    this.Invalidate();                	
+                }
+                catch
+                {
+                }
 
                 Thread.Sleep(50);
             }

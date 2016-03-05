@@ -72,8 +72,12 @@ namespace TiX.Core
 
             if (disposing)
             {
-                if (this.DataType == DataTypes.Image)
+                if (this.DataType == DataTypes.Image &&
+                    this.m_object != null)
+                {
                     (this.m_object as Image).Dispose();
+                    this.m_object = null;
+                }
             }
         }
         

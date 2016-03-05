@@ -127,12 +127,13 @@ namespace TiX
                 {                    
                     if (String.IsNullOrEmpty(Settings.UToken) | String.IsNullOrEmpty(Settings.USecret))
                     {
-                        frm = new frmPin();
-                        Application.Run(instance.MainWindow = frm);
-                        frm.Dispose();
+                        using (frm = new frmPin())
+                        {
+                            Application.Run(instance.MainWindow = frm);
 
-                        if (frm.DialogResult != DialogResult.OK)
-                            return;
+                            if (frm.DialogResult != DialogResult.OK)
+                                return;
+                        }
                     }
 
                     frm = new frmMain();
