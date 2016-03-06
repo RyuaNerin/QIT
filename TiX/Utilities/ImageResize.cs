@@ -9,67 +9,93 @@ namespace TiX.Utilities
 {
     public static class ImageResize
     {
-        private const int MaxSize = 2936012; // 2.8 MiB
+        private const int MaxSize = 3040870; // 2.9 MiB
         
-        public static void ResizeImage(ref Image image, ref byte[] rawData, ref double ratio, ref string extension)
+        public static void ResizeImage(ref Image image, MemoryStream rawData, out string extension)
         {
-            long oldSize, newSize;
-
-            using (var buffer = new MemoryStream(MaxSize))
+            // jpeg 거나 png 파일의 rawData 가 일정 기준 이하면 리사이징을 하지 않고 넘어간다
+            if ((0 < rawData.Length && rawData.Length < MaxSize) && (image.RawFormat.Guid == ImageFormat.Jpeg.Guid || image.RawFormat.Guid == ImageFormat.Png.Guid))
             {
-                Bitmap              bitmap;
-                ImageCodecInfo		codec;
-                EncoderParameters	param;
+                extension = image.RawFormat.Guid == ImageFormat.Jpeg.Guid ? ".jpg" : ".png";
+                return;
+            }
+            
+            Bitmap              bitmap = ConvertToBitmap(image);
+            ImageCodecInfo		codec;
+            EncoderParameters	param;
+            
+            if (image.RawFormat.Guid == ImageFormat.Jpeg.Guid || !IsImageTransparent(bitmap))
+            {
+                extension = ".jpg";
 
-                if (!(image is Bitmap))
+                codec = ImageCodecInfo.GetImageDecoders().First(e => e.FormatID == ImageFormat.Jpeg.Guid);
+                using (param = new EncoderParameters(1))
                 {
-                    var newImage = new Bitmap(image.Width, image.Height, image.PixelFormat);
-                    using (var g = Graphics.FromImage(newImage))
-                        g.DrawImage(newImage, 0, 0, newImage.Width, newImage.Height);
+                    long quality = 90;
+                    if (image.PropertyIdList.Any(e => e == 0x5010)) quality = image.PropertyItems.First(e => e.Id == 0x5010).Value[0];
 
-                    image.Dispose();
-                    image = newImage;
+                    param.Param[0] = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality, quality);
+
+                    ResizeJpg(ref bitmap, rawData, codec, param);
                 }
+            }
+            else
+            {
+                extension = ".png";
 
-                oldSize = image.Width * image.Height;
-
-                bitmap = image as Bitmap;
-
-                if (image.RawFormat.Guid == ImageFormat.Jpeg.Guid || !IsImageTransparent(bitmap))
+                codec = ImageCodecInfo.GetImageDecoders().First(e => e.FormatID == ImageFormat.Png.Guid);
+                using (param = new EncoderParameters(1))
                 {
-                    extension = "jpg";
+                    param.Param[0] = new EncoderParameter(Encoder.ColorDepth, Bitmap.GetPixelFormatSize(image.PixelFormat));
 
-                    codec = ImageCodecInfo.GetImageDecoders().First(e => e.FormatID == ImageFormat.Jpeg.Guid);
-                    using (param = new EncoderParameters(1))
-                    {
-                        long quality = 90;
-                        if (image.PropertyIdList.Any(e => e == 0x5010)) quality = image.PropertyItems.First(e => e.Id == 0x5010).Value[0];
-
-                        param.Param[0] = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality, quality);
-
-                        ResizeJpg(ref bitmap, buffer, codec, param);
-                    }
+                    ResizePng(ref bitmap, rawData, codec, param);
                 }
-                else
-                {
-                    extension = "png";
-
-                    codec = ImageCodecInfo.GetImageDecoders().First(e => e.FormatID == ImageFormat.Png.Guid);
-                    using (param = new EncoderParameters(1))
-                    {
-                        param.Param[0] = new EncoderParameter(Encoder.ColorDepth, Bitmap.GetPixelFormatSize(image.PixelFormat));
-
-                        ResizePng(ref bitmap, buffer, codec, param);
-                    }
-                }
-
-                rawData = buffer.ToArray();
-
-                image = bitmap;
             }
 
-            newSize = image.Width * image.Height;
-            ratio = newSize * 100d / oldSize;
+            image = bitmap;
+        }
+
+        private static Bitmap ConvertToBitmap(Image image)
+        {
+            Metafile meta;
+            Bitmap bitmap;
+
+            meta = image as Metafile;
+            if (meta != null)
+            {
+                using (meta)
+                {
+                    var header = meta.GetMetafileHeader();
+                    float scaleX = header.DpiX / 96f;
+                    float scaleY = header.DpiY / 96f;
+
+                    bitmap = new Bitmap((int)(scaleX * meta.Width / header.DpiX * 100), (int)(scaleY * meta.Height / header.DpiY * 100), PixelFormat.Format32bppArgb);
+                    using (Graphics g = Graphics.FromImage(bitmap))
+                    {
+                        g.SmoothingMode = SmoothingMode.AntiAlias;
+                        g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+
+                        g.Clear(Color.Transparent);
+                        g.ScaleTransform(scaleX, scaleY);
+                        g.DrawImageUnscaledAndClipped(meta, new Rectangle(0, 0, image.Width, image.Height));
+                    }
+
+                    return bitmap;
+                }
+            }
+
+            bitmap = image as Bitmap;
+            if (bitmap != null)
+                return bitmap;
+                        
+            using (image)
+            {
+                bitmap = new Bitmap(image.Width, image.Height, image.PixelFormat);
+                using (var g = Graphics.FromImage(bitmap))
+                    g.DrawImageUnscaledAndClipped(image, new Rectangle(0, 0, image.Width, image.Height));
+
+                return bitmap;
+            }
         }
 
         private static void ResizeJpg(ref Bitmap image, MemoryStream rawData, ImageCodecInfo codec, EncoderParameters param)

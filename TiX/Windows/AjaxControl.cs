@@ -1,6 +1,8 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Drawing;
 using System.Threading;
 using System.Windows.Forms;
+using Timer = System.Threading.Timer;
 
 namespace TiX.Windows
 {
@@ -19,18 +21,20 @@ namespace TiX.Windows
                 this._size = (value ? 16 : 32);
 
                 this.Width = this.Height = this._size;
+                this.m_image = this._size == 16 ? Properties.Resources.loading : Properties.Resources.loading32;
             }
         }
 
         public AjaxControl()
         {
             this.DoubleBuffered = true;
+
+            this.m_timer = new Timer(this.Callback, null, Timeout.Infinite, Timeout.Infinite);
         }
 
         protected override void Dispose(bool disposing)
         {
-            lock (this._sync)
-                this.bAjax = false;
+            this.m_timer.Dispose();
 
             base.Dispose(disposing);
         }
@@ -41,56 +45,39 @@ namespace TiX.Windows
 
             e.Graphics.Clear(this.BackColor);
             e.Graphics.DrawImage(
-                (this._size == 16 ? Properties.Resources.loading : Properties.Resources.loading32),
+                this.m_image,
                 new Rectangle(0, 0, this._size, this._size),
-                new Rectangle(0, this._size * this.iAjax, this._size, this._size),
+                new Rectangle(0, this._size * this.m_index, this._size, this._size),
                 GraphicsUnit.Pixel
                 );
         }
 
-        private object _sync = new object();
-        private bool bAjax;
-
-        private int iAjax;
-
-        private Thread thd;
-
+        private Image   m_image;
+        private Timer   m_timer;
+        private int     m_index;
+        
         public void Start()
         {
-            if (!this.bAjax && ((this.thd == null) || !this.thd.IsAlive))
-            {
-                this.bAjax = true;
-
-                this.Visible = true;
-
-                this.thd = new Thread(Threadp);
-                this.thd.Start();
-            }
+            this.m_timer.Change(0, 50);
+            this.Visible = true;
         }
 
         public void Stop()
         {
-            lock (this._sync)
-                this.bAjax = false;
-
+            this.m_timer.Change(Timeout.Infinite, Timeout.Infinite);
             this.Visible = false;
         }
 
-        private void Threadp()
+        private void Callback(object state)
         {
-            while (this.bAjax && !this.Disposing && !this.IsDisposed)
+            this.m_index = (this.m_index + 1) % 24;
+
+            try
             {
-                this.iAjax = (this.iAjax + 1) % 24;
-
-                try
-                {
-                    this.Invalidate();                	
-                }
-                catch
-                {
-                }
-
-                Thread.Sleep(50);
+                this.Invoke(new Action(() => this.Invalidate()));
+            }
+            catch
+            {
             }
         }
     }

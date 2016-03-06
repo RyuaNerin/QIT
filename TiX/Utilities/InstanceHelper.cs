@@ -38,6 +38,7 @@ namespace TiX.Utilities
             }
         }
 
+        private NativeMethods.WndProc m_proc;
         private IntPtr  m_customHwnd;
         private Mutex   m_mutex;
 
@@ -66,9 +67,11 @@ namespace TiX.Utilities
 
         private void CreateWindow()
         {
+            this.m_proc = new NativeMethods.WndProc(this.CustomProc);
+
             var wndClass			= new NativeMethods.WNDCLASS();
             wndClass.lpszClassName	= this.m_uniqueName;
-            wndClass.lpfnWndProc	= this.CustomProc;
+            wndClass.lpfnWndProc	= Marshal.GetFunctionPointerForDelegate(this.m_proc);
 
             var resRegister	= NativeMethods.RegisterClass(ref wndClass);
             var resError	= Marshal.GetLastWin32Error();
@@ -89,13 +92,16 @@ namespace TiX.Utilities
 
         private IntPtr CustomProc(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam)
         {
-            try
+            if (msg == CustomMsg && this.MainWindow != null)
             {
-                if (msg == CustomMsg && this.MainWindow != null)
+                try
+                {
                     this.MainWindow.Invoke(new Action(this.MainWindow.Activate));
+                }
+                catch
+                {
+                }
             }
-            catch
-            { }
 
             return NativeMethods.DefWindowProc(hWnd, msg, wParam, lParam);
         }
@@ -153,8 +159,7 @@ namespace TiX.Utilities
             public struct WNDCLASS
             {
                 public int		style;
-                [MarshalAs(UnmanagedType.FunctionPtr)]
-                public WndProc	lpfnWndProc;
+                public IntPtr	lpfnWndProc;
                 public int		cbClsExtra;
                 public int		cbWndExtra;
                 public IntPtr	hInstance;

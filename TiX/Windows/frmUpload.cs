@@ -14,11 +14,13 @@ namespace TiX.Windows
     {
         private ImageCollection m_ic;
         private int     m_index = -1;
-        private double  m_ratio;
+        private float   m_ratio;
+        private Size    m_bef;
+        private Size    m_aft;
         private string  m_extension;
         private Image   m_image;
         private Image   m_imageThumbnail;
-        private byte[]  m_rawData;
+        private MemoryStream  m_rawData;
 
 		internal string InReplyToStatusId { get; set; }
 
@@ -59,6 +61,8 @@ namespace TiX.Windows
                 this.Left = screen.Left + (screen.Width  - this.Width)  / 2;
                 this.Top  = screen.Top  + (screen.Height - this.Height) / 2;
             }
+
+            this.m_ic.GetImage();
             
             StartNew();
         }
@@ -88,7 +92,7 @@ namespace TiX.Windows
 
                 this.txtText.Enabled = false;
                 this.ajax.Start();
-                this.bgwResize.RunWorkerAsync();
+                this.bgwResize.RunWorkerAsync(this.m_index);
             }
             catch
             {
@@ -122,10 +126,20 @@ namespace TiX.Windows
 
         private void bgwResize_DoWork(object sender, DoWorkEventArgs e)
         {
-            this.m_image = this.m_ic.Get();
+            this.m_ic.Get((int)e.Argument, out this.m_image, out this.m_rawData);
             if (this.m_image == null) return;
 
-            ImageResize.ResizeImage(ref this.m_image, ref this.m_rawData, ref this.m_ratio, ref this.m_extension);
+            this.m_bef = this.m_image.Size;
+
+            try
+            {
+                ImageResize.ResizeImage(ref this.m_image, this.m_rawData, out this.m_extension);
+            }
+            catch
+            {
+                return;
+            }
+            this.m_aft = this.m_image.Size;
          
             //////////////////////////////////////////////////
             // Thumbnail
@@ -138,6 +152,8 @@ namespace TiX.Windows
             using (var graphics = Graphics.FromImage(this.m_imageThumbnail))
                 graphics.DrawImage(this.m_image, 0, 0, newWidth, newHeight);
             //////////////////////////////////////////////////
+                        
+            this.m_ratio = (this.m_bef.Width * this.m_bef.Height) * 100f / (this.m_aft.Width * this.m_aft.Height);
 
             e.Result = 0;
         }
@@ -160,10 +176,11 @@ namespace TiX.Windows
 
                     this.lblImageSize.Text =
                     String.Format(
-                            "{0} {1} x {2} ({3:##0.0} %)",
-                            this.m_extension.ToUpper(),
-                            this.m_image.Width,
-                            this.m_image.Height,
+                            "{0}x{1} > {2}x{3} ({4:##0.0} %)",
+                            this.m_bef.Width,
+                            this.m_bef.Height,
+                            this.m_aft.Width,
+                            this.m_aft.Height,
                             this.m_ratio);
 
                     if (this.AutoStart && (!Settings.UniformityText || this.m_index > 0))
@@ -212,12 +229,6 @@ namespace TiX.Windows
         {
             using (frmPreview frm = new frmPreview(this.m_image))
                 frm.ShowDialog(this);
-        }
-
-        private void frmUpload_FormClosed(object sender, FormClosedEventArgs e)
-        {
-            this.Clear();
-            this.m_ic.Dispose();
         }
 
         //////////////////////////////////////////////////////////////////////////
@@ -346,9 +357,9 @@ namespace TiX.Windows
 
 					writer.WriteLine(boundary2);
                     writer.WriteLine("Content-Type: application/octet-stream");
-                    writer.WriteLine("Content-Disposition: form-data; name=\"media[]\"; filename=\"img.{0}\"", this.m_extension);
+                    writer.WriteLine("Content-Disposition: form-data; name=\"media[]\"; filename=\"img{0}\"", this.m_extension);
                     writer.WriteLine();
-                    stream.Write(this.m_rawData, 0, this.m_rawData.Length);
+                    this.m_rawData.CopyTo(stream);
                     writer.WriteLine();
 
                     writer.WriteLine(boundary2 + "--");
@@ -392,8 +403,9 @@ namespace TiX.Windows
             if (e.Button == MouseButtons.Left)
             {
                 var temp = Path.GetTempFileName();
-                temp = Path.ChangeExtension(temp, "." + this.m_extension);
-                File.WriteAllBytes(temp, this.m_rawData);
+                temp = Path.ChangeExtension(temp, this.m_extension);
+                using (var file = File.OpenWrite(temp))
+                    this.m_rawData.CopyTo(file);
 
                 DataObject dataObject = new DataObject();
                 dataObject.SetData(DataFormats.FileDrop, new string[] { temp });

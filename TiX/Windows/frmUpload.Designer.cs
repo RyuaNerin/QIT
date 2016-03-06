@@ -13,10 +13,13 @@
 		/// <param name="disposing">관리되는 리소스를 삭제해야 하면 true이고, 그렇지 않으면 false입니다.</param>
 		protected override void Dispose(bool disposing)
 		{
-			if (disposing && (components != null))
-			{
-				components.Dispose();
+			if (disposing)
+			{                
                 this.Clear();
+                this.m_ic.Dispose();
+
+                if (components != null)
+                    components.Dispose();
 			}
             base.Dispose(disposing);
 		}
@@ -122,7 +125,6 @@
             this.Text = "TiX";
             this.TopMost = true;
             this.Activated += new System.EventHandler(this.frmUpload_Activated);
-            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.frmUpload_FormClosed);
             this.Shown += new System.EventHandler(this.frmUpload_Shown);
             this.Enter += new System.EventHandler(this.frmUpload_Enter);
             ((System.ComponentModel.ISupportInitialize)(this.picImage)).EndInit();

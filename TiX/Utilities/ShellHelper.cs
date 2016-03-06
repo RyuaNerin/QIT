@@ -33,7 +33,8 @@ namespace TiX.Utilities
 
             this.DestroyWindow();
         }
-
+        
+        private NativeMethods.WndProc m_proc;
         private IntPtr          m_customHwnd;
         private IList<byte[]>   m_data = new List<byte[]>();
         private DateTime        m_timeOut;
@@ -107,9 +108,11 @@ namespace TiX.Utilities
 
         private void CreateWindow()
         {
+            this.m_proc = new NativeMethods.WndProc(this.CustomProc);
+
             var wndClass			= new NativeMethods.WNDCLASS();
             wndClass.lpszClassName	= this.m_uniqueName;
-            wndClass.lpfnWndProc	= this.CustomProc;
+            wndClass.lpfnWndProc	= Marshal.GetFunctionPointerForDelegate(this.m_proc);
 
             var resRegister	= NativeMethods.RegisterClass(ref wndClass);
             var resError	= Marshal.GetLastWin32Error();
@@ -268,8 +271,7 @@ namespace TiX.Utilities
             public struct WNDCLASS
             {
                 public int		style;
-                [MarshalAs(UnmanagedType.FunctionPtr)]
-                public WndProc	lpfnWndProc;
+                public IntPtr	lpfnWndProc;
                 public int		cbClsExtra;
                 public int		cbWndExtra;
                 public IntPtr	hInstance;
