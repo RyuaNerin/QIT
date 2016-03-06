@@ -236,7 +236,7 @@ namespace TiX.Core
         }
         private static void GetImageFromIData(Data data, ParallelLoopState state)
         {
-            var idata = data as IDataObject;
+            var idata = data.DataObject as IDataObject;
 
             // Images
             if (idata.GetDataPresent(DataFormats.Bitmap))

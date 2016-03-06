@@ -31,10 +31,7 @@ namespace TiX.Utilities
                 codec = ImageCodecInfo.GetImageDecoders().First(e => e.FormatID == ImageFormat.Jpeg.Guid);
                 using (param = new EncoderParameters(1))
                 {
-                    long quality = 90;
-                    if (image.PropertyIdList.Any(e => e == 0x5010)) quality = image.PropertyItems.First(e => e.Id == 0x5010).Value[0];
-
-                    param.Param[0] = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality, quality);
+                    param.Param[0] = new EncoderParameter(Encoder.Quality, 90L);
 
                     ResizeJpg(ref bitmap, rawData, codec, param);
                 }
@@ -102,15 +99,13 @@ namespace TiX.Utilities
             int w = image.Width;
             int h = image.Height;
 
-            rawData.SetLength(0);
-            image.Save(rawData, codec, param);
-            while (rawData.Length > MaxSize)
+            do
             {
                 ResizeBySize(ref image, rawData, codec, param, w, h);
 
                 w = (int)(w * 0.9f);
                 h = (int)(h * 0.9f);
-            }
+            } while (rawData.Length > MaxSize);
         }
 
         private static void ResizePng(ref Bitmap image, MemoryStream rawData, ImageCodecInfo codec, EncoderParameters param)
@@ -118,15 +113,13 @@ namespace TiX.Utilities
             int w, h;
             GetSizeFromPixels(MaxSize * param.Param[0].NumberOfValues / 8 * 2, image.Width, image.Height, out w, out h);
             
-            rawData.SetLength(0);
-            image.Save(rawData, codec, param);
-            while (rawData.Length > MaxSize)
+            do
             {
                 ResizeBySize(ref image, rawData, codec, param, w, h);
 
                 w = (int)(w * 0.9f);
                 h = (int)(h * 0.9f);
-            }
+            } while (rawData.Length > MaxSize);
         }
 
         private static void GetSizeFromPixels(int pixels, int oriW, int oriH, out int newW, out int newH)

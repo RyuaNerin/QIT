@@ -151,7 +151,7 @@ namespace TiX.Windows
                 graphics.DrawImage(this.m_image, 0, 0, newWidth, newHeight);
             //////////////////////////////////////////////////
                         
-            this.m_ratio = (szBefore.Width * szBefore.Height) * 100f / (szAfter.Width * szAfter.Height);
+            this.m_ratio = (szAfter.Width * szAfter.Height) * 100f / (szBefore.Width * szBefore.Height);
 
             e.Result = 0;
         }
@@ -401,6 +401,8 @@ namespace TiX.Windows
             {
                 var temp = Path.GetTempFileName();
                 temp = Path.ChangeExtension(temp, this.m_extension);
+
+                this.m_rawData.Position = 0;
                 using (var file = File.OpenWrite(temp))
                     this.m_rawData.CopyTo(file);
 
