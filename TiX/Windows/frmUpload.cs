@@ -355,6 +355,7 @@ namespace TiX.Windows
                     writer.WriteLine("Content-Type: application/octet-stream");
                     writer.WriteLine("Content-Disposition: form-data; name=\"media[]\"; filename=\"img{0}\"", this.m_extension);
                     writer.WriteLine();
+                    this.m_rawData.Position = 0;
                     this.m_rawData.CopyTo(stream);
                     writer.WriteLine();
 
