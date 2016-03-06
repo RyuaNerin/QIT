@@ -25,11 +25,7 @@ namespace TiX.Core
 			'5', '6', '7', '8', '9'
 		};
 
-		public static string CreateString()
-		{
-			return CreateString(40);
-		}
-		public static string CreateString(int length)
+		public static string CreateString(int length = 40)
 		{
 			StringBuilder stringBuilder = new StringBuilder(length + 1);
 

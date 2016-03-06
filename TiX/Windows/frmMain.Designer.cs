@@ -29,58 +29,58 @@
         private void InitializeComponent()
 		{
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmMain));
-            this.label4 = new System.Windows.Forms.Label();
-            this.label2 = new System.Windows.Forms.Label();
-            this.label1 = new System.Windows.Forms.Label();
-            this.label3 = new System.Windows.Forms.Label();
+            this.lblStasis = new System.Windows.Forms.Label();
+            this.lblCtrl = new System.Windows.Forms.Label();
+            this.lblDragTweet = new System.Windows.Forms.Label();
+            this.lblSetting = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
-            // label4
+            // lblStasis
             // 
-            this.label4.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.label4.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.label4.Location = new System.Drawing.Point(12, 85);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(200, 19);
-            this.label4.TabIndex = 27;
-            this.label4.Text = "Ctrl + Shift + C로 그거 하기";
-            this.label4.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this.label4.MouseUp += new System.Windows.Forms.MouseEventHandler(this.frmMain_MouseUp);
+            this.lblStasis.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.lblStasis.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.lblStasis.Location = new System.Drawing.Point(12, 85);
+            this.lblStasis.Name = "lblStasis";
+            this.lblStasis.Size = new System.Drawing.Size(200, 19);
+            this.lblStasis.TabIndex = 27;
+            this.lblStasis.Text = "Ctrl + Shift + C로 그거 하기";
+            this.lblStasis.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.lblStasis.MouseUp += new System.Windows.Forms.MouseEventHandler(this.frmMain_MouseUp);
             // 
-            // label2
+            // lblCtrl
             // 
-            this.label2.Font = new System.Drawing.Font("맑은 고딕", 11F);
-            this.label2.ForeColor = System.Drawing.Color.MediumBlue;
-            this.label2.Location = new System.Drawing.Point(12, 34);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(200, 25);
-            this.label2.TabIndex = 25;
-            this.label2.Text = "Ctrl을 눌러 [바로] 작성";
-            this.label2.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this.label2.MouseUp += new System.Windows.Forms.MouseEventHandler(this.frmMain_MouseUp);
+            this.lblCtrl.Font = new System.Drawing.Font("맑은 고딕", 11F);
+            this.lblCtrl.ForeColor = System.Drawing.Color.MediumBlue;
+            this.lblCtrl.Location = new System.Drawing.Point(12, 34);
+            this.lblCtrl.Name = "lblCtrl";
+            this.lblCtrl.Size = new System.Drawing.Size(200, 25);
+            this.lblCtrl.TabIndex = 25;
+            this.lblCtrl.Text = "Ctrl을 눌러 [바로] 작성";
+            this.lblCtrl.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.lblCtrl.MouseUp += new System.Windows.Forms.MouseEventHandler(this.frmMain_MouseUp);
             // 
-            // label1
+            // lblDragTweet
             // 
-            this.label1.Font = new System.Drawing.Font("맑은 고딕", 11F);
-            this.label1.Location = new System.Drawing.Point(12, 9);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(200, 25);
-            this.label1.TabIndex = 26;
-            this.label1.Text = "사진을 드래그하여 트윗하기";
-            this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this.label1.MouseUp += new System.Windows.Forms.MouseEventHandler(this.frmMain_MouseUp);
+            this.lblDragTweet.Font = new System.Drawing.Font("맑은 고딕", 11F);
+            this.lblDragTweet.Location = new System.Drawing.Point(12, 9);
+            this.lblDragTweet.Name = "lblDragTweet";
+            this.lblDragTweet.Size = new System.Drawing.Size(200, 25);
+            this.lblDragTweet.TabIndex = 26;
+            this.lblDragTweet.Text = "사진을 드래그하여 트윗하기";
+            this.lblDragTweet.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.lblDragTweet.MouseUp += new System.Windows.Forms.MouseEventHandler(this.frmMain_MouseUp);
             // 
-            // label3
+            // lblSetting
             // 
-            this.label3.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.label3.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.label3.Location = new System.Drawing.Point(12, 66);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(200, 19);
-            this.label3.TabIndex = 24;
-            this.label3.Text = "우클릭하여 설정 열기";
-            this.label3.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this.label3.MouseUp += new System.Windows.Forms.MouseEventHandler(this.frmMain_MouseUp);
+            this.lblSetting.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.lblSetting.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.lblSetting.Location = new System.Drawing.Point(12, 66);
+            this.lblSetting.Name = "lblSetting";
+            this.lblSetting.Size = new System.Drawing.Size(200, 19);
+            this.lblSetting.TabIndex = 24;
+            this.lblSetting.Text = "우클릭하여 설정 열기";
+            this.lblSetting.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.lblSetting.MouseUp += new System.Windows.Forms.MouseEventHandler(this.frmMain_MouseUp);
             // 
             // frmMain
             // 
@@ -88,10 +88,10 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(224, 113);
-            this.Controls.Add(this.label4);
-            this.Controls.Add(this.label2);
-            this.Controls.Add(this.label1);
-            this.Controls.Add(this.label3);
+            this.Controls.Add(this.lblStasis);
+            this.Controls.Add(this.lblCtrl);
+            this.Controls.Add(this.lblDragTweet);
+            this.Controls.Add(this.lblSetting);
             this.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
@@ -112,10 +112,10 @@
 
 		#endregion
 
-        private System.Windows.Forms.Label label4;
-        private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.Label lblStasis;
+        private System.Windows.Forms.Label lblCtrl;
+        private System.Windows.Forms.Label lblDragTweet;
+        private System.Windows.Forms.Label lblSetting;
 
 
 

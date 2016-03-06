@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.IO;
@@ -13,7 +12,7 @@ namespace TiX.Windows
 {
     public partial class frmUpload : Form
     {
-        private IList<DragDropInfo> m_infos;
+        private ImageCollection m_ic;
         private int     m_index = -1;
         private double  m_ratio;
         private string  m_extension;
@@ -25,7 +24,7 @@ namespace TiX.Windows
 
         //////////////////////////////////////////////////////////////////////////
 
-        private frmUpload(bool mainWnd)
+        public frmUpload(ImageCollection ic, bool mainWnd = false)
         {
             InitializeComponent();
 
@@ -33,19 +32,10 @@ namespace TiX.Windows
             this.ajax.Top  = this.txtText.Top  + this.txtText.Height / 2 - 16;
 
             this.ShowInTaskbar = mainWnd;
-        }
-        public frmUpload(IList<DragDropInfo> infos, bool mainWnd = false) : this(mainWnd)
-        {
-            this.m_infos = infos;
-            
-            this.Text = String.Format("{0} (1 / {1})", Program.ProductName, this.m_infos.Count);
-        }
-        public frmUpload(DragDropInfo info, bool mainWnd = false) : this(mainWnd)
-        {
-            this.m_infos = new List<DragDropInfo>();
-            this.m_infos.Add(info);
 
-            this.Text = String.Format("{0} (1 / {1})", Program.ProductName, this.m_infos.Count);
+            this.m_ic = ic;
+            
+            this.Text = String.Format("{0} (1 / {1})", Program.ProductName, ic.Count);
         }
 
         public bool AutoStart { get; set; }
@@ -77,7 +67,7 @@ namespace TiX.Windows
         {
             Clear();
 
-            if (++this.m_index >= this.m_infos.Count)
+            if (++this.m_index >= this.m_ic.Count)
             {
                 this.Close();
                 return;
@@ -94,7 +84,7 @@ namespace TiX.Windows
                     this.txtText.Text = "";
                 }
 
-                this.Text = String.Format("{0} ({1} / {2})", Program.ProductName, this.m_index + 1, this.m_infos.Count);
+                this.Text = String.Format("{0} ({1} / {2})", Program.ProductName, this.m_index + 1, this.m_ic.Count);
 
                 this.txtText.Enabled = false;
                 this.ajax.Start();
@@ -132,7 +122,7 @@ namespace TiX.Windows
 
         private void bgwResize_DoWork(object sender, DoWorkEventArgs e)
         {
-            this.m_image = this.m_infos[this.m_index].GetImage();
+            this.m_image = this.m_ic.Get();
             if (this.m_image == null) return;
 
             ImageResize.ResizeImage(ref this.m_image, ref this.m_rawData, ref this.m_ratio, ref this.m_extension);
@@ -220,23 +210,14 @@ namespace TiX.Windows
 
         private void ShowPreview()
         {
-            try
-            {
-                using (frmPreview frm = new frmPreview())
-                {
-                    frm.Text = String.Format("미리보기 {0} ({1} x {2})", (this.m_extension.ToUpper()), this.m_image.Width, this.m_image.Height);
-                    frm.SetImage(this.m_image);
-                    frm.ShowDialog(this);
-                }
-            }
-            catch
-            { }
+            using (frmPreview frm = new frmPreview(this.m_image))
+                frm.ShowDialog(this);
         }
 
         private void frmUpload_FormClosed(object sender, FormClosedEventArgs e)
         {
             this.Clear();
-            this.Dispose();
+            this.m_ic.Dispose();
         }
 
         //////////////////////////////////////////////////////////////////////////

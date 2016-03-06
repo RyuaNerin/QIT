@@ -28,10 +28,11 @@ namespace TiX.Windows
         private void frmSettings_Load(object sender, EventArgs e)
         {
             this.TopMost = Settings.Topmost;
-            this.chkTopMost.Checked = Settings.Topmost;
-            this.chkReversedCtrl.Checked = Settings.ReversedCtrl;
-            this.ctlUniformity.Checked = Settings.UniformityText;
-            this.chkEnableShell.Checked = Settings.EnabledShell;
+
+            this.chkTopMost.Checked         = Settings.Topmost;
+            this.chkReversedCtrl.Checked    = Settings.ReversedCtrl;
+            this.ctlUniformity.Checked      = Settings.UniformityText;
+            this.chkEnableShell.Checked     = Settings.EnabledShell;
         }
 
         public static bool IsAdministrator()
@@ -47,8 +48,8 @@ namespace TiX.Windows
 
         private void btnOK_Click(object sender, EventArgs e)
         {
-            Settings.Topmost = this.chkTopMost.Checked;
-            Settings.ReversedCtrl = this.chkReversedCtrl.Checked;
+            Settings.Topmost        = this.chkTopMost.Checked;
+            Settings.ReversedCtrl   = this.chkReversedCtrl.Checked;
             Settings.UniformityText = this.ctlUniformity.Checked;
 
             if (Settings.EnabledShell != this.chkEnableShell.Checked)

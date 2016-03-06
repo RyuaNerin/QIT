@@ -10,19 +10,16 @@ namespace TiX.Windows
 
 		//////////////////////////////////////////////////////////////////////////
 
-		public frmPreview()
-		{
-			InitializeComponent();
-
-			this.ClientSize = frmPreview.s;
-
-			this.SetLocationMax();
-		}
-
-		public void SetImage(Image img)
+		public frmPreview(Image img)
 		{
 			this._img = img;
 
+			InitializeComponent();
+            this.Text = String.Format("미리보기 ({0} x {1})", img.Width, img.Height);
+
+			this.ClientSize = frmPreview.s;
+            
+			this.SetLocationMax();
 			this.CheckPosition();
 
 			this.Invalidate();
@@ -114,17 +111,22 @@ namespace TiX.Windows
 		}
 		private void RawTrans(Graphics g, Rectangle rec)
 		{
-			int size = 24;
+			const int size = 24;
 
 			int xm = (int)Math.Ceiling(rec.Width * 1.0d / size);
 			int ym = (int)Math.Ceiling(rec.Height * 1.0d / size);
 
 			int w, h;
 
+            // 배경을 쫙 깜
+            g.FillRectangle(Brushes.White, rec);
+
 			for (int y = 0; y < ym; ++y)
 			{
 				for (int x = 0; x < xm; ++x)
 				{
+                    if ((y % 2 + x % 2) % 2 == 0) continue;
+
 					w = rec.Left + x * size;
 					if (w + size >= rec.Width) w = rec.Width - w;
 					else w = size;
@@ -134,7 +136,7 @@ namespace TiX.Windows
 					else h = size;
 
 					g.FillRectangle(
-						(((y % 2 + x % 2) % 2 == 0) ? Brushes.Gainsboro : Brushes.White),
+                        Brushes.Gainsboro,
 						rec.Left + x * size,
 						rec.Top + y * size,
 						w,

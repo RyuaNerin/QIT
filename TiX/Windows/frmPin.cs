@@ -42,7 +42,6 @@ namespace TiX.Windows
             NativeMethods.RemoveClipboardFormatListener(this.Handle);
         }
 
-        [SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.UnmanagedCode)]
         protected override void WndProc(ref Message m)
         {
             if (m.Msg == 0x031D) // WM_CLIPBOARDUPDATE

@@ -1,9 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.Threading;
 using System.Windows.Forms;
 using TiX.Core;
+using TiX.ScreenCapture;
 using TiX.Utilities;
 
 namespace TiX.Windows
@@ -12,7 +12,7 @@ namespace TiX.Windows
     {
         public static Form Instance { get; private set; }
 
-        private static GlobalKeyboardHook manager;
+        private static GlobalKeyboardHook m_manager;
         public frmMain()
         {
             InitializeComponent();
@@ -21,13 +21,13 @@ namespace TiX.Windows
             this.Text = Program.ProductName;
             this.TopMost = Settings.Topmost;
             if (Settings.ReversedCtrl)
-                label2.Text = "Ctrl을 눌러 [내용] 작성";
+                this.lblCtrl.Text = "Ctrl을 눌러 [내용] 작성";
             else
-                label2.Text = "Ctrl을 눌러 [바로] 작성";
+                this.lblCtrl.Text = "Ctrl을 눌러 [바로] 작성";
 
-            manager = new GlobalKeyboardHook();
-			manager.Down.Add(Keys.C | Keys.Control | Keys.Shift);
-            manager.KeyDown += GlobalKeyboardHook_KeyDown;
+            m_manager = new GlobalKeyboardHook();
+			m_manager.Down.Add(Keys.C | Keys.Control | Keys.Shift);
+            m_manager.KeyDown += GlobalKeyboardHook_KeyDown;
         }
 
         private void frmMain_FormClosing(object sender, FormClosingEventArgs e)
@@ -44,9 +44,9 @@ namespace TiX.Windows
 
                 this.TopMost = Settings.Topmost;
                 if (Settings.ReversedCtrl)
-                    label2.Text = "Ctrl을 눌러 [내용] 작성";
+                    lblCtrl.Text = "Ctrl을 눌러 [내용] 작성";
                 else
-                    label2.Text = "Ctrl을 눌러 [바로] 작성";
+                    lblCtrl.Text = "Ctrl을 눌러 [바로] 작성";
             }
         }
 
@@ -54,7 +54,7 @@ namespace TiX.Windows
         {
             e.Effect = DragDropEffects.None;
 
-            if (DragDropInfo.IsAvailable(e))
+            if (ImageCollection.IsAvailable(e))
             {
                 bool allow = true;
 
@@ -109,7 +109,7 @@ namespace TiX.Windows
             this.ShowInTaskbar = false;
 
             Image cropedImage;
-            using (var stasis = new TiX.ScreenCapture.Stasisfield())
+            using (var stasis = new Stasisfield())
             {
                 stasis.ShowDialog();
                 cropedImage   = stasis.CropedImage;
@@ -124,7 +124,7 @@ namespace TiX.Windows
         
         internal class CallbackData
         {
-            public List<DragDropInfo> List = new List<DragDropInfo>();
+            public ImageCollection Collection;
             public bool         Callback;
             public IAsyncResult IAsyncResult;
             public bool         AutoStart;
@@ -136,10 +136,12 @@ namespace TiX.Windows
             if (data.Callback)
                 frmMain.Instance.EndInvoke(data.IAsyncResult);
             
-            var frm = new frmUpload(data.List);
+            var frm = new frmUpload(data.Collection);
             frm.AutoStart           = data.AutoStart;
             frm.TweetString         = data.DefaultText;
             frm.InReplyToStatusId   = data.InReplyToStatusId;
+
+            frm.Disposed += (s, e) => frm.Dispose();
 
             if (frmMain.Instance != null)
                 frm.Show(frmMain.Instance);

@@ -81,16 +81,16 @@ namespace TiX
             }
             else if (args.Length >= 1)
             {
-                var lst = new List<DragDropInfo>();
+                var data = new ImageCollection();
 
                 if (args.Length >= 2 && args[0].Equals("shell", StringComparison.CurrentCultureIgnoreCase))
                 {
-                    var data = Encoding.UTF8.GetBytes(string.Join("\n", args, 1, args.Length - 1));
+                    var rawData = Encoding.UTF8.GetBytes(string.Join("\n", args, 1, args.Length - 1));
 
                     IList<byte[]> byteList;
                     using (var shell = new ShellHelper(ShellName))
                     {
-                        byteList = shell.GetOrSend(data);
+                        byteList = shell.GetOrSend(rawData);
                         if (byteList == null) return; 
                     }
                     
@@ -100,23 +100,17 @@ namespace TiX
                     fileList.Sort();
 
                     for (i = 0; i < fileList.Count; ++i)
-                    {
-                        if (!File.Exists(fileList[i])) continue;
-                        lst.Add(DragDropInfo.Create(fileList[i]));
-                    }
+                        data.Add(fileList[i]);
                 }
                 else
                 {
                     for (i = 0; i < args.Length; ++i)
-                    {
-                        if (!File.Exists(args[i])) continue;
-                        lst.Add(DragDropInfo.Create(args[i]));
-                    }
+                        data.Add(args[i]);
                 }
 
-                if (lst.Count == 0) return;
+                if (data.Count == 0) return;
 
-                Application.Run(new frmUpload(lst, true) { AutoStart = false });
+                Application.Run(new frmUpload(data, true) { AutoStart = false });
                 return;
             }
 
