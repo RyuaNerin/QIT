@@ -75,7 +75,6 @@ namespace TiX.Utilities
                         g.SmoothingMode = SmoothingMode.AntiAlias;
                         g.InterpolationMode = InterpolationMode.HighQualityBicubic;
 
-                        g.Clear(Color.Transparent);
                         g.ScaleTransform(scaleX, scaleY);
                         g.DrawImageUnscaledAndClipped(meta, new Rectangle(0, 0, image.Width, image.Height));
                     }

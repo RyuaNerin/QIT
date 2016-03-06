@@ -15,8 +15,6 @@ namespace TiX.Windows
         private ImageCollection m_ic;
         private int     m_index = -1;
         private float   m_ratio;
-        private Size    m_bef;
-        private Size    m_aft;
         private string  m_extension;
         private Image   m_image;
         private Image   m_imageThumbnail;
@@ -129,7 +127,7 @@ namespace TiX.Windows
             this.m_ic.Get((int)e.Argument, out this.m_image, out this.m_rawData);
             if (this.m_image == null) return;
 
-            this.m_bef = this.m_image.Size;
+            var szBefore = this.m_image.Size;
 
             try
             {
@@ -139,7 +137,7 @@ namespace TiX.Windows
             {
                 return;
             }
-            this.m_aft = this.m_image.Size;
+            var szAfter = this.m_image.Size;
          
             //////////////////////////////////////////////////
             // Thumbnail
@@ -153,7 +151,7 @@ namespace TiX.Windows
                 graphics.DrawImage(this.m_image, 0, 0, newWidth, newHeight);
             //////////////////////////////////////////////////
                         
-            this.m_ratio = (this.m_bef.Width * this.m_bef.Height) * 100f / (this.m_aft.Width * this.m_aft.Height);
+            this.m_ratio = (szBefore.Width * szBefore.Height) * 100f / (szAfter.Width * szAfter.Height);
 
             e.Result = 0;
         }
@@ -176,11 +174,9 @@ namespace TiX.Windows
 
                     this.lblImageSize.Text =
                     String.Format(
-                            "{0}x{1} > {2}x{3} ({4:##0.0} %)",
-                            this.m_bef.Width,
-                            this.m_bef.Height,
-                            this.m_aft.Width,
-                            this.m_aft.Height,
+                            "{0}x{1} ({2:##0.0} %)",
+                            this.m_image.Width,
+                            this.m_image.Height,
                             this.m_ratio);
 
                     if (this.AutoStart && (!Settings.UniformityText || this.m_index > 0))

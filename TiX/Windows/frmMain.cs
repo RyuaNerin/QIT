@@ -141,7 +141,7 @@ namespace TiX.Windows
             frm.TweetString         = data.DefaultText;
             frm.InReplyToStatusId   = data.InReplyToStatusId;
 
-            //frm.FormClosed += (s, e) => frm.Dispose();
+            frm.FormClosed += (s, e) => frm.Dispose();
 
             if (frmMain.Instance != null)
                 frm.Show(frmMain.Instance);
