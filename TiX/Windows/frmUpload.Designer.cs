@@ -85,7 +85,7 @@
             // 
             // lblImageSize
             // 
-            this.lblImageSize.Location = new System.Drawing.Point(82, 13);
+            this.lblImageSize.Location = new System.Drawing.Point(82, 9);
             this.lblImageSize.Name = "lblImageSize";
             this.lblImageSize.Size = new System.Drawing.Size(161, 15);
             this.lblImageSize.TabIndex = 8;

@@ -99,12 +99,15 @@ namespace TiX.Utilities
             int w = image.Width;
             int h = image.Height;
 
+            GetSizeFromPixels(MaxSize * param.Param[0].NumberOfValues / 8 * 2, image.Width, image.Height, out w, out h);
+
             do
             {
-                ResizeBySize(ref image, rawData, codec, param, w, h);
+                ResizeBySize(ref image, rawData, codec, param, w, h, PixelFormat.Format24bppRgb);
 
                 w = (int)(w * 0.9f);
                 h = (int)(h * 0.9f);
+
             } while (rawData.Length > MaxSize);
         }
 
@@ -115,7 +118,7 @@ namespace TiX.Utilities
             
             do
             {
-                ResizeBySize(ref image, rawData, codec, param, w, h);
+                ResizeBySize(ref image, rawData, codec, param, w, h, PixelFormat.Format32bppArgb);
 
                 w = (int)(w * 0.9f);
                 h = (int)(h * 0.9f);
@@ -131,14 +134,26 @@ namespace TiX.Utilities
             if (newH > oriH) newH = oriH;
         }
 
-        private static void ResizeBySize(ref Bitmap image, MemoryStream rawData, ImageCodecInfo codec, EncoderParameters param, int w, int h)
+        private static void ResizeBySize(ref Bitmap image, MemoryStream rawData, ImageCodecInfo codec, EncoderParameters param, int w, int h, PixelFormat defaultFormat)
         {
-            Bitmap imageNew = new Bitmap(w, h, image.PixelFormat);
-            using (Graphics g = Graphics.FromImage(imageNew))
+            var formatOrz = image.PixelFormat;
+            var formatRsz = image.PixelFormat;
+            switch (formatRsz)
             {
-                foreach (PropertyItem propertyItem in image.PropertyItems)
-                    imageNew.SetPropertyItem(propertyItem);
+            case PixelFormat.Indexed:
+            case PixelFormat.Format1bppIndexed:
+            case PixelFormat.Format4bppIndexed:
+            case PixelFormat.Format8bppIndexed:
+            case PixelFormat.Undefined:
+                formatRsz = defaultFormat;
+                break;
+            }
 
+            var imageNew = new Bitmap(w, h, formatRsz);
+            foreach (var propertyItem in image.PropertyItems)
+                imageNew.SetPropertyItem(propertyItem);
+            using (var g = Graphics.FromImage(imageNew))
+            {
                 g.InterpolationMode = InterpolationMode.HighQualityBicubic;
                 g.PixelOffsetMode = PixelOffsetMode.HighQuality;
                 g.SmoothingMode = SmoothingMode.AntiAlias;
@@ -146,11 +161,11 @@ namespace TiX.Utilities
                 g.DrawImage(image, 0, 0, w, h);
             }
 
-            rawData.SetLength(0);
-            imageNew.Save(rawData, codec, param);
-
             image.Dispose();
             image = imageNew;
+
+            rawData.SetLength(0);
+            image.Save(rawData, codec, param);
         }
 
         private static bool IsImageTransparent(Bitmap image)
