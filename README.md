@@ -37,6 +37,4 @@
 
 - [MIT LICENSE](LICENSE)
 
-- [TiXShell : MS-LPL](https://code.msdn.microsoft.com/windowsapps/CppShellExtContextMenuHandl-410a709a)
-
 - [SimplePSD](http://www.codeproject.com/csharp/simplepsd.asp)
