@@ -35,7 +35,7 @@
 
 # LICENSE
 
-- [MIT LICENSE](LICENSE.txt)
+- [MIT LICENSE](LICENSE)
 
 - [TiXShell : MS-LPL](https://code.msdn.microsoft.com/windowsapps/CppShellExtContextMenuHandl-410a709a)
 
