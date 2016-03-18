@@ -1,6 +1,6 @@
 ![TiX](https://raw.githubusercontent.com/RyuaNerin/QIT/master/TiX-256.png)
 
-# TiX (QIT > QITx > Quicx)
+# TiX (QIT > QITx > Quicx > TiX)
 
 - 쉽게 사진을 트윗해주는 프로그램입니다!
 
