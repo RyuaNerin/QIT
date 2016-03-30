@@ -6,19 +6,14 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using TiX.Core;
-using TiX.Utilities;
 
 namespace TiX.Windows
 {
     public partial class frmUpload : Form
     {
         private ImageCollection m_ic;
-        private int     m_index = -1;
-        private float   m_ratio;
-        private string  m_extension;
-        private Image   m_image;
-        private Image   m_imageThumbnail;
-        private MemoryStream  m_rawData;
+        private int m_index = -1;
+        private ImageSet m_imageSet;
 
 		internal string InReplyToStatusId { get; set; }
 
@@ -27,6 +22,7 @@ namespace TiX.Windows
         public frmUpload(ImageCollection ic, bool mainWnd = false)
         {
             InitializeComponent();
+            this.Icon = TiX.Properties.Resources.TiX;
 
             this.ajax.Left = this.txtText.Left + this.txtText.Width  / 2 - 16;
             this.ajax.Top  = this.txtText.Top  + this.txtText.Height / 2 - 16;
@@ -98,18 +94,10 @@ namespace TiX.Windows
         }
         private void Clear()
         {
-            this.m_rawData = null;
-
-            if (this.m_image != null)
+            if (this.m_imageSet != null)
             {
-                this.m_image.Dispose();
-                this.m_image = null;
-            }
-
-            if (this.m_imageThumbnail != null)
-            {
-                this.m_imageThumbnail.Dispose();
-                this.m_imageThumbnail = null;
+                this.m_imageSet.Dispose();
+                this.m_imageSet = null;
             }
 
             try
@@ -124,41 +112,15 @@ namespace TiX.Windows
 
         private void bgwResize_DoWork(object sender, DoWorkEventArgs e)
         {
-            this.m_ic.Get((int)e.Argument, out this.m_image, out this.m_rawData);
-            if (this.m_image == null) return;
+            this.m_ic.Get((int)e.Argument, out this.m_imageSet);
+            if (this.m_imageSet.Image == null) return;
 
-            var szBefore = this.m_image.Size;
-
-            try
-            {
-                ImageResize.ResizeImage(ref this.m_image, this.m_rawData, out this.m_extension);
-            }
-            catch
-            {
-                return;
-            }
-            var szAfter = this.m_image.Size;
-         
-            //////////////////////////////////////////////////
-            // Thumbnail
-            var ratio = Math.Min(64d / this.m_image.Width, 64d / this.m_image.Height);
-            var newWidth  = (int)(this.m_image.Width  * ratio);
-            var newHeight = (int)(this.m_image.Height * ratio);
-
-            this.m_imageThumbnail = new Bitmap(newWidth, newHeight);
-
-            using (var graphics = Graphics.FromImage(this.m_imageThumbnail))
-                graphics.DrawImage(this.m_image, 0, 0, newWidth, newHeight);
-            //////////////////////////////////////////////////
-                        
-            this.m_ratio = (szAfter.Width * szAfter.Height) * 100f / (szBefore.Width * szBefore.Height);
-
-            e.Result = 0;
+            e.Result = this.m_imageSet.ResizeImage();
         }
 
         private void bgwResize_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            if (e.Result == null)
+            if (e.Result == null || !(bool)e.Result)
             {
                 this.Clear();
                 this.StartNew();
@@ -170,14 +132,14 @@ namespace TiX.Windows
                     this.ajax.Stop();
                     this.txtText.Enabled = true;
 
-                    this.picImage.Image = this.m_imageThumbnail;
+                    this.picImage.Image = this.m_imageSet.Thumbnail;
 
                     this.lblImageSize.Text =
                     String.Format(
                             "{0}x{1} ({2:##0.0} %)",
-                            this.m_image.Width,
-                            this.m_image.Height,
-                            this.m_ratio);
+                            this.m_imageSet.Size.Width,
+                            this.m_imageSet.Size.Height,
+                            this.m_imageSet.Ratio);
 
                     if (this.AutoStart && (!Settings.UniformityText || this.m_index > 0))
                     {
@@ -223,7 +185,7 @@ namespace TiX.Windows
 
         private void ShowPreview()
         {
-            using (frmPreview frm = new frmPreview(this.m_image))
+            using (frmPreview frm = new frmPreview(this.m_imageSet))
                 frm.ShowDialog(this);
         }
 
@@ -329,15 +291,15 @@ namespace TiX.Windows
             try
             {
                 string boundary  = Helper.CreateString();
-                string boundary2 = "--" + boundary;
 
                 var req = Program.Twitter.CreateWebRequest("POST", "https://api.twitter.com/1.1/statuses/update_with_media.json");
                 req.ContentType = "multipart/form-data; charset=utf-8; boundary=" + boundary;
+                boundary = "--" + boundary;
 
                 var stream = req.GetRequestStream();
                 using (var writer = new StreamWriter(stream, Encoding.UTF8) { AutoFlush = true, NewLine = "\r\n" })
 				{
-					writer.WriteLine( boundary2 );
+					writer.WriteLine( boundary );
 					writer.WriteLine( "Content-Disposition: form-data; name=\"status\"" );
 					writer.WriteLine( );
 					writer.WriteLine( e.Argument as string );
@@ -345,21 +307,21 @@ namespace TiX.Windows
                     int i;
 					if (!string.IsNullOrEmpty(InReplyToStatusId) && int.TryParse(InReplyToStatusId, out i))
 					{
-						writer.WriteLine( boundary2 );
+						writer.WriteLine( boundary );
 						writer.WriteLine( "Content-Disposition: form-data; name=\"in_reply_to_status_id\"" );
 						writer.WriteLine( );
 						writer.WriteLine(InReplyToStatusId);
 					}
 
-					writer.WriteLine(boundary2);
+					writer.WriteLine(boundary);
                     writer.WriteLine("Content-Type: application/octet-stream");
-                    writer.WriteLine("Content-Disposition: form-data; name=\"media[]\"; filename=\"img{0}\"", this.m_extension);
+                    writer.WriteLine("Content-Disposition: form-data; name=\"media[]\"; filename=\"img{0}\"", this.m_imageSet.Extension);
                     writer.WriteLine();
-                    this.m_rawData.Position = 0;
-                    this.m_rawData.CopyTo(stream);
+                    this.m_imageSet.RawStream.Position = 0;
+                    this.m_imageSet.RawStream.CopyTo(stream);
                     writer.WriteLine();
 
-                    writer.WriteLine(boundary2 + "--");
+                    writer.WriteLine(boundary + "--");
                 }
 
                 using (var res = req.GetResponse())
@@ -400,13 +362,13 @@ namespace TiX.Windows
             if (e.Button == MouseButtons.Left)
             {
                 var temp = Path.GetTempFileName();
-                temp = Path.ChangeExtension(temp, this.m_extension);
+                temp = Path.ChangeExtension(temp, this.m_imageSet.Extension);
 
-                this.m_rawData.Position = 0;
+                this.m_imageSet.RawStream.Position = 0;
                 using (var file = File.OpenWrite(temp))
-                    this.m_rawData.CopyTo(file);
+                    this.m_imageSet.RawStream.CopyTo(file);
 
-                DataObject dataObject = new DataObject();
+                var dataObject = new DataObject();
                 dataObject.SetData(DataFormats.FileDrop, new string[] { temp });
 
                 this.picImage.DoDragDrop(dataObject, DragDropEffects.All);

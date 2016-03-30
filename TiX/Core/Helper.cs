@@ -34,5 +34,19 @@ namespace TiX.Core
 
 			return stringBuilder.ToString();
 		}
+
+        public static string ToCapString(long size)
+        {
+            if (size < 1000)
+                return string.Format("{0:##0} B");
+
+            if (size < 1000 * 1024)
+                return string.Format("{0:##0.0} KiB", size / 1024d);
+
+            if (size < 1000 * 1024 * 1024)
+                return string.Format("{0:##0.0} MiB", size / 1024d / 1024d);
+
+            return string.Format("{0:##0.0} GiB", size / 1024d / 1024d / 1024d);
+        }
 	}
 }

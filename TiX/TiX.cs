@@ -13,8 +13,8 @@ using TiX.Windows;
 namespace TiX
 {
 	static class Program
-	{
-        public static string ProductName = String.Format("TiX v{0}", Application.ProductVersion);
+    {
+        public static string ProductName = String.Format("TiX rev.{0}", Application.ProductVersion);
         public const  string UniqueName = "C0E6D64A-23D2-4676-93F7-F4B9D8CE25DF";
         public const  string ShellName  = "C0E6D64A-23D2-4676-93F7-F4B9D8CE25DE";
 

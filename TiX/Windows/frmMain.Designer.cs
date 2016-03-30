@@ -28,7 +28,6 @@
 		/// </summary>
         private void InitializeComponent()
 		{
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmMain));
             this.lblStasis = new System.Windows.Forms.Label();
             this.lblCtrl = new System.Windows.Forms.Label();
             this.lblDragTweet = new System.Windows.Forms.Label();
@@ -94,7 +93,6 @@
             this.Controls.Add(this.lblSetting);
             this.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
-            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.KeyPreview = true;
             this.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.MaximizeBox = false;

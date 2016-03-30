@@ -6,11 +6,11 @@ using System.Runtime.InteropServices;
 // 어셈블리와 관련된 정보를 수정하려면
 // 이 특성 값을 변경하십시오.
 [assembly: AssemblyTitle("TiX")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("TiX 와 함께 트위터에 이미지를 트윗해요")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("TiX")]
-[assembly: AssemblyCopyright("CopyRight (C) 2014- RyuaNerin, Sasarino MARi")]
+[assembly: AssemblyCopyright("CopyRight (C) RyuaNerin & Sasarino MARi")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -32,5 +32,5 @@ using System.Runtime.InteropServices;
 // 모든 값을 지정하거나 아래와 같이 '*'를 사용하여 빌드 번호 및 수정 버전이 자동으로
 // 지정되도록 할 수 있습니다.
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("2.0.0")]
-[assembly: AssemblyFileVersion("2.0.0")]
+[assembly: AssemblyVersion("1")]
+[assembly: AssemblyFileVersion("1")]

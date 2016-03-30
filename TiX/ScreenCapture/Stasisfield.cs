@@ -54,8 +54,8 @@ namespace TiX.ScreenCapture
         private Rectangle   m_rect;
 		private bool        m_done          = false;
 		private bool        m_drag          = false;
-		private Image       m_captureBlur   = null;                     // 정지장이 생성되는 시점의 화면 화상입니다.
-		private Image       m_capture       = null;                     // 정지장이 생성되는 시점의 화면 화상입니다.
+		private Bitmap      m_captureBlur   = null;                     // 정지장이 생성되는 시점의 화면 화상입니다.
+		private Bitmap      m_capture       = null;                     // 정지장이 생성되는 시점의 화면 화상입니다.
 		private Point[]     m_location      = new Point[2];             // 마우스 다운 및 업 이벤트 발생 좌표
 
         public Image  CropedImage   { get; private set; }
@@ -73,16 +73,7 @@ namespace TiX.ScreenCapture
                 
                 if (GetSizeFromLocation(m_location[0], m_location[1]))
                 {
-                    this.CropedImage = new Bitmap(this.m_rect.Width, this.m_rect.Height);
-                    using (var g = Graphics.FromImage(this.CropedImage))
-                    {
-                        g.DrawImage(
-                            this.m_capture,
-                            new Rectangle(0, 0, this.m_rect.Width, this.m_rect.Height),
-                            this.m_rect,
-                            GraphicsUnit.Pixel
-                        );
-                    }
+                    this.CropedImage = this.m_capture.Clone(this.m_rect, PixelFormat.Format24bppRgb);
                 }
 			}
 		}

@@ -16,6 +16,8 @@ namespace TiX.Windows
         public frmMain()
         {
             InitializeComponent();
+            this.Icon = TiX.Properties.Resources.TiX;
+
             frmMain.Instance = this;
 
             this.Text = Program.ProductName;
@@ -24,6 +26,7 @@ namespace TiX.Windows
                 this.lblCtrl.Text = "Ctrl을 눌러 [내용] 작성";
             else
                 this.lblCtrl.Text = "Ctrl을 눌러 [바로] 작성";
+
 
             m_manager = new GlobalKeyboardHook();
 			m_manager.Down.Add(Keys.C | Keys.Control | Keys.Shift);

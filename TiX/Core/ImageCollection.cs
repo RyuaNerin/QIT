@@ -1,6 +1,5 @@
 ﻿﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -32,29 +31,30 @@ namespace TiX.Core
      * 주의점
      * 갑작스런 Dispose 호출 시 오랜 시간이 걸릴 수 있으므로 비동기로 호출하는게 좋음.
     */
-	public class ImageCollection
+	public class ImageCollection : IDisposable
     {
         private enum DataTypes { None, File, IDataObject }
         private class Data
         {
-            public Data(DataTypes type, object dataObject)
+            private Data()
+            {
+                this.ImageSet   = new ImageSet();
+            }
+            public Data(DataTypes type, object dataObject) : this()
             {
                 this.DataType   = type;
                 this.DataObject = dataObject;
                 this.Event      = new ManualResetEvent(false);
 
-                this.RawData    = new MemoryStream();
             }
-            public Data(Image image)
+            public Data(Image image) : this()
             {
-                this.Image      = image;
-                this.RawData    = new MemoryStream();
+                this.ImageSet.Image = image;
             }
 
             public DataTypes        DataType    { get; private set; }
             public object           DataObject  { get; private set; }
-            public MemoryStream     RawData     { get; private set; }
-            public Image            Image       { get; set; }
+            public ImageSet         ImageSet    { get; set; }
             public ManualResetEvent Event       { get; private set; }
         }
 
@@ -104,13 +104,11 @@ namespace TiX.Core
                 {
                     for (int i = 0; i < this.m_data.Count; ++i)
                     {
-                        if (this.m_data[i].Image != null)
-                    	    this.m_data[i].Image.Dispose();
+                        if (this.m_data[i].ImageSet != null)
+                    	    this.m_data[i].ImageSet.Dispose();
 
                         if (this.m_data[i].Event != null)
                             this.m_data[i].Event.Dispose();
-
-                        this.m_data[i].RawData.Dispose();
                     }
                 }
             }
@@ -123,15 +121,14 @@ namespace TiX.Core
         private Task m_task;
         private CancellationTokenSource m_cancel;
 
-        public void Get(int index, out Image image, out MemoryStream rawData)
+        public void Get(int index, out ImageSet image)
         {
             var data = this.m_data[index];
 
             if (data.Event != null)
                 data.Event.WaitOne();
 
-            image   = data.Image;
-            rawData = data.RawData;
+            image   = data.ImageSet;
         }
         
         public void Add(IDataObject e)
@@ -194,7 +191,7 @@ namespace TiX.Core
             try
             {
                 if (data.DataType == DataTypes.None)
-                    data.Image = data.Image;
+                    data.ImageSet = data.ImageSet;
                 
                 else if (data.DataType == DataTypes.File)
                     GetImageFromFile(data);
@@ -203,8 +200,7 @@ namespace TiX.Core
                     GetImageFromIData(data, state);
             }
             catch
-            {
-            }
+            { }
 
             if (data.Event != null)
                 data.Event.Set();
@@ -216,21 +212,21 @@ namespace TiX.Core
             switch (Path.GetExtension(path).ToLower())
             {
             case ".psd":
-                    using (var psd = new SimplePsd.CPSD())
-                {
+                using (var psd = new SimplePsd.CPSD())
+                {                    
                     using (var file = File.OpenRead(path))
                         psd.Load(file);
 
-                    data.Image = Image.FromHbitmap(psd.HBitmap);
+                    data.ImageSet.Image = Image.FromHbitmap(psd.HBitmap);
                 }
                 break;
 
             default:
                 using (var file = File.OpenRead(path))
-                    file.CopyTo(data.RawData);
+                    file.CopyTo(data.ImageSet.RawStream);
 
-                data.RawData.Position = 0;
-                data.Image = Image.FromStream(data.RawData);
+                data.ImageSet.RawStream.Position = 0;
+                data.ImageSet.Image = Image.FromStream(data.ImageSet.RawStream);
                 break;
             }
         }
@@ -240,14 +236,14 @@ namespace TiX.Core
 
             // Images
             if (idata.GetDataPresent(DataFormats.Bitmap))
-                data.Image = (Image)idata.GetData(DataFormats.Bitmap);
+                data.ImageSet.Image = (Image)idata.GetData(DataFormats.Bitmap);
 
             // Specifies the Windows device-independent bitmap
             else if (idata.GetDataPresent(DataFormats.Dib))
-                data.Image = (Image)idata.GetData(DataFormats.Dib, true);
+                data.ImageSet.Image = (Image)idata.GetData(DataFormats.Dib, true);
 
             else if (idata.GetDataPresent(DataFormats.Tiff))
-                data.Image = (Image)idata.GetData(DataFormats.Tiff, true);
+                data.ImageSet.Image = (Image)idata.GetData(DataFormats.Tiff, true);
 
             // In Program like MS Word
             else if (idata.GetDataPresent(DataFormats.EnhancedMetafile) &&
@@ -256,7 +252,7 @@ namespace TiX.Core
                 using (var stream = (Stream)idata.GetData(DataFormats.MetafilePict))
                 {
                     stream.Seek(0, SeekOrigin.Begin);
-                    data.Image = new Metafile(stream);
+                    data.ImageSet.Image = new Metafile(stream);
                 }
             }
 
@@ -282,7 +278,7 @@ namespace TiX.Core
                 }
 
                 var req = WebRequest.Create(uri) as HttpWebRequest;
-                req.Referer = uri.ToString();
+                req.Referer = new Uri(uri, "/").ToString();
 
                 using (var res = req.GetResponse() as HttpWebResponse)
                 using (var stm = res.GetResponseStream())
@@ -291,13 +287,13 @@ namespace TiX.Core
                     var buff = new byte[40960]; // 40k
 
                     while (!state.IsStopped && !state.ShouldExitCurrentIteration && (rd = stm.Read(buff, 0, 40960)) > 0)
-                        data.RawData.Write(buff, 0, rd);
+                        data.ImageSet.RawStream.Write(buff, 0, rd);
                 }
 
-                if (data.RawData.Length > 0)
+                if (data.ImageSet.RawStream.Length > 0)
                 {
-                    data.RawData.Position = 0;
-                    data.Image = Image.FromStream(data.RawData);
+                    data.ImageSet.RawStream.Position = 0;
+                    data.ImageSet.Image = Image.FromStream(data.ImageSet.RawStream);
                 }
             }
         }

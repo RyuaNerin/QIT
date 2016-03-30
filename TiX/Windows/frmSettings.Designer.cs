@@ -28,7 +28,6 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmSettings));
             this.chkTopMost = new System.Windows.Forms.CheckBox();
             this.chkReversedCtrl = new System.Windows.Forms.CheckBox();
             this.ctlUniformity = new System.Windows.Forms.CheckBox();
@@ -103,7 +102,7 @@
             this.lblCopyRight.Name = "lblCopyRight";
             this.lblCopyRight.Size = new System.Drawing.Size(265, 19);
             this.lblCopyRight.TabIndex = 3;
-            this.lblCopyRight.Text = "By RyuaNerin, Sasarino MARi";
+            this.lblCopyRight.Text = "By RyuaNerin && Sasarino MARi";
             this.lblCopyRight.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.lblCopyRight.Click += new System.EventHandler(this.lblCopyRight_Click);
             // 
@@ -133,7 +132,6 @@
             this.Controls.Add(this.chkTopMost);
             this.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
-            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.MaximizeBox = false;
             this.Name = "frmSettings";

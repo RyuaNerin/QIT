@@ -40,6 +40,7 @@
     <Prefer32Bit>false</Prefer32Bit>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
     <RunCodeAnalysis>false</RunCodeAnalysis>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -50,6 +51,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup>
     <SignAssembly>true</SignAssembly>
@@ -72,7 +74,7 @@
   <PropertyGroup />
   <PropertyGroup />
   <ItemGroup>
-    <Compile Include="Core\ImageCollection.cs" />
+    <Compile Include="Core\ImageSet.cs" />
     <Compile Include="Core\TweetModerator.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -80,7 +82,16 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="ShellExtension.cs" />
+    <Compile Include="SimplePSD\BigEndianBinaryReader.cs" />
+    <Compile Include="SimplePSD\CPSD.cs" />
     <Compile Include="SimplePSD\NativeMethods.cs" />
+    <Compile Include="SimplePSD\PSDColorModeData.cs" />
+    <Compile Include="SimplePSD\PSDDisplayInfo.cs" />
+    <Compile Include="SimplePSD\PSDHeaderInfo.cs" />
+    <Compile Include="SimplePSD\PSDImageResource.cs" />
+    <Compile Include="SimplePSD\PSDResolutionInfo.cs" />
+    <Compile Include="SimplePSD\PSDThumbNail.cs" />
+    <Compile Include="Utilities\GifFrames.cs" />
     <Compile Include="Utilities\globalKeyboardHook.cs" />
     <Compile Include="Utilities\ImageResize.cs" />
     <Compile Include="Utilities\InstanceHelper.cs" />
@@ -128,14 +139,6 @@
       <DependentUpon>Stasisfield.cs</DependentUpon>
     </Compile>
     <Compile Include="Core\Settings.cs" />
-    <Compile Include="SimplePSD\CPSD.cs" />
-    <Compile Include="SimplePSD\BigEndianBinaryReader.cs" />
-    <Compile Include="SimplePSD\PSDColorModeData.cs" />
-    <Compile Include="SimplePSD\PSDDisplayInfo.cs" />
-    <Compile Include="SimplePSD\PSDHeaderInfo.cs" />
-    <Compile Include="SimplePSD\PSDImageResource.cs" />
-    <Compile Include="SimplePSD\PSDResolutionInfo.cs" />
-    <Compile Include="SimplePSD\PSDThumbNail.cs" />
     <Compile Include="Limitation\OAuth.cs" />
     <EmbeddedResource Include="Windows\frmMain.resx">
       <DependentUpon>frmMain.cs</DependentUpon>

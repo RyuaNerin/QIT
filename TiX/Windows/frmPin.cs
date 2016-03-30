@@ -2,7 +2,6 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using System.Security.Permissions;
 using System.Windows.Forms;
 using TiX.Core;
 
@@ -25,7 +24,8 @@ namespace TiX.Windows
 
 		public frmPin()
 		{
-			InitializeComponent();
+            InitializeComponent();
+            this.Icon = TiX.Properties.Resources.TiX;
 		}
 
 		private void frmPin_Load(object sender, EventArgs e)

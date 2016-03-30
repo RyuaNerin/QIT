@@ -12,9 +12,9 @@
 
 ## 사용법
 
-- 최초 실행 시  AOuth인증을 진행합니다.
+- 최초 실행 시 트위터 인증을 진행합니다.
 
- - 브라우저를 통해 어플리케이션 승인 후 PIN코드를 어플리케이션에 입력해주세요!
+- 브라우저를 통해 어플리케이션 승인 후 PIN코드를 어플리케이션에 입력해주세요!
 
 - 탐색기 혹은 브라우저에서 이미지를 TiX 로 드래그하거나
 
@@ -25,13 +25,13 @@
 - bmp
 - emf
 - exif
-- gif
+- gif (with animation)
 - ico
 - jpg (jpeg)
 - png
 - tif (tiff)
 - wmf
-- psd
+- psd (8 bits Only. not support alpha channel.)
 
 # LICENSE
 

@@ -22,6 +22,7 @@ namespace TiX.Windows
         public frmSettings()
         {
             InitializeComponent();
+            this.Icon = TiX.Properties.Resources.TiX;
 
             this.m_admin = IsAdministrator();
         }
