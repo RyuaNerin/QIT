@@ -74,6 +74,7 @@
   <PropertyGroup />
   <PropertyGroup />
   <ItemGroup>
+    <Compile Include="Core\ImageCollection.cs" />
     <Compile Include="Core\ImageSet.cs" />
     <Compile Include="Core\TweetModerator.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
