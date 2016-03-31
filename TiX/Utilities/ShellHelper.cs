@@ -5,7 +5,7 @@ using System.Threading;
 
 namespace TiX.Utilities
 {
-    public sealed class ShellHelper : IDisposable
+    public sealed class ShellHelper
     {
         private static readonly IntPtr CustomParam = new IntPtr(0x7A8E);
         private const int SendTimeout    = 500;
@@ -16,26 +16,7 @@ namespace TiX.Utilities
         {
             this.m_uniqueName = uniqueName;
         }
-        ~ShellHelper()
-        {
-            this.Dispose(false);
-        }
-        private bool m_disposed;
-        public void Dispose()
-        {
-            this.Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-        private void Dispose(bool disposing)
-        {
-            if (this.m_disposed) return;
-            this.m_disposed = true;
 
-            this.DestroyWindow();
-        }
-        
-        private NativeMethods.WndProc m_proc;
-        private IntPtr          m_customHwnd;
         private IList<byte[]>   m_data = new List<byte[]>();
         private DateTime        m_timeOut;
         private DateTime          TimeOut
@@ -54,8 +35,9 @@ namespace TiX.Utilities
             if (createdNew || mutex.WaitOne(0))
             {
                 this.TimeOut = DateTime.UtcNow.AddMilliseconds(RecieveTimeout);
-
-                this.CreateWindow();
+                
+                var proc = new NativeMethods.WndProc(this.CustomProc);
+                var hwnd = this.CreateWindow(proc);
     
                 // 마와레 마와레
                 // 메시지 루프를 돌아요
@@ -72,13 +54,13 @@ namespace TiX.Utilities
                     }
                 }
 
-                this.DestroyWindow();
+                NativeMethods.DestroyWindow(hwnd);
 
-                mutex.Close();
+                mutex.Dispose();
             }
             else
             {
-                mutex.Close();
+                mutex.Dispose();
 
                 bool succ = false;
                 
@@ -106,13 +88,11 @@ namespace TiX.Utilities
             return this.m_data;
         }
 
-        private void CreateWindow()
+        private IntPtr CreateWindow(NativeMethods.WndProc proc)
         {
-            this.m_proc = new NativeMethods.WndProc(this.CustomProc);
-
             var wndClass			= new NativeMethods.WNDCLASS();
             wndClass.lpszClassName	= this.m_uniqueName;
-            wndClass.lpfnWndProc	= Marshal.GetFunctionPointerForDelegate(this.m_proc);
+            wndClass.lpfnWndProc	= Marshal.GetFunctionPointerForDelegate(proc);
 
             var resRegister	= NativeMethods.RegisterClass(ref wndClass);
             var resError	= Marshal.GetLastWin32Error();
@@ -120,15 +100,7 @@ namespace TiX.Utilities
             if (resRegister == 0 && resError != NativeMethods.ERROR_CLASS_ALREADY_EXISTS)
                 throw new Exception();
 
-            this.m_customHwnd = NativeMethods.CreateWindowEx(0, this.m_uniqueName, null, 0, 0, 0, 0, 0, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero);
-        }
-        private void DestroyWindow()
-        {
-            if (this.m_customHwnd != IntPtr.Zero)
-            {
-                NativeMethods.DestroyWindow(this.m_customHwnd);
-                this.m_customHwnd = IntPtr.Zero;
-            }
+            return NativeMethods.CreateWindowEx(0, this.m_uniqueName, null, 0, 0, 0, 0, 0, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero);
         }
 
         private IntPtr CustomProc(IntPtr hwnd, uint msg, IntPtr wParam, IntPtr lParam)

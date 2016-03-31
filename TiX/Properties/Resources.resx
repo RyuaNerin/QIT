@@ -380,7 +380,7 @@
         RudN65tdA8sHzg46DF645Xrr8m2v29fvrLwzMBQydHc4cnjkLvvu5L2key/vZ9yff7DpIfph4SOpR+WP
         lR7X/aj3Y+uI5ciZUdfRvidBTx6Mscae/5T+04fx/Kfkp+UTqhONk2aTp6fcp24+W/1s/Hnq8/npgp+l
         f65+ofviu18cf+mbWTUz/pL/cuHX4lfyr468Xva6e9Z/9vGb5Dfzc4Vv5d8efcd41/s+7P3EfOYH7IeK
-        j3ofuz55f3q4kLyw8Bv3hPP74uYdwgAAAAlwSFlzAAALDQAACw0B7QfALAAANl9JREFUeF7FnS3QLEnR
+        j3ofuz55f3q4kLyw8Bv3hPP74uYdwgAAAAlwSFlzAAALDAAACwwBP0AiyAAANl9JREFUeF7FnS3QLEnR
         hV+xaiUCRRAEAoEiCAQKgUKgECgECrEKgUKgECgUAoFAIRAEAoVAIVYhUCtQiFUI1CoihnzO7VObXZ3d
         Xf0zc7+I83VPz0ydp7KqqzNr3r28/elPf2r6/e9///ab3/xGxz/+8Y9vP/7xj3X+wx/+kPcfv/zlLx9x
         /vjmN7/5+PrXv/744he/qPPQ26gej8dMIwAy/fKXv/z4whe+IGGM0vnbqI4APALg8dWvfvXxpS99qZlm
@@ -619,5 +619,8 @@
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="TiX" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\TiX.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Jint_dll" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\externallibrary\jint\jint.dll.gz;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
 </root>

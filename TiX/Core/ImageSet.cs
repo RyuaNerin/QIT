@@ -36,7 +36,7 @@ namespace TiX.Core
         public Image Image { get; set; }
         public GifFrames GifFrames { get; set; }
         public Image Thumbnail { get; set; }
-        public Stream RawStream { get; set; }
+        public MemoryStream RawStream { get; set; }
         public string Extension { get; set; }
         public double Ratio { get; set; }
 

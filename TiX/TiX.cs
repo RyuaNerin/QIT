@@ -51,6 +51,8 @@ namespace TiX
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
+            TiX.ExternalLibrary.Resolver.Init(typeof(Properties.Resources));
+
             Settings.Load();
             Program.Twitter.UserToken  = Settings.UToken;
             Program.Twitter.UserSecret = Settings.USecret;
@@ -87,12 +89,8 @@ namespace TiX
                 {
                     var rawData = Encoding.UTF8.GetBytes(string.Join("\n", args, 1, args.Length - 1));
 
-                    IList<byte[]> byteList;
-                    using (var shell = new ShellHelper(ShellName))
-                    {
-                        byteList = shell.GetOrSend(rawData);
-                        if (byteList == null) return; 
-                    }
+                    var byteList = new ShellHelper(ShellName).GetOrSend(rawData);
+                    if (byteList == null) return;
                     
                     var fileList = new List<string>();
                     for (i = 0; i < byteList.Count; ++i)

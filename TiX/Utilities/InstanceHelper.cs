@@ -14,28 +14,17 @@ namespace TiX.Utilities
         {
             this.m_uniqueName = uniqueName;
         }
-        ~InstanceHelper()
-        {
-            this.Dispose(false);
-        }
-        private bool m_disposed;
         public void Dispose()
         {
-            this.Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-        private void Dispose(bool disposing)
-        {
-            if (this.m_disposed) return;
-            this.m_disposed = true;
-
             this.DestroyWindow();
 
             if (this.m_mutex != null)
             {
-                this.m_mutex.Close();
+                this.m_mutex.Dispose();
                 this.m_mutex = null;
             }
+
+            GC.SuppressFinalize(this);
         }
 
         private NativeMethods.WndProc m_proc;
@@ -60,7 +49,7 @@ namespace TiX.Utilities
                 if (hwnd != IntPtr.Zero)
                     NativeMethods.SendMessage(hwnd, InstanceHelper.CustomMsg, IntPtr.Zero, IntPtr.Zero);
 
-                this.m_mutex.Close();
+                this.m_mutex.Dispose();
                 return false;
             }
         }

@@ -4,10 +4,13 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Net;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Globalization;
+using TiX.Utilities;
 
 namespace TiX.Core
 {
@@ -76,42 +79,28 @@ namespace TiX.Core
 		public ImageCollection()
         {
         }
-        ~ImageCollection()
-        {
-            this.Dispose(false);
-        }
 
-        private bool _disposed = false;
         public void Dispose()
         {
-            this.Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-        private void Dispose(bool disposing)
-        {
-            if (this._disposed) return;
-            this._disposed = true;
-
-            if (disposing)
+            if (this.m_cancel != null && this.m_task.Status != TaskStatus.RanToCompletion)
             {
-                if (this.m_cancel != null && this.m_task.Status != TaskStatus.RanToCompletion)
-                {
-                    this.m_cancel.Cancel();
-                    this.m_task.Wait();
-                }
+                this.m_cancel.Cancel();
+                this.m_task.Wait();
+            }
 
-                lock (this.m_data)
+            lock (this.m_data)
+            {
+                for (int i = 0; i < this.m_data.Count; ++i)
                 {
-                    for (int i = 0; i < this.m_data.Count; ++i)
-                    {
-                        if (this.m_data[i].ImageSet != null)
-                    	    this.m_data[i].ImageSet.Dispose();
+                    if (this.m_data[i].ImageSet != null)
+                        this.m_data[i].ImageSet.Dispose();
 
-                        if (this.m_data[i].Event != null)
-                            this.m_data[i].Event.Dispose();
-                    }
+                    if (this.m_data[i].Event != null)
+                        this.m_data[i].Event.Dispose();
                 }
             }
+
+            GC.SuppressFinalize(this);
         }
 
         private List<Data> m_data = new List<Data>();
@@ -277,17 +266,10 @@ namespace TiX.Core
                     uri = new Uri(new Uri(baseUrl), src);
                 }
 
-                var req = WebRequest.Create(uri) as HttpWebRequest;
-                req.Referer = new Uri(uri, "/").ToString();
-
-                using (var res = req.GetResponse() as HttpWebResponse)
-                using (var stm = res.GetResponseStream())
+                if (!Http.GetResponse(uri, data.ImageSet.RawStream, state))
                 {
-                    int rd;
-                    var buff = new byte[40960]; // 40k
-
-                    while (!state.IsStopped && !state.ShouldExitCurrentIteration && (rd = stm.Read(buff, 0, 40960)) > 0)
-                        data.ImageSet.RawStream.Write(buff, 0, rd);
+                    data.ImageSet.RawStream.SetLength(0);
+                    data.ImageSet.RawStream.Capacity = 0;
                 }
 
                 if (data.ImageSet.RawStream.Length > 0)

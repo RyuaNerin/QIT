@@ -77,6 +77,7 @@
     <Compile Include="Core\ImageCollection.cs" />
     <Compile Include="Core\ImageSet.cs" />
     <Compile Include="Core\TweetModerator.cs" />
+    <Compile Include="ExternalLibrary\Resolver.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -94,6 +95,7 @@
     <Compile Include="SimplePSD\PSDThumbNail.cs" />
     <Compile Include="Utilities\GifFrames.cs" />
     <Compile Include="Utilities\globalKeyboardHook.cs" />
+    <Compile Include="Utilities\Http.cs" />
     <Compile Include="Utilities\ImageResize.cs" />
     <Compile Include="Utilities\InstanceHelper.cs" />
     <Compile Include="Utilities\ShellHelper.cs" />
@@ -178,13 +180,20 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <None Include="app.config" />
+    <None Include="ExternalLibrary\Jint\Jint.dll.gz" />
     <None Include="TiX.snk" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="ExternalLibrary\Jint\Jint.dll" />
+    <None Include="ExternalLibrary\Jint\Jint.pdb" />
     <Content Include="TiX.ico" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="Jint, Version=2.7.0.0, Culture=neutral, PublicKeyToken=2e92ba9c8d81157f, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>ExternalLibrary\Jint\Jint.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />

@@ -23,8 +23,8 @@ namespace SimplePsd
 		private bool	m_bThumbnailFilled;
 		private bool    m_bCopyright;
 
-		private short   m_nColourCount;
-		private short   m_nTransparentIndex;
+        private short   m_nColourCount;
+        private short   m_nTransparentIndex;
 		private int		m_nGlobalAngle;
 		private int		m_nCompression;
 		private	IntPtr  m_hBitmap;
