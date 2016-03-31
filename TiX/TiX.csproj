@@ -87,12 +87,6 @@
     <Compile Include="SimplePSD\BigEndianBinaryReader.cs" />
     <Compile Include="SimplePSD\CPSD.cs" />
     <Compile Include="SimplePSD\NativeMethods.cs" />
-    <Compile Include="SimplePSD\PSDColorModeData.cs" />
-    <Compile Include="SimplePSD\PSDDisplayInfo.cs" />
-    <Compile Include="SimplePSD\PSDHeaderInfo.cs" />
-    <Compile Include="SimplePSD\PSDImageResource.cs" />
-    <Compile Include="SimplePSD\PSDResolutionInfo.cs" />
-    <Compile Include="SimplePSD\PSDThumbNail.cs" />
     <Compile Include="Utilities\GifFrames.cs" />
     <Compile Include="Utilities\globalKeyboardHook.cs" />
     <Compile Include="Utilities\Http.cs" />

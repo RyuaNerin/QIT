@@ -201,13 +201,8 @@ namespace TiX.Core
             switch (Path.GetExtension(path).ToLower())
             {
             case ".psd":
-                using (var psd = new SimplePsd.CPSD())
-                {                    
-                    using (var file = File.OpenRead(path))
-                        psd.Load(file);
-
+                using (var psd = new SimplePsd.CPSD(path))
                     data.ImageSet.Image = Image.FromHbitmap(psd.HBitmap);
-                }
                 break;
 
             default:

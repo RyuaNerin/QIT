@@ -11,68 +11,41 @@ namespace SimplePsd
 	/// Main class is for opening Adobe Photoshop files
 	/// </summary>
 	public sealed class CPSD : IDisposable
-	{
-		private PSDHeaderInfo       m_HeaderInfo;
-		private PSDColorModeData    m_ColorModeData;
-		private PSDImageResource    m_ImageResource;
-		private PSDResolutionInfo   m_ResolutionInfo;
-		private PSDDisplayInfo      m_DisplayInfo;
-		private PSDThumbNail        m_ThumbNail;
+    {
+        private short m_channels;
+        private int m_width;
+        private int m_height;
+        private short m_bpp;
+        private short m_colorMode;
 
-		private bool	m_bResolutionInfoFilled;
-		private bool	m_bThumbnailFilled;
-		private bool    m_bCopyright;
+        private int m_colorLength;
+        private byte[] m_colorData;
 
-        private short   m_nColourCount;
-        private short   m_nTransparentIndex;
-		private int		m_nGlobalAngle;
-		private int		m_nCompression;
-		private	IntPtr  m_hBitmap;
-		
-		public CPSD()
-		{
-			this.m_bResolutionInfoFilled = false;
-			this.m_bThumbnailFilled = false;
-			this.m_bCopyright = false;
-			this.m_nColourCount = -1;
-			this.m_nTransparentIndex = -1;
-			this.m_nGlobalAngle = 30;
-			this.m_nCompression = -1;
-			this.m_hBitmap = IntPtr.Zero;
-		}
+        private short n_heightRes = 96;
+        private short n_widthRes = 96;
 
-		~CPSD()
+        private short   m_nColourCount = -1;
+		private int		m_nCompression = -1;
+		private	IntPtr  m_hBitmap = IntPtr.Zero;
+
+        public CPSD(string strPathName)
         {
-            this.Dispose(false);
-		}
-
-        private bool m_disposed;
-        public void Dispose()
-        {
-            this.Dispose(true);
-            GC.SuppressFinalize(this);
+            using (var file = File.OpenRead(strPathName))
+            using (var reader = new BigEndianBinaryReader(file))
+                this.Load(reader);
         }
-        private void Dispose(bool disposing)
-        {
-            if (this.m_disposed) return;
-            this.m_disposed = true;
-
-            if (disposing)
-            {
-                NativeMethods.DeleteObject(this.m_hBitmap);
-            }
-        }
-		
-		public void Load(string strPathName)
-		{
-            using (var reader = new BigEndianBinaryReader(new FileStream(strPathName, FileMode.Open, FileAccess.Read, FileShare.Read)))
-			    this.Load(reader);
-		}
-		public void Load(Stream stream)
+        public CPSD(Stream stream)
         {
             using (var reader = new BigEndianBinaryReader(stream))
                 this.Load(reader);
-		}
+        }
+
+        public void Dispose()
+        {
+            NativeMethods.DeleteObject(this.m_hBitmap);
+            GC.SuppressFinalize(this);
+        }
+		
 		private void Load(BigEndianBinaryReader stream)
 		{
 			stream.BaseStream.Position = 0;
@@ -101,47 +74,38 @@ namespace SimplePsd
 			{
 				if (Version[1] == 0x01)
 				{
-					this.m_HeaderInfo = new PSDHeaderInfo();
-
-					this.m_HeaderInfo.nChannels = stream.ReadInt16();
-					this.m_HeaderInfo.nHeight = stream.ReadInt32();
-					this.m_HeaderInfo.nWidth = stream.ReadInt32();
-					this.m_HeaderInfo.nBitsPerPixel = stream.ReadInt16();
-					this.m_HeaderInfo.nColourMode = stream.ReadInt16();
+					this.m_channels = stream.ReadInt16();
+					this.m_height = stream.ReadInt32();
+					this.m_width = stream.ReadInt32();
+					this.m_bpp = stream.ReadInt16();
+					this.m_colorMode = stream.ReadInt16();
 				}
 			}
 		}
 
 		private void ReadColourModeData(BigEndianBinaryReader stream)
 		{
-			this.m_ColorModeData = new PSDColorModeData();
-			this.m_ColorModeData.nLength = stream.ReadInt32();
+			this.m_colorLength = stream.ReadInt32();
 
-			if (this.m_ColorModeData.nLength > 0)
-				this.m_ColorModeData.ColourData = stream.ReadBytes(this.m_ColorModeData.nLength);
+			if (this.m_colorLength > 0)
+				this.m_colorData = stream.ReadBytes(this.m_colorLength);
 		}
 
 		private static readonly byte[] Signature_8BIM = { 0x38, 0x42, 0x49, 0x4D };
 		private void ReadImageResource(BigEndianBinaryReader stream)
 		{
-			this.m_ImageResource	= new PSDImageResource();
-			this.m_ResolutionInfo	= new PSDResolutionInfo();
-			this.m_DisplayInfo		= new PSDDisplayInfo();
-			this.m_ThumbNail		= new PSDThumbNail();
-
-			this.m_ImageResource.nLength = stream.ReadInt32();
-			int nTotalBytes = this.m_ImageResource.nLength;
+			int nTotalBytes = stream.ReadInt32();
 
 			stream.BytesRead = 0;
 
+            short nId;
+            int nSize;
+
 			while ((stream.BaseStream.Position < stream.BaseStream.Length) && (stream.BytesRead < nTotalBytes))
 			{
-				this.m_ImageResource.Reset();
-				this.m_ImageResource.OSType = stream.ReadBytes(4);
-
-				if (Enumerable.SequenceEqual(this.m_ImageResource.OSType, Signature_8BIM))
+				if (Enumerable.SequenceEqual(stream.ReadBytes(4), Signature_8BIM))
 				{
-					this.m_ImageResource.nID = stream.ReadInt16();
+					nId = stream.ReadInt16();
 
 					byte SizeOfName = stream.ReadByte();
 						
@@ -151,93 +115,35 @@ namespace SimplePsd
 						if((nSizeOfName % 2) != 0)
 							SizeOfName = stream.ReadByte();
 
-						this.m_ImageResource.Name = stream.ReadBytes(nSizeOfName);
+                        // Name
+                        stream.Move(nSizeOfName);
 					}
 
 					//SizeOfName = stream.ReadByte();
 					stream.Move(1);
 
-					this.m_ImageResource.nSize = stream.ReadInt32();
+					nSize = stream.ReadInt32();
 
-					if ((this.m_ImageResource.nSize % 2) != 0)
-						this.m_ImageResource.nSize++;
+					if ((nSize % 2) != 0)
+						nSize++;
 
-					if (this.m_ImageResource.nSize > 0)
+					if (nSize > 0)
 					{
-						switch(this.m_ImageResource.nID)
+						switch(nId)
 						{
 							case 1005:
-								this.m_bResolutionInfoFilled = true;
-								this.m_ResolutionInfo.hRes			= stream.ReadInt16();
-								this.m_ResolutionInfo.hResUnit		= stream.ReadInt32();
-								this.m_ResolutionInfo.widthUnit		= stream.ReadInt16();
-								this.m_ResolutionInfo.vRes			= stream.ReadInt16();
-								this.m_ResolutionInfo.vResUnit		= stream.ReadInt32();
-								this.m_ResolutionInfo.heightUnit	= stream.ReadInt16();
-								break;
-
-							case 1007:
-								this.m_DisplayInfo.ColourSpace	= stream.ReadInt16();
-								this.m_DisplayInfo.Colour[0]	= stream.ReadInt16();
-								this.m_DisplayInfo.Colour[1]	= stream.ReadInt16();
-								this.m_DisplayInfo.Colour[2]	= stream.ReadInt16();
-								this.m_DisplayInfo.Colour[3]	= stream.ReadInt16();
-								this.m_DisplayInfo.Opacity		= stream.ReadInt16();
-								this.m_DisplayInfo.kind			= (stream.ReadByte() != 0x00);
-								this.m_DisplayInfo.padding		= stream.ReadByte();
-
-								if (this.m_DisplayInfo.Opacity < 0 || this.m_DisplayInfo.Opacity > 100)
-									this.m_DisplayInfo.Opacity = 100;
-								break;
-
-							case 1034:
-								this.m_bCopyright = (stream.ReadInt16() > 0);
-								break;
-
-							case 1033:
-							case 1036:
-								this.m_bThumbnailFilled = true;
-								this.m_ThumbNail.nFormat			= stream.ReadInt32();
-								this.m_ThumbNail.nWidth				= stream.ReadInt32();
-								this.m_ThumbNail.nHeight			= stream.ReadInt32();
-								this.m_ThumbNail.nWidthBytes		= stream.ReadInt32();
-								this.m_ThumbNail.nSize				= stream.ReadInt32();
-								this.m_ThumbNail.nCompressedSize	= stream.ReadInt32();
-								this.m_ThumbNail.nBitPerPixel		= stream.ReadInt16();
-								this.m_ThumbNail.nPlanes			= stream.ReadInt16();
-								
-								int nTotalData = this.m_ImageResource.nSize - 28;
-
-								// In BGR format
-								if (this.m_ImageResource.nID == 1033)
-								{
-									if (nTotalData % 3 != 0)
-										nTotalData += 3 - (nTotalData % 3);
-
-									stream.Move(nTotalData);
-								}
-								// In RGB format
-								else if (this.m_ImageResource.nID == 1036)
-								{
-									stream.Move(nTotalData);
-								}
-
-								break;
-
-							case 1037:
-								this.m_nGlobalAngle = stream.ReadInt32();
+								this.n_widthRes = stream.ReadInt16();
+                                stream.Move(6);
+								this.n_heightRes = stream.ReadInt16();
+                                stream.Move(6);
 								break;
 
 							case 1046:
 								this.m_nColourCount = stream.ReadInt16();
 								break;
 
-							case 1047:
-								this.m_nTransparentIndex = stream.ReadInt16();
-								break;
-
 							default:
-								stream.Move(this.m_ImageResource.nSize);
+								stream.Move(nSize);
 								break;
 						}
 					}
@@ -262,18 +168,18 @@ namespace SimplePsd
 				case 0:
 					#region
 					{
-						int nWidth = this.m_HeaderInfo.nWidth;
-						int nHeight = this.m_HeaderInfo.nHeight;
-						int bytesPerPixelPerChannel = this.m_HeaderInfo.nBitsPerPixel / 8;
+						int nWidth = this.m_width;
+						int nHeight = this.m_height;
+						int bytesPerPixelPerChannel = this.m_bpp / 8;
 						
 						int nPixels = nWidth * nHeight;
-						int nTotalBytes = nPixels * bytesPerPixelPerChannel * this.m_HeaderInfo.nChannels;
+						int nTotalBytes = nPixels * bytesPerPixelPerChannel * this.m_channels;
 
 						byte [] pData = new byte[nTotalBytes];
 						byte [] pImageData = new byte[nTotalBytes];
 						
-						#region switch(m_HeaderInfo.nColourMode)
-						switch(this.m_HeaderInfo.nColourMode)
+						#region switch(.nColourMode)
+						switch(this.m_colorMode)
 						{
 							case 1:		// Grayscale
 							case 2:		// Indexed
@@ -302,7 +208,7 @@ namespace SimplePsd
 								if (nBytesToReadPerPixelPerChannel == 2)
 								{
 									nBytesToReadPerPixelPerChannel = 1;
-									nTotalBytes = nPixels * nBytesToReadPerPixelPerChannel * this.m_HeaderInfo.nChannels;
+									nTotalBytes = nPixels * nBytesToReadPerPixelPerChannel * this.m_channels;
 								}
 
 								pImageData = new byte[nBytesToReadPerPixelPerChannel];
@@ -393,19 +299,10 @@ namespace SimplePsd
 
 						if(stream.BytesRead == nTotalBytes)
 						{
-							int ppm_x = 3780;	// 96 dpi
-							int ppm_y = 3780;	// 96 dpi
+							int ppm_x = (int)Math.Ceiling(this.n_widthRes  * 10000 / 254d);
+                            int ppm_y = (int)Math.Ceiling(this.n_heightRes * 10000 / 254d);
 
-							if(this.m_bResolutionInfoFilled)
-							{
-								int nHorzResolution = (int)this.m_ResolutionInfo.hRes;
-								int nVertResolution = (int)this.m_ResolutionInfo.vRes;
-
-								ppm_x = (nHorzResolution * 10000) / 254;
-								ppm_y = (nVertResolution * 10000) / 254;
-							}
-
-							switch(this.m_HeaderInfo.nBitsPerPixel)
+							switch(this.m_bpp)
 							{
 								case 1:
 									throw new Exception("Not yet implemented");
@@ -431,12 +328,12 @@ namespace SimplePsd
 				case 1:	// RLE compression
 					#region
 					{
-						int nWidth = this.m_HeaderInfo.nWidth;
-						int nHeight = this.m_HeaderInfo.nHeight;
-						int bytesPerPixelPerChannel = this.m_HeaderInfo.nBitsPerPixel / 8;
+						int nWidth = this.m_width;
+						int nHeight = this.m_height;
+						int bytesPerPixelPerChannel = this.m_bpp / 8;
 						
 						int nPixels = nWidth * nHeight;
-						int nTotalBytes = nPixels * bytesPerPixelPerChannel * this.m_HeaderInfo.nChannels;
+						int nTotalBytes = nPixels * bytesPerPixelPerChannel * this.m_channels;
 
 						byte [] pDest = new byte[nTotalBytes];
 						byte [] pData = new byte[nTotalBytes];
@@ -451,10 +348,10 @@ namespace SimplePsd
 
 						// The RLE-compressed data is proceeded by a 2-byte data count for each row in the data,
 						// which we're going to just skip.
-						stream.Position += nHeight * this.m_HeaderInfo.nChannels * 2;
+						stream.Position += nHeight * this.m_channels * 2;
 
 
-						for(int channel=0; channel< this.m_HeaderInfo.nChannels; ++channel)
+						for(int channel=0; channel< this.m_channels; ++channel)
 						{
 							// Read the RLE data.
 							Count = 0;
@@ -504,7 +401,7 @@ namespace SimplePsd
 						int nPixelCounter = 0;
 						nPointer = 0;
 
-						for(int nColour = 0; nColour < this.m_HeaderInfo.nChannels; ++nColour)
+						for(int nColour = 0; nColour < this.m_channels; ++nColour)
 						{
 							nPixelCounter = nColour * bytesPerPixelPerChannel;
 							for(int nPos = 0; nPos < nPixels; ++nPos)
@@ -514,26 +411,17 @@ namespace SimplePsd
 
 								nPointer++;
 
-								nPixelCounter += this.m_HeaderInfo.nChannels * bytesPerPixelPerChannel;
+								nPixelCounter += this.m_channels * bytesPerPixelPerChannel;
 							}
 						}
 
 						for(int i = 0; i < nTotalBytes; i++)
 							pData[i] = pDest[i];
-						
-						int ppm_x = 3780;	// 96 dpi
-						int ppm_y = 3780;	// 96 dpi
 
-						if(this.m_bResolutionInfoFilled)
-						{
-							int nHorResolution = (int)this.m_ResolutionInfo.hRes;
-							int nVertResolution = (int)this.m_ResolutionInfo.vRes;
+                        int ppm_x = (int)Math.Ceiling(this.n_widthRes  * 10000 / 254d);
+                        int ppm_y = (int)Math.Ceiling(this.n_heightRes * 10000 / 254d);
 
-							ppm_x = (nHorResolution * 10000) / 254;
-							ppm_y = (nVertResolution * 10000) / 254;
-						}
-
-						switch (this.m_HeaderInfo.nBitsPerPixel)
+						switch (this.m_bpp)
 						{
 							case 1:
 								throw new FormatException("Not yet implemented");
@@ -622,11 +510,11 @@ namespace SimplePsd
 			IntPtr hdcMemory = IntPtr.Zero;
 			IntPtr hbmpOld = IntPtr.Zero;
 
-			short bytesPerPixelPerChannel = (short)(this.m_HeaderInfo.nBitsPerPixel / 8);
-			int nPixels = this.m_HeaderInfo.nWidth * this.m_HeaderInfo.nHeight;
-			int nTotalBytes = nPixels * bytesPerPixelPerChannel * this.m_HeaderInfo.nChannels;
+			short bytesPerPixelPerChannel = (short)(this.m_bpp / 8);
+			int nPixels = this.m_width * this.m_height;
+			int nTotalBytes = nPixels * bytesPerPixelPerChannel * this.m_channels;
 			
-			switch (this.m_HeaderInfo.nColourMode)
+			switch (this.m_colorMode)
 			{
 				case 1:		// Grayscale
 				case 8:		// Duotone
@@ -642,9 +530,9 @@ namespace SimplePsd
 
 						byte[] ColorValue = new byte[64];
 
-						for(int nRow = 0; nRow < this.m_HeaderInfo.nHeight; ++nRow)
+						for(int nRow = 0; nRow < this.m_height; ++nRow)
 						{
-							for(int nCol = 0; nCol < this.m_HeaderInfo.nWidth; ++nCol)
+							for(int nCol = 0; nCol < this.m_width; ++nCol)
 							{
 								for(int i=0;i<bytesPerPixelPerChannel;i++)
 									ColorValue[i] = pData[nCounter+i];
@@ -652,7 +540,7 @@ namespace SimplePsd
 								BigEndianBinaryReader.SwapBytes(ColorValue, bytesPerPixelPerChannel);
 							
 								nValue = BitConverter.ToInt32(ColorValue,0);
-								if(this.m_HeaderInfo.nBitsPerPixel == 16)
+								if(this.m_bpp == 16)
 									nValue = nValue / 256;
 
 								if(nValue > 255) nValue = 255;
@@ -677,7 +565,7 @@ namespace SimplePsd
 						hbmpOld = NativeMethods.SelectObject(hdcMemory, hBitmap);
 						// pData holds the indices of loop through the palette and set the correct RGB
 						// 8bpp are supported
-						if(this.m_ColorModeData.nLength==768 && this.m_nColourCount>0)
+						if(this.m_colorLength==768 && this.m_nColourCount>0)
 						{
 							int nRow = 0;
 							int nCol = 0;
@@ -690,14 +578,14 @@ namespace SimplePsd
 							for(int nCounter=0; nCounter<nTotalBytes; ++nCounter)
 							{
 								nIndex = (int)pData[nCounter];
-								nRed = (int)this.m_ColorModeData.ColourData[nIndex];
-								nGreen = (int)this.m_ColorModeData.ColourData[nIndex + 256];
-								nBlue = (int)this.m_ColorModeData.ColourData[nIndex + 2 * 256];
+								nRed = (int)this.m_colorData[nIndex];
+								nGreen = (int)this.m_colorData[nIndex + 256];
+								nBlue = (int)this.m_colorData[nIndex + 2 * 256];
 
 								nColor = ColorTranslator.ToWin32(Color.FromArgb(nRed, nGreen, nBlue));
 								NativeMethods.SetPixel(hdcMemory, nCol, nRow, nColor);
 								nCol++;
-								if(this.m_HeaderInfo.nWidth <= nCol)
+								if(this.m_width <= nCol)
 								{
 									nCol = 0;
 									nRow++;
@@ -717,7 +605,7 @@ namespace SimplePsd
 						hdcMemory = NativeMethods.CreateCompatibleDC(IntPtr.Zero);
 						hbmpOld = NativeMethods.SelectObject(hdcMemory, hBitmap);
 
-						int nBytesToRead = this.m_HeaderInfo.nBitsPerPixel / 8;
+						int nBytesToRead = this.m_bpp / 8;
 						if (nBytesToRead == 2)
 							nBytesToRead = 1;
 
@@ -729,7 +617,7 @@ namespace SimplePsd
 						int nColor = 0;
 						byte [] ColorValue = new byte[8];
 
-						for (int nCounter = 0; nCounter < nTotalBytes; nCounter += this.m_HeaderInfo.nChannels * nBytesToRead)
+						for (int nCounter = 0; nCounter < nTotalBytes; nCounter += this.m_channels * nBytesToRead)
 						{
 							Array.Copy(pData, nCounter + 0 * nBytesToRead, ColorValue, 0, nBytesToRead);
 							BigEndianBinaryReader.SwapBytes(ColorValue, nBytesToRead);
@@ -746,7 +634,7 @@ namespace SimplePsd
 							nColor = ColorTranslator.ToWin32(Color.FromArgb(nRed, nGreen, nBlue));
 							NativeMethods.SetPixel(hdcMemory, nCol, nRow, nColor);
 							nCol++;
-							if (this.m_HeaderInfo.nWidth <= nCol)
+							if (this.m_width <= nCol)
 							{
 								nCol = 0;
 								nRow++;
@@ -774,7 +662,7 @@ namespace SimplePsd
 
 						byte [] ColorValue = new byte[8];
 
-						double dMaxColours = Math.Pow(2, this.m_HeaderInfo.nBitsPerPixel);
+						double dMaxColours = Math.Pow(2, this.m_bpp);
 
 						Color crPixel = Color.White;
 
@@ -806,7 +694,7 @@ namespace SimplePsd
 							nColor = ColorTranslator.ToWin32(crPixel);
 							NativeMethods.SetPixel(hdcMemory, nCol, nRow, nColor);
 							nCol++;
-							if (this.m_HeaderInfo.nWidth <= nCol)
+							if (this.m_width <= nCol)
 							{
 								nCol = 0;
 								nRow++;
@@ -834,14 +722,14 @@ namespace SimplePsd
 
 						byte [] ColorValue = new byte[8];
 
-						double dMaxColours = Math.Pow(2, this.m_HeaderInfo.nBitsPerPixel);
+						double dMaxColours = Math.Pow(2, this.m_bpp);
 
 						Color crPixel = Color.White;
 
 						// assume format is in either CMY or CMYK
-						if(this.m_HeaderInfo.nChannels >= 3)
+						if(this.m_channels >= 3)
 						{
-							for(int nCounter = 0; nCounter < nTotalBytes; nCounter += this.m_HeaderInfo.nChannels * bytesPerPixelPerChannel)
+							for(int nCounter = 0; nCounter < nTotalBytes; nCounter += this.m_channels * bytesPerPixelPerChannel)
 							{
 								Array.Copy(pData, nCounter + 0 * bytesPerPixelPerChannel, ColorValue, 0, bytesPerPixelPerChannel);
 								BigEndianBinaryReader.SwapBytes(ColorValue, bytesPerPixelPerChannel);
@@ -860,7 +748,7 @@ namespace SimplePsd
 								Y = (1.0 - exY / dMaxColours);
 								K = 0;
 							
-								if(this.m_HeaderInfo.nChannels == 4)
+								if(this.m_channels == 4)
 								{
 									Array.Copy(pData,nCounter+3*bytesPerPixelPerChannel, ColorValue, 0, bytesPerPixelPerChannel);
 									BigEndianBinaryReader.SwapBytes(ColorValue, bytesPerPixelPerChannel);
@@ -874,7 +762,7 @@ namespace SimplePsd
 								nColor = ColorTranslator.ToWin32(crPixel);
 								NativeMethods.SetPixel(hdcMemory, nCol, nRow, nColor);
 								nCol++;
-								if (this.m_HeaderInfo.nWidth <= nCol)
+								if (this.m_width <= nCol)
 								{
 									nCol = 0;
 									nRow++;
@@ -904,7 +792,7 @@ namespace SimplePsd
 
 						double exL, exA, exB;
 						double L_coef, a_coef, b_coef;
-						double dMaxColours = Math.Pow(2, this.m_HeaderInfo.nBitsPerPixel);
+						double dMaxColours = Math.Pow(2, this.m_bpp);
 
 						L_coef = dMaxColours / 100.0;
 						a_coef = dMaxColours / 256.0;
@@ -935,7 +823,7 @@ namespace SimplePsd
 							nColor = ColorTranslator.ToWin32(crPixel);
 							NativeMethods.SetPixel(hdcMemory, nCol, nRow, nColor);
 							nCol++;
-							if(this.m_HeaderInfo.nWidth <= nCol)
+							if(this.m_width <= nCol)
 							{
 								nCol = 0;
 								nRow++;
@@ -1044,54 +932,10 @@ namespace SimplePsd
 		}
 
 		#region Properies
-		public bool IsThumbnailIncluded
-		{
-			get { return this.m_bThumbnailFilled; }
-		}
-
-		public int BitsPerPixel
-		{
-			get { return this.m_HeaderInfo.nBitsPerPixel; }
-		}
-
-		public int GlobalAngle
-		{
-			get { return this.m_nGlobalAngle; }
-		}
-
-		public bool IsCopyrighted
-		{
-			get { return this.m_bCopyright; }
-		}
 
 		public IntPtr HBitmap
 		{
 			get { return this.m_hBitmap; }
-		}
-
-		public int Width
-		{
-			get { return this.m_HeaderInfo.nWidth; }
-		}
-
-		public int Height
-		{
-			get { return this.m_HeaderInfo.nHeight; }
-		}
-
-		public int XResolution
-		{
-			get { return this.m_ResolutionInfo.hRes; }
-		}
-
-		public int YResolution
-		{
-			get { return this.m_ResolutionInfo.vRes; }
-		}
-
-		public int Compression
-		{
-			get { return this.m_nCompression; }
 		}
 		#endregion
 	};

@@ -21,8 +21,8 @@ namespace SimplePsd
 		{
 			get { return this.BaseStream.Length; }
 		}
-
-		public void Move(int count)
+        
+        public void Move(int count)
 		{
 			this.BytesRead += count;
 			base.BaseStream.Seek(count, SeekOrigin.Current);
@@ -42,30 +42,10 @@ namespace SimplePsd
 			this.BytesRead += 2;
 			return BitConverter.ToInt16(BigEndianBinaryReader.SwapBytes(base.ReadBytes(2)), 0);
 		}
-		public override ushort ReadUInt16()
-		{
-			this.BytesRead += 2;
-			return BitConverter.ToUInt16(BigEndianBinaryReader.SwapBytes(base.ReadBytes(2)), 0);
-		}
 		public override int ReadInt32()
 		{
 			this.BytesRead += 4;
 			return BitConverter.ToInt32(BigEndianBinaryReader.SwapBytes(base.ReadBytes(4)), 0);
-		}
-		public override uint ReadUInt32()
-		{
-			this.BytesRead += 4;
-			return BitConverter.ToUInt32(BigEndianBinaryReader.SwapBytes(base.ReadBytes(4)), 0);
-		}
-		public override long ReadInt64()
-		{
-			this.BytesRead += 8;
-			return BitConverter.ToInt64(BigEndianBinaryReader.SwapBytes(base.ReadBytes(8)), 0);
-		}
-		public override ulong ReadUInt64()
-		{
-			this.BytesRead += 8;
-			return BitConverter.ToUInt64(BigEndianBinaryReader.SwapBytes(base.ReadBytes(8)), 0);
 		}
 
 		public static byte[] SwapBytes(byte[] array)
