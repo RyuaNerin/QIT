@@ -6,7 +6,6 @@ using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace TiX.Utilities
 {
@@ -16,7 +15,7 @@ namespace TiX.Utilities
 
         private readonly static CookieContainer Cookies = new CookieContainer();
         private readonly static Jint.Engine JSEngine = new Jint.Engine();
-        public static bool GetResponse(Uri uri, Stream stream, ParallelLoopState state, bool passException = false)
+        public static bool GetResponse(Uri uri, Stream stream, CancellationToken cancel, bool passException = false)
         {
             var req = WebRequest.Create(uri) as HttpWebRequest;
             req.Referer = new Uri(uri, "/").ToString();
@@ -31,7 +30,7 @@ namespace TiX.Utilities
                     if (res.ContentType.IndexOf("image", StringComparison.CurrentCultureIgnoreCase) == -1)
                         return false;
 
-                    return GetResponseBytes(res, stream, state);
+                    return GetResponseBytes(res, stream, cancel);
                 }
             }
             catch (WebException e)
@@ -52,7 +51,7 @@ namespace TiX.Utilities
 
                     using (var mem = new MemoryStream())
                     {
-                        if (!GetResponseBytes(res, mem, state)) return false;
+                        if (!GetResponseBytes(res, mem, cancel)) return false;
 
                         mem.Position = 0;
                         using (var reader = new StreamReader(mem))
@@ -63,7 +62,7 @@ namespace TiX.Utilities
                     refresh = res.Headers["refresh"];
                 }
 
-                return BypassCloudFlare(body, cookies, refresh, uri, stream, state);
+                return BypassCloudFlare(body, cookies, refresh, uri, stream, cancel);
             }
             catch
             {
@@ -72,18 +71,18 @@ namespace TiX.Utilities
             return false;
         }
 
-        private static bool GetResponseBytes(HttpWebResponse res, Stream stream, ParallelLoopState state)
+        private static bool GetResponseBytes(HttpWebResponse res, Stream stream, CancellationToken cancel)
         {
             using (var http = res.GetResponseStream())
             {
                 int rd;
                 var buff = new byte[40960]; // 40k
 
-                while (!state.IsStopped && !state.ShouldExitCurrentIteration && (rd = http.Read(buff, 0, 40960)) > 0)
+                while (!cancel.IsCancellationRequested && (rd = http.Read(buff, 0, 40960)) > 0)
                     stream.Write(buff, 0, rd);
             }
 
-            return !state.IsStopped && !state.ShouldExitCurrentIteration;
+            return !cancel.IsCancellationRequested;
         }
 
         private readonly static RegexOptions RegexDefaultOption = RegexOptions.Compiled | RegexOptions.IgnoreCase;
@@ -94,7 +93,7 @@ namespace TiX.Utilities
         private readonly static Regex regCG_scriptReplace1  = new Regex(@"\s{3,}[a-z](?: = |\.).+", RegexDefaultOption);
         private readonly static Regex regCG_scriptReplace2  = new Regex(@"[\n\\']", RegexDefaultOption);
         //private readonly static Regex regRefresh  = new Regex(@"(\d+); *url=([^;]+)", RegexDefaultOption);
-        private static bool BypassCloudFlare(string body, string setCookieHeader, string refreshHeader, Uri uri, Stream stream, ParallelLoopState state)
+        private static bool BypassCloudFlare(string body, string setCookieHeader, string refreshHeader, Uri uri, Stream stream, CancellationToken cancel)
         {
             // http://stackoverflow.com/questions/32425973/how-can-i-get-html-from-page-with-cloudflare-ddos-portection#2
 
@@ -118,7 +117,7 @@ namespace TiX.Utilities
             var solved = Convert.ToInt64(JSEngine.Execute(builder).GetCompletionValue().ToObject());
             solved += uri.Host.Length;
 
-            if (!Wait(3, state))
+            if (!Wait(3, cancel))
                 return false;
 
             var cookie_url = string.Format("{0}://{1}/cdn-cgi/l/chk_jschl", uri.Scheme, uri.Host);
@@ -159,18 +158,18 @@ namespace TiX.Utilities
                 Cookies.Add(StringToCookies(res.Headers["Set-Cookie"], uri.Host));
             }
 
-            return GetResponse(uri, stream, state, true);
+            return GetResponse(uri, stream, cancel, true);
         }
 
-        private static bool Wait(int seconds, ParallelLoopState state)
+        private static bool Wait(int seconds, CancellationToken cancel)
         {
             var wait = DateTime.UtcNow.AddSeconds(seconds);
             do
             {
-                Thread.Sleep(250);
-            } while (DateTime.UtcNow < wait && !state.IsStopped && !state.ShouldExitCurrentIteration);
+                Thread.Sleep(100);
+            } while (DateTime.UtcNow < wait && !cancel.IsCancellationRequested);
             
-            return !state.IsStopped && !state.ShouldExitCurrentIteration;
+            return !cancel.IsCancellationRequested;
         }
 
         private static CookieCollection StringToCookies(string setCookies, string domain)

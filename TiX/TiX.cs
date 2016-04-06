@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Text;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using Limitation;
 using TiX.Core;
@@ -12,7 +13,7 @@ using TiX.Windows;
 
 namespace TiX
 {
-	static class Program
+    static class Program
     {
         public static string ProductName = String.Format("TiX rev.{0}", Application.ProductVersion);
         public const  string UniqueName = "C0E6D64A-23D2-4676-93F7-F4B9D8CE25DF";
@@ -34,9 +35,9 @@ namespace TiX
             return false;
         }
 
-		[STAThread]
-		static void Main( string[] args )
-		{
+        [STAThread]
+        static void Main( string[] args )
+        {
             if (args.Length == 1 && args[0].Equals("install", StringComparison.CurrentCultureIgnoreCase))
             {
                 Console.Write(ShellExtension.Install());
@@ -53,6 +54,14 @@ namespace TiX
 
             TiX.ExternalLibrary.Resolver.Init(typeof(Properties.Resources));
 
+            Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
+            AppDomain.CurrentDomain.UnhandledException += (s, e) => WriteException(e.ExceptionObject as Exception);
+            TaskScheduler.UnobservedTaskException += (s, e) => WriteException(e.Exception);
+            Application.ThreadException += (s, e) => WriteException(e.Exception);
+            
+            System.Net.HttpWebRequest.DefaultCachePolicy = new System.Net.Cache.RequestCachePolicy(System.Net.Cache.RequestCacheLevel.NoCacheNoStore);
+            System.Net.HttpWebRequest.DefaultWebProxy = null;
+
             Settings.Load();
             Program.Twitter.UserToken  = Settings.UToken;
             Program.Twitter.UserSecret = Settings.USecret;
@@ -61,9 +70,6 @@ namespace TiX
 
             if (args.Length >= 1 && args[0].Equals("stasis", StringComparison.CurrentCultureIgnoreCase))
             {
-                //args = new string[] { "Stasis" }; // 정지장 생성 테스트용
-                //args = new string[] { "Stasis", "hsky_Lauren", "705274228010954752" }; // 정지장 멘션 테스트용
-
                 Image cropedImage;
                 using (var stasisForm = new Stasisfield())
                 {
@@ -132,6 +138,23 @@ namespace TiX
                     Application.Run(instance.MainWindow = frm);
                 }
             }
-		}
-	}
+        }
+
+        private static void WriteException(Exception exception)
+        {
+            var date = DateTime.Now.ToString("yyyy-MM-dd-HH-mm-ss");
+            var file = string.Format("Crash-{0}.txt", date);
+
+            using (var writer = new StreamWriter(Path.Combine(Application.StartupPath, file)))
+            {
+                writer.WriteLine("Decchi Crash Report");
+                writer.WriteLine("Date    : " + date);
+                writer.WriteLine();
+                writer.WriteLine("Exception");
+                writer.WriteLine(exception.ToString());
+            }
+
+            Application.Exit();
+        }
+    }
 }

@@ -84,15 +84,16 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="ShellExtension.cs" />
-    <Compile Include="SimplePSD\BigEndianBinaryReader.cs" />
-    <Compile Include="SimplePSD\CPSD.cs" />
-    <Compile Include="SimplePSD\NativeMethods.cs" />
-    <Compile Include="Utilities\GifFrames.cs" />
+    <Compile Include="Utilities\GifFrames.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Utilities\globalKeyboardHook.cs" />
     <Compile Include="Utilities\Http.cs" />
-    <Compile Include="Utilities\ImageResize.cs" />
     <Compile Include="Utilities\InstanceHelper.cs" />
+    <Compile Include="LoadPSD\LoadPSD.cs" />
+    <Compile Include="Utilities\ResizeImage.cs" />
     <Compile Include="Utilities\ShellHelper.cs" />
+    <Compile Include="Utilities\ExtendStringComparer.cs" />
     <Compile Include="Windows\AjaxControl.cs" />
     <Compile Include="Windows\frmMain.cs">
       <SubType>Form</SubType>

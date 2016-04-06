@@ -1,37 +1,70 @@
 ﻿﻿using System;
 using System.Drawing;
-using System.Drawing.Drawing2D;
 using System.IO;
+using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows.Forms;
 using TiX.Utilities;
 
 namespace TiX.Core
 {
     public class ImageSet : IDisposable
     {
-        public ImageSet()
+        private ImageSet(ImageCollection collection, int index)
         {
+            this.Index = index;
             this.RawStream = new MemoryStream(4 * 1024 * 1024);
+            this.m_collection = collection;
+        }
+        
+        public ImageSet(ImageCollection collection, int index, DataTypes type, object dataObject) : this(collection, index)
+        {
+            this.DataType   = type;
+            this.DataObject = dataObject;
+            this.IsLoading  = new ManualResetEvent(false);
+
+            this.Status = Statues.None;
+        }
+        public ImageSet(ImageCollection collection, int index, Image image) : this(collection, index)
+        {
+            this.DataType = DataTypes.Image;
+            this.Image = image;
+
+            this.Status = Statues.Success;
         }
 
         public void Dispose()
         {
+            if (this.IsLoading  != null) this.IsLoading.Dispose();
             if (this.Image      != null) this.Image.Dispose();
-            if (this.GifFrames  != null) this.GifFrames.Dispose();
             if (this.Thumbnail  != null) this.Thumbnail.Dispose();
             if (this.RawStream  != null) this.RawStream.Dispose();
 
             GC.SuppressFinalize(this);
         }
-
-        public Size Size
+        
+        public enum Statues
         {
-            get
-            {
-                return this.GifFrames != null ? this.GifFrames.Size : this.Image.Size;
-            }
+            None,
+            Success,
+            Error
         }
-        public int Width { get { return this.Size.Width; } }
-        public int Height { get { return this.Size.Height; } }
+
+        private object m_statusSync = new object();
+        private Statues m_status;
+        public Statues Status
+        {
+            get { lock (this.m_statusSync) return this.m_status; }
+            set { lock (this.m_statusSync) this.m_status = value; }
+        }
+
+        private ImageCollection m_collection;
+        public int Index { get; private set; }
+
+        public DataTypes DataType { get; private set; }
+        public object DataObject { get; private set; }
+        public ManualResetEvent IsLoading { get; private set; }
 
         public Image Image { get; set; }
         public GifFrames GifFrames { get; set; }
@@ -40,38 +73,141 @@ namespace TiX.Core
         public string Extension { get; set; }
         public double Ratio { get; set; }
 
-        public bool ResizeImage()
+        public string TwitterMediaId { get; set; }
+
+        public void StartLoad()
         {
-            var szBefore = this.Image.Size;
+            Task.Factory.StartNew(new Action<object>(this.StartLoadPriv), this.m_collection.Token);
+        }
+
+        private void StartLoadPriv(object ocancel)
+        {
+            var cancel = (CancellationToken)ocancel;
+
+            if (this.Status == Statues.None)
+            {
+                try
+                {
+                    if (this.DataType != DataTypes.Image)
+                    {
+                        if (this.DataType == DataTypes.File)
+                            GetImageFromFile();
+                        else if (this.DataType == DataTypes.IDataObject)
+                            GetImageFromIData(cancel);
+                    }
+
+                    if (cancel.IsCancellationRequested)
+                        throw new Exception();
+
+                    ResizeImage.Resize(this);
+
+                    this.Status = Statues.Success;
+                }
+                catch
+                {
+                    if (this.Image != null)
+                    {
+                        this.Image.Dispose();
+                        this.Image = null;
+                    }
+
+                    this.Status = Statues.Error;
+                }
+            }
+
             try
             {
-                ImageResize.ResizeImage(this);
+                this.IsLoading.Set();
+                this.m_collection.RaiseEvent(this);
             }
             catch
             {
-                return false;
             }
-            var szAfter = this.Image.Size;
+        }
 
-            this.Ratio = ((double)szAfter.Width * szAfter.Height) / (szBefore.Width * szBefore.Height) * 100d;
+        private void GetImageFromFile()
+        {
+            var path = this.DataObject as string;
 
-            // Thumbnail
-            var ratio = Math.Min(64d / this.Image.Width, 64d / this.Image.Height);
-            var newWidth  = (int)(this.Image.Width  * ratio);
-            var newHeight = (int)(this.Image.Height * ratio);
-
-            this.Thumbnail = new Bitmap(newWidth, newHeight);
-
-            using (var g = Graphics.FromImage(this.Thumbnail))
+            switch (Path.GetExtension(path).ToLower())
             {
-                g.InterpolationMode = InterpolationMode.HighQualityBicubic;
-                g.PixelOffsetMode = PixelOffsetMode.HighQuality;
-                g.SmoothingMode = SmoothingMode.AntiAlias;
+            case ".psd":
+                this.Image = RyuaNerin.Drawing.LoadPSD.Load(path);
+                break;
 
-                g.DrawImage(this.Image, new Rectangle(0, 0, newWidth, newHeight), new Rectangle(0, 0, this.Image.Width, this.Image.Height), GraphicsUnit.Pixel);
+            default:
+                using (var file = File.OpenRead(path))
+                    file.CopyTo(this.RawStream);
+
+                this.RawStream.Position = 0;
+                this.Image = Image.FromStream(this.RawStream);
+                break;
+            }
+        }
+        
+        private static Regex regSrc             = new Regex(@"<img.*?src=[""'](.*?)[""'].*>", RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.IgnoreCase);
+        private static Regex regFragmentStart   = new Regex(@"^StartFragment:(\d+)", RegexOptions.Compiled | RegexOptions.Multiline);
+        private static Regex regFragmentEnd     = new Regex(@"^EndFragment:(\d+)", RegexOptions.Compiled | RegexOptions.Multiline);
+        private static Regex regBaseUrl         = new Regex(@"http://.*?/", RegexOptions.Compiled | RegexOptions.Multiline);
+        private void GetImageFromIData(CancellationToken cancel)
+        {
+            var idata = this.DataObject as IDataObject;
+
+            // Images
+            if (idata.GetDataPresent(DataFormats.Bitmap))
+                this.Image = (Image)idata.GetData(DataFormats.Bitmap);
+
+            // Specifies the Windows device-independent bitmap
+            else if (idata.GetDataPresent(DataFormats.Dib))
+                this.Image = (Image)idata.GetData(DataFormats.Dib, true);
+
+            else if (idata.GetDataPresent(DataFormats.Tiff))
+                this.Image = (Image)idata.GetData(DataFormats.Tiff, true);
+
+            // In Program like MS Word
+            else if (idata.GetDataPresent(DataFormats.EnhancedMetafile) &&
+                     idata.GetDataPresent(DataFormats.MetafilePict))
+            {
+                using (var stream = (Stream)idata.GetData(DataFormats.MetafilePict))
+                {
+                    stream.Seek(0, SeekOrigin.Begin);
+                    this.Image = Image.FromStream(stream);
+                }
             }
 
-            return true;
+            // HTML
+            else if (idata.GetDataPresent("HTML Format"))
+            {
+                Uri uri;
+                string html;
+                string src;
+
+                html = (string)idata.GetData("HTML Format");
+
+                src = regSrc.Match(html).Groups[1].Value;
+
+                if (!Uri.TryCreate(src, UriKind.Absolute, out uri))
+                {
+                    int fragmentStart   = int.Parse(regFragmentStart.Match(html).Groups[1].Value);
+                    int fragmentEnd     = int.Parse(regFragmentEnd.Match(html).Groups[1].Value);
+
+                    string baseUrl = regBaseUrl.Match(html, fragmentStart, fragmentEnd - fragmentStart).Groups[0].Value;
+
+                    uri = new Uri(new Uri(baseUrl), src);
+                }
+
+                if (!Http.GetResponse(uri, this.RawStream, cancel))
+                {
+                    this.RawStream.SetLength(0);
+                    this.RawStream.Capacity = 0;
+                }
+
+                if (this.RawStream.Length > 0)
+                {
+                    this.RawStream.Position = 0;
+                    this.Image = Image.FromStream(this.RawStream);
+                }
+            }
         }
     }
 }

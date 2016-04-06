@@ -12,7 +12,9 @@ namespace TiX.Utilities
     }
 
     public class GifFrames : List<GifFrame>, IDisposable
-    {        
+    {
+        public const int DefaultDelay = 80;
+
         public GifFrames()
         { }
         public GifFrames(Image image)
@@ -21,10 +23,14 @@ namespace TiX.Utilities
             if (frames <= 1) throw new Exception();
 
             byte[] times = image.GetPropertyItem(0x5100).Value;
+            int delay;
             for (int i = 0; i < frames; ++i)
             {
-                this.Add(new GifFrame { Image = new Bitmap(image), Dalay = BitConverter.ToInt32(times, 4 * i) * 10 });
+                delay = BitConverter.ToInt32(times, 4 * i) * 10;
+                if (delay == 0) delay = DefaultDelay;
+
                 image.SelectActiveFrame(FrameDimension.Time, i);
+                this.Add(new GifFrame { Image = CopyImage(image), Dalay = delay });
             }
         }
 
@@ -45,6 +51,15 @@ namespace TiX.Utilities
             this.Clear();
 
             GC.SuppressFinalize(this);
+        }
+
+        private static Bitmap CopyImage(Image orig)
+        {
+            var bitmap = new Bitmap(orig.Width, orig.Height, PixelFormat.Format24bppRgb);
+            using (var g = Graphics.FromImage(bitmap))
+                g.DrawImageUnscaledAndClipped(orig, new Rectangle(Point.Empty, orig.Size));
+
+            return bitmap;
         }
     }
 }

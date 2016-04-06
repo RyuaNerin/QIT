@@ -15,6 +15,7 @@ namespace TiX.Utilities
         public ShellHelper(string uniqueName)
         {
             this.m_uniqueName = uniqueName;
+            this.m_proc = new NativeMethods.WndProc(this.CustomProc);;
         }
 
         private IList<byte[]>   m_data = new List<byte[]>();
@@ -24,6 +25,7 @@ namespace TiX.Utilities
             get { lock (m_data) return this.m_timeOut; }
             set { lock (m_data) this.m_timeOut = value; }
         }
+        private NativeMethods.WndProc m_proc;
 
         public IList<byte[]> GetOrSend(byte[] data)
         {
@@ -36,8 +38,7 @@ namespace TiX.Utilities
             {
                 this.TimeOut = DateTime.UtcNow.AddMilliseconds(RecieveTimeout);
                 
-                var proc = new NativeMethods.WndProc(this.CustomProc);
-                var hwnd = this.CreateWindow(proc);
+                var hwnd = this.CreateWindow(this.m_proc);
     
                 // 마와레 마와레
                 // 메시지 루프를 돌아요
@@ -90,12 +91,12 @@ namespace TiX.Utilities
 
         private IntPtr CreateWindow(NativeMethods.WndProc proc)
         {
-            var wndClass			= new NativeMethods.WNDCLASS();
-            wndClass.lpszClassName	= this.m_uniqueName;
-            wndClass.lpfnWndProc	= Marshal.GetFunctionPointerForDelegate(proc);
+            var wndClass            = new NativeMethods.WNDCLASS();
+            wndClass.lpszClassName    = this.m_uniqueName;
+            wndClass.lpfnWndProc    = Marshal.GetFunctionPointerForDelegate(proc);
 
-            var resRegister	= NativeMethods.RegisterClass(ref wndClass);
-            var resError	= Marshal.GetLastWin32Error();
+            var resRegister    = NativeMethods.RegisterClass(ref wndClass);
+            var resError    = Marshal.GetLastWin32Error();
 
             if (resRegister == 0 && resError != NativeMethods.ERROR_CLASS_ALREADY_EXISTS)
                 throw new Exception();
@@ -133,13 +134,13 @@ namespace TiX.Utilities
             return NativeMethods.DefWindowProc(hwnd, msg, wParam, lParam);
         }
 
-		private bool SendData(IntPtr hwnd, byte[] data)
-		{
+        private bool SendData(IntPtr hwnd, byte[] data)
+        {
             var lpData = IntPtr.Zero;
-			try
-			{
-				lpData = Marshal.AllocHGlobal(data.Length);
-				Marshal.Copy(data, 0, lpData, data.Length);
+            try
+            {
+                lpData = Marshal.AllocHGlobal(data.Length);
+                Marshal.Copy(data, 0, lpData, data.Length);
 
                 var lParam = IntPtr.Zero;
                 try
@@ -161,16 +162,16 @@ namespace TiX.Utilities
                 {
                     if (lParam != IntPtr.Zero) Marshal.FreeHGlobal(lParam);
                 }
-			}
-			catch
-			{ }
-			finally
-			{
-				if (lpData != IntPtr.Zero) Marshal.FreeHGlobal(lpData);
-			}
+            }
+            catch
+            { }
+            finally
+            {
+                if (lpData != IntPtr.Zero) Marshal.FreeHGlobal(lpData);
+            }
 
             return false;
-		}
+        }
 
         private static class NativeMethods
         {
@@ -242,27 +243,27 @@ namespace TiX.Utilities
             [StructLayout(LayoutKind.Sequential)]
             public struct WNDCLASS
             {
-                public int		style;
-                public IntPtr	lpfnWndProc;
-                public int		cbClsExtra;
-                public int		cbWndExtra;
-                public IntPtr	hInstance;
-                public IntPtr	hIcon;
-                public IntPtr	hCursor;
-                public IntPtr	hbrBackground;
+                public int        style;
+                public IntPtr    lpfnWndProc;
+                public int        cbClsExtra;
+                public int        cbWndExtra;
+                public IntPtr    hInstance;
+                public IntPtr    hIcon;
+                public IntPtr    hCursor;
+                public IntPtr    hbrBackground;
                 [MarshalAs(UnmanagedType.LPTStr)]
-                public string	lpszMenuName;
+                public string    lpszMenuName;
                 [MarshalAs(UnmanagedType.LPTStr)]
-                public string	lpszClassName;
+                public string    lpszClassName;
             }
 
-		    [StructLayout(LayoutKind.Sequential)]
-		    public struct COPYDATASTRUCT
-		    {
-			    public IntPtr	dwData;
-			    public int		cbData;
-			    public IntPtr	lpData;
-		    }
+            [StructLayout(LayoutKind.Sequential)]
+            public struct COPYDATASTRUCT
+            {
+                public IntPtr    dwData;
+                public int        cbData;
+                public IntPtr    lpData;
+            }
 
             [StructLayout(LayoutKind.Sequential)]
             public struct MSG

@@ -8,15 +8,15 @@ using System.Windows.Forms;
 
 namespace TiX.Core
 {
-	public static class Settings
-	{
+    public static class Settings
+    {
         private sealed class Attr : Attribute
         { }
 
-		public readonly static string FilePath = Path.Combine(Application.StartupPath, "TiX.ini");
+        public readonly static string FilePath = Path.Combine(Application.StartupPath, "TiX.ini");
 
         [Attr] public static string UToken              { get; set; }
-        [Attr] public static string	USecret             { get; set; }
+        [Attr] public static string USecret             { get; set; }
         [Attr] public static bool   Topmost             { get; set; }
         [Attr] public static bool   ReversedCtrl        { get; set; }
         [Attr] public static bool   UniformityText      { get; set; }
@@ -29,10 +29,10 @@ namespace TiX.Core
             Settings.m_properties = typeof(Settings).GetProperties().Where(e => e.GetCustomAttributes(false).Any(ee => ee is Attr)).ToArray();
         }
 
-		public static void Load()
-		{
-			if (!File.Exists(Settings.FilePath))
-				return;
+        public static void Load()
+        {
+            if (!File.Exists(Settings.FilePath))
+                return;
 
             string str;
             foreach (var prop in m_properties)
@@ -41,9 +41,9 @@ namespace TiX.Core
                 if (!string.IsNullOrEmpty(str))
                     prop.SetValue(null, Str2Obj(str, prop.PropertyType), null);
             }
-		}
+        }
 
-		public static void Save()
+        public static void Save()
         {
             string val;
             foreach (var prop in m_properties)
@@ -53,7 +53,7 @@ namespace TiX.Core
                 if (val != null)
                     NativeMethods.Set(FilePath, "TiX", prop.Name, val);
             }
-		}
+        }
 
         public static object Str2Obj(string val, Type toType)
         {
@@ -92,5 +92,5 @@ namespace TiX.Core
                 WritePrivateProfileString(section, key, value, path);
             }
         }
-	}
+    }
 }

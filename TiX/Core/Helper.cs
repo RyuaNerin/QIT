@@ -38,7 +38,7 @@ namespace TiX.Core
         public static string ToCapString(long size)
         {
             if (size < 1000)
-                return string.Format("{0:##0} B");
+                return string.Format("{0:##0} B", size);
 
             if (size < 1000 * 1024)
                 return string.Format("{0:##0.0} KiB", size / 1024d);

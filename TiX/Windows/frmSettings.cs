@@ -38,12 +38,19 @@ namespace TiX.Windows
 
         public static bool IsAdministrator()
         {
-            using (var identity = WindowsIdentity.GetCurrent())
+            try
             {
-                if (identity == null) return false;
+                using (var identity = WindowsIdentity.GetCurrent())
+                {
+                    if (identity == null) return false;
 
-                var principal = new WindowsPrincipal(identity);
-                return principal.IsInRole(WindowsBuiltInRole.Administrator);
+                    var principal = new WindowsPrincipal(identity);
+                    return principal.IsInRole(WindowsBuiltInRole.Administrator);
+                }
+            }
+            catch
+            {
+                return false;
             }
         }
 

@@ -25,16 +25,16 @@
 - bmp
 - emf
 - exif
-- gif (with animation)
+- gif (support animation)
 - ico
-- jpg (jpeg)
+- jpeg
 - png
-- tif (tiff)
+- tiff
 - wmf
-- psd (8 bits Only. not support alpha channel.)
+- psd
 
 # LICENSE
 
 - [MIT LICENSE](LICENSE)
 
-- [SimplePSD](http://www.codeproject.com/csharp/simplepsd.asp)
+- [PSDFile](http://psdplugin.codeplex.com/)

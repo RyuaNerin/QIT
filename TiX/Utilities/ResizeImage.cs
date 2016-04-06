@@ -1,4 +1,11 @@
-﻿using System;
+﻿// https://dev.twitter.com/rest/media/uploading-media
+
+// GIF
+// Resolution should be <= 1280x1080 (width x height)
+// Number of frames <= 350
+// Number of pixels (width * height * num_frames) <= 300 million
+
+using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
@@ -7,11 +14,44 @@ using TiX.Core;
 
 namespace TiX.Utilities
 {
-    public static class ImageResize
+    public static class ResizeImage
     {
-        private const int MaxSize = 3 * 1024 * 1024; // 3 MiB
-        private const double JPGCompressionRatio = 16.0d; // : 1
-        private const double PNGCompressionRatio =  2.5d; // : 1
+        private const int MaxSize = 3 * 1024 * 1024;
+        private const double JpgCompressionRatio = 16.0d; // : 1
+        private const double PngCompressionRatio =  2.5d; // : 1
+
+        private static readonly ImageCodecInfo JpgCodec;
+        private static readonly ImageCodecInfo PngCodec;
+        private static readonly ImageCodecInfo GifCodec;
+        private static readonly EncoderParameters JpgParam;
+        private static readonly EncoderParameters PngParam;
+        private static readonly EncoderParameters GifParamFrame;
+        private static readonly EncoderParameters GifParamDimention;
+        private static readonly EncoderParameters GifParamFlush;
+
+        static ResizeImage()
+        {
+            JpgCodec = ImageCodecInfo.GetImageDecoders().First(e => e.FormatID == ImageFormat.Jpeg.Guid);
+            PngCodec = ImageCodecInfo.GetImageDecoders().First(e => e.FormatID == ImageFormat.Png.Guid);
+            GifCodec = ImageCodecInfo.GetImageDecoders().First(e => e.FormatID == ImageFormat.Gif.Guid);
+
+            JpgParam = new EncoderParameters(1);
+            JpgParam.Param[0] = new EncoderParameter(Encoder.Quality, 90L);
+            
+            PngParam = new EncoderParameters(2);
+            PngParam.Param[0] = new EncoderParameter(Encoder.ColorDepth, 32L);
+            PngParam.Param[1] = new EncoderParameter(Encoder.Compression, (long)EncoderValue.CompressionLZW);
+
+            GifParamFrame = new EncoderParameters(2);
+            GifParamFrame.Param[0] = new EncoderParameter(Encoder.SaveFlag, (long)EncoderValue.MultiFrame);
+            GifParamFrame.Param[1] = new EncoderParameter(Encoder.Compression, (long)EncoderValue.CompressionLZW);
+
+            GifParamDimention = new EncoderParameters(1);
+            GifParamDimention.Param[0] = new EncoderParameter(Encoder.SaveFlag, (long)EncoderValue.FrameDimensionTime);
+
+            GifParamFlush = new EncoderParameters(1);
+            GifParamFlush.Param[0] = new EncoderParameter(Encoder.SaveFlag, (long)EncoderValue.Flush);
+        }
         
         private enum Extension { Gif, Png, Jpg }
         private static Extension GetExtension(ImageSet image)
@@ -33,123 +73,159 @@ namespace TiX.Utilities
             image.Extension = ".png";
             return Extension.Png;
         }
-        
-        private const long ColorDepth = 32L;
 
-        private static readonly ImageCodecInfo JpgCodec;
-        private static readonly ImageCodecInfo PngCodec;
-        private static readonly ImageCodecInfo GifCodec;
-        private static readonly EncoderParameters JpgParam;
-        private static readonly EncoderParameters PngParam;
-        private static readonly EncoderParameters GifParamFrame;
-        private static readonly EncoderParameters GifParamDimention;
-        private static readonly EncoderParameters GifParamFlush;
-
-        static ImageResize()
-        {
-            JpgCodec = ImageCodecInfo.GetImageDecoders().First(e => e.FormatID == ImageFormat.Jpeg.Guid);
-            PngCodec = ImageCodecInfo.GetImageDecoders().First(e => e.FormatID == ImageFormat.Png.Guid);
-            GifCodec = ImageCodecInfo.GetImageDecoders().First(e => e.FormatID == ImageFormat.Gif.Guid);
-
-            JpgParam = new EncoderParameters(1);
-            JpgParam.Param[0] = new EncoderParameter(Encoder.Quality, 90L);
-            
-            PngParam = new EncoderParameters(2);
-            PngParam.Param[0] = new EncoderParameter(Encoder.ColorDepth, ColorDepth);
-            PngParam.Param[1] = new EncoderParameter(Encoder.Compression, (long)EncoderValue.CompressionLZW);
-
-            GifParamFrame = new EncoderParameters(2);
-            GifParamFrame.Param[0] = new EncoderParameter(Encoder.SaveFlag, (long)EncoderValue.MultiFrame);
-            GifParamFrame.Param[1] = new EncoderParameter(Encoder.Compression, (long)EncoderValue.CompressionLZW);
-
-            GifParamDimention = new EncoderParameters(1);
-            GifParamDimention.Param[0] = new EncoderParameter(Encoder.SaveFlag, (long)EncoderValue.FrameDimensionTime);
-
-            GifParamFlush = new EncoderParameters(1);
-            GifParamFlush.Param[0] = new EncoderParameter(Encoder.SaveFlag, (long)EncoderValue.Flush);
-        }
-
-        public static void ResizeImage(ImageSet imageSet)
-        {
-            var ext = GetExtension(imageSet);
-
-#if !DEBUG
-            // jpeg 혹은 png 파일의 크기가 일정 기준 이하면 리사이징을 하지 않고 넘어간다
-            if ((ext == Extension.Jpg || ext == Extension.Png) && imageSet.RawStream.Length < MaxSize)
-                return;
-#endif
-
-            if (ext == Extension.Gif)
-                if (ResizeGif(imageSet))
-                    return;
-
-            bool containsAlpha;
-            imageSet.Image = ConvertToBitmap(imageSet.Image, out containsAlpha);
-
-            if (ext == Extension.Jpg || !containsAlpha)
-            {
-                imageSet.Extension = ".jpg";
-                Resize(imageSet, JpgCodec, JpgParam, MaxSize * JPGCompressionRatio);
-            }
-            else
-            {
-                imageSet.Extension = ".png";
-                Resize(imageSet, PngCodec, PngParam, MaxSize * PNGCompressionRatio * ColorDepth / 8);
-            }
-        }
-
-        private static bool ResizeGif(ImageSet imageSet)
-        {
+        public static bool Resize(ImageSet imageSet)
+        {            
+            var szBefore = imageSet.Image.Size;
             try
             {
-                imageSet.GifFrames = new GifFrames(imageSet.Image);	
+                ResizeImagePrivate(imageSet);
             }
             catch
             {
                 return false;
             }
+            var szAfter = imageSet.Image.Size;
 
+            imageSet.Ratio = ((double)szAfter.Width * szAfter.Height) / (szBefore.Width * szBefore.Height) * 100d;
 
-            int i;
-            int w = imageSet.GifFrames.Size.Width;
-            int h = imageSet.GifFrames.Size.Height;
-            
-            // Remove Transparent
-            for (i = 0; i < imageSet.GifFrames.Count; ++i)
+            // Thumbnail
+            var ratio = Math.Min(64d / imageSet.Image.Width, 64d / imageSet.Image.Height);
+            var newWidth  = (int)(imageSet.Image.Width  * ratio);
+            var newHeight = (int)(imageSet.Image.Height * ratio);
+
+            imageSet.Thumbnail = ResizeBySize(imageSet.Image, newWidth, newHeight, PixelFormat.Format32bppArgb);
+
+            return true;
+        }
+
+        private static void ResizeImagePrivate(ImageSet imageSet)
+        {
+            var ext = GetExtension(imageSet);
+            if (ext == Extension.Gif)
             {
-                var newBitmap = imageSet.GifFrames[i].Image.Clone(new Rectangle(Point.Empty, imageSet.GifFrames[i].Image.Size), PixelFormat.Format24bppRgb);
-                imageSet.GifFrames[i].Image.Dispose();
-                imageSet.GifFrames[i].Image = newBitmap;
+                imageSet.GifFrames = new GifFrames(imageSet.Image);
+                ResizeGif(imageSet);
+                return;
             }
 
+            // 크기가 일정 기준 이하면 리사이징을 하지 않고 넘어간다
+            if (0 < imageSet.RawStream.Length && imageSet.RawStream.Length <= MaxSize)
+                return;
+
+            bool containsAlpha;
+            imageSet.Image = ConvertToBitmap(imageSet.Image, out containsAlpha);
+
+            ImageCodecInfo codec;
+            EncoderParameters param;
+            double pixels;
+
+            if (ext == Extension.Jpg || !containsAlpha)
+            {
+                imageSet.Extension = ".jpg";
+                codec = JpgCodec;
+                param = JpgParam;
+                pixels = MaxSize * JpgCompressionRatio;
+            }
+            else
+            {
+                imageSet.Extension = ".png";
+                codec = PngCodec;
+                param = PngParam;
+                pixels = MaxSize * PngCompressionRatio * 4;
+            }
+            
+            if (imageSet.RawStream.Length == 0)
+            {
+                imageSet.Image.Save(imageSet.RawStream, codec, param);
+
+                if (0 < imageSet.RawStream.Length && imageSet.RawStream.Length <= MaxSize)
+                    return;
+            }
+
+            Resize(imageSet, codec, param, pixels);
+        }
+
+        private static bool ResizeGif(ImageSet imageSet)
+        {
+            int i;
+            int w = imageSet.Image.Width;
+            int h = imageSet.Image.Height;
+
+            // Resolution should be <= 1280x1080 (width x height)
+            if (w > 1280 || h > 1080)
+            {
+                var ratio = Math.Min(1280d / imageSet.Image.Width, 1080d / imageSet.Image.Height);
+                w  = (int)(imageSet.Image.Width  * ratio);
+                h = (int)(imageSet.Image.Height * ratio);
+            }
+
+            // Number of frames <= 350
+            while (imageSet.GifFrames.Count > 350)
+            {
+                imageSet.GifFrames[350].Image.Dispose();
+                imageSet.GifFrames.RemoveAt(350);
+            }
+
+            // Number of pixels (width * height * num_frames) <= 300,000,000
+            {
+                double pixels = w * h * imageSet.GifFrames.Count;
+                if (pixels > 300000000)
+                {
+                    int nw, nh;
+                    GetSizeFromPixels(300000000d / imageSet.GifFrames.Count, w, h, out nw, out nh);
+
+                    w = nw;
+                    h = nh;
+                }
+            }
+            
+
+            bool resized = false;
+            Bitmap[] image = new Bitmap[imageSet.GifFrames.Count];
             while (imageSet.RawStream.Length > MaxSize)
             {
+                resized = true;
+
                 w = (int)(w * 0.9d);
                 h = (int)(h * 0.9d);
 
                 for (i = 0; i < imageSet.GifFrames.Count; ++i)
-                    imageSet.GifFrames[i].Image = ResizeImage(imageSet.GifFrames[i].Image, w, h);
+                {
+                    if (image[i] != null)
+                        image[i].Dispose();
+                    image[i] = ResizeBySize(imageSet.GifFrames[i].Image, w, h);
+                }
 
                 imageSet.RawStream.SetLength(0);
 
-                using (var newImage = new Bitmap(imageSet.GifFrames[0].Image))
+                using (var newImage = image[0].Clone() as Bitmap)
                 {
-                    foreach (var propertyItem in imageSet.Image.PropertyItems)
-                        newImage.SetPropertyItem(propertyItem);
+                    CopyProperties(imageSet.Image, newImage);
 
                     for (i = 0; i < imageSet.GifFrames.Count; ++i)
                     {
                         if (i == 0)
                             newImage.Save(imageSet.RawStream, GifCodec, GifParamFrame);
                         else
-                            newImage.SaveAdd(imageSet.GifFrames[i].Image, GifParamDimention);
+                            newImage.SaveAdd(image[i], GifParamDimention);
                     }
                     newImage.SaveAdd(GifParamFlush);
                 }
             }
-
             imageSet.Image.Dispose();
+
+            if (resized)
+            {
+                for (i = 0; i < imageSet.GifFrames.Count; ++i)
+                {
+                    imageSet.GifFrames[i].Image.Dispose();
+                    imageSet.GifFrames[i].Image = image[i];
+                }
+            }
+
             imageSet.Image = imageSet.GifFrames[0].Image;
+            imageSet.RawStream.Position = 0;
 
             return true;
         }
@@ -159,20 +235,7 @@ namespace TiX.Utilities
             PixelFormat.Indexed,
             PixelFormat.Format1bppIndexed,
             PixelFormat.Format4bppIndexed,
-            PixelFormat.Format8bppIndexed,
-            PixelFormat.Undefined
-        };
-        private readonly static PixelFormat[] FormatWithAlpha =
-        {
-            PixelFormat.Gdi,
-            PixelFormat.Alpha,
-			PixelFormat.PAlpha,
-            PixelFormat.Canonical,
-            PixelFormat.Format16bppArgb1555,
-			PixelFormat.Format32bppArgb,
-            PixelFormat.Format32bppPArgb,
-            PixelFormat.Format64bppArgb,
-			PixelFormat.Format64bppPArgb
+            PixelFormat.Format8bppIndexed
         };
 
         private static Bitmap ConvertToBitmap(Image image, out bool containsAlpha)
@@ -183,16 +246,20 @@ namespace TiX.Utilities
                 if (FormatIndexed.Contains(image.PixelFormat))
                 {
                     var newBitmap = bitmap.Clone(new Rectangle(Point.Empty, image.Size), PixelFormat.Format32bppRgb);
+                    CopyProperties(bitmap, newBitmap);
+
                     bitmap.Dispose();
                     bitmap = newBitmap;
                 }
                 
-                if (FormatWithAlpha.Contains(image.PixelFormat))
+                if (Image.IsAlphaPixelFormat(image.PixelFormat))
                 {
                     containsAlpha = IsImageTransparent(bitmap);
                     if (!containsAlpha)
                     {
                         var newBitmap = bitmap.Clone(new Rectangle(Point.Empty, bitmap.Size), PixelFormat.Format24bppRgb);
+                        CopyProperties(bitmap, newBitmap);
+
                         bitmap.Dispose();
                         bitmap = newBitmap;
                     }
@@ -213,11 +280,9 @@ namespace TiX.Utilities
                     float scaleY = header.DpiY / 96f;
 
                     bitmap = new Bitmap((int)(scaleX * meta.Width / header.DpiX * 100), (int)(scaleY * meta.Height / header.DpiY * 100), PixelFormat.Format32bppArgb);
+                    CopyProperties(meta, bitmap);
                     using (Graphics g = Graphics.FromImage(bitmap))
                     {
-                        foreach (var propertyItem in meta.PropertyItems)
-                            bitmap.SetPropertyItem(propertyItem);
-
                         g.InterpolationMode = InterpolationMode.HighQualityBicubic;
                         g.PixelOffsetMode = PixelOffsetMode.HighQuality;
                         g.SmoothingMode = SmoothingMode.AntiAlias;
@@ -233,6 +298,7 @@ namespace TiX.Utilities
             using (image)
             {
                 bitmap = new Bitmap(image.Width, image.Height, image.PixelFormat);
+                CopyProperties(image, bitmap);
                 using (var g = Graphics.FromImage(bitmap))
                     g.DrawImageUnscaledAndClipped(image, new Rectangle(0, 0, image.Width, image.Height));
 
@@ -240,19 +306,32 @@ namespace TiX.Utilities
             }
         }
 
+        private static void CopyProperties(Image from, Image to)
+        {
+            foreach (var propertyItem in from.PropertyItems)
+                to.SetPropertyItem(propertyItem);
+        }
+
         private static void Resize(ImageSet imageSet, ImageCodecInfo codec, EncoderParameters param, double size)
         {
             int w, h;
 
-            GetSizeFromPixels(size, imageSet.Width, imageSet.Height, out w, out h);
+            GetSizeFromPixels(size, imageSet.Image.Width, imageSet.Image.Height, out w, out h);
 
+            Bitmap newImage = null;
             do
             {
-                ResizeBySize(imageSet, codec, param, w, h);
+                if (newImage != null)
+                    newImage.Dispose();
+
+                newImage = ResizeAndSave(imageSet, codec, param, w, h);
 
                 w = (int)(w * 0.9f);
                 h = (int)(h * 0.9f);
             } while (imageSet.RawStream.Length > MaxSize);
+
+            imageSet.Image.Dispose();
+            imageSet.Image = newImage;
         }
 
         private static void GetSizeFromPixels(double pixels, int oriW, int oriH, out int newW, out int newH)
@@ -264,29 +343,30 @@ namespace TiX.Utilities
             if (newH > oriH) newH = oriH;
         }
 
-        private static void ResizeBySize(ImageSet imageSet, ImageCodecInfo codec, EncoderParameters param, int w, int h)
+        private static Bitmap ResizeAndSave(ImageSet imageSet, ImageCodecInfo codec, EncoderParameters param, int w, int h)
         {
-            imageSet.Image = ResizeImage(imageSet.Image, w, h);
-
+            var newImage = ResizeBySize(imageSet.Image, w, h);
             imageSet.RawStream.SetLength(0);
-            imageSet.Image.Save(imageSet.RawStream, codec, param);
+            newImage.Save(imageSet.RawStream, codec, param);
+
+            return newImage;
         }
 
-        private static Bitmap ResizeImage(Image oldImage, int w, int h)
+        private static Bitmap ResizeBySize(Image oldImage, int w, int h)
         {
-            var newImage = new Bitmap(w, h, oldImage.PixelFormat);
-            foreach (var propertyItem in oldImage.PropertyItems)
-                newImage.SetPropertyItem(propertyItem);
+            return ResizeBySize(oldImage, w, h, oldImage.PixelFormat);
+        }
+        private static Bitmap ResizeBySize(Image oldImage, int w, int h, PixelFormat pixelFormat)
+        {
+            var newImage = new Bitmap(w, h, pixelFormat);
             using (var g = Graphics.FromImage(newImage))
             {
                 g.InterpolationMode = InterpolationMode.HighQualityBicubic;
                 g.PixelOffsetMode = PixelOffsetMode.HighQuality;
                 g.SmoothingMode = SmoothingMode.AntiAlias;
 
-                g.DrawImage(oldImage, 0, 0, w, h);
+                g.DrawImage(oldImage, new Rectangle(0, 0, w, h), new Rectangle(Point.Empty, oldImage.Size), GraphicsUnit.Pixel);
             }
-
-            oldImage.Dispose();
 
             return newImage;
         }
