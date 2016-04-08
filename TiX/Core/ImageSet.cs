@@ -84,7 +84,7 @@ namespace TiX.Core
         {
             var cancel = (CancellationToken)ocancel;
 
-            if (this.Status == Statues.None)
+            if (this.Status == Statues.None || this.RawStream.Length == 0)
             {
                 try
                 {

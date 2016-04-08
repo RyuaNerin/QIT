@@ -48,7 +48,6 @@ namespace TiX.Core
             }
             else
 			{
-				ResizeImage.Resize( data.Collection[0] );
                 frmMain.Callback(data);
 			}
         }
