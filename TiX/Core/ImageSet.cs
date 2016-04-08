@@ -16,13 +16,13 @@ namespace TiX.Core
             this.Index = index;
             this.RawStream = new MemoryStream(4 * 1024 * 1024);
             this.m_collection = collection;
+            this.IsLoading  = new ManualResetEvent(false);
         }
         
         public ImageSet(ImageCollection collection, int index, DataTypes type, object dataObject) : this(collection, index)
         {
             this.DataType   = type;
             this.DataObject = dataObject;
-            this.IsLoading  = new ManualResetEvent(false);
 
             this.Status = Statues.None;
         }

@@ -59,8 +59,10 @@ namespace TiX
             TaskScheduler.UnobservedTaskException += (s, e) => WriteException(e.Exception);
             Application.ThreadException += (s, e) => WriteException(e.Exception);
             
+#if !DEBUG
             System.Net.HttpWebRequest.DefaultCachePolicy = new System.Net.Cache.RequestCachePolicy(System.Net.Cache.RequestCacheLevel.NoCacheNoStore);
             System.Net.HttpWebRequest.DefaultWebProxy = null;
+#endif
 
             Settings.Load();
             Program.Twitter.UserToken  = Settings.UToken;

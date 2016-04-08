@@ -366,7 +366,7 @@ namespace TiX.Windows
 
                 media_ids = sb.ToString();
             }
-            var obj = new { status = (string)e.Argument, media_ids = media_ids };
+            var obj = new { status = (string)e.Argument, media_ids = media_ids, in_reply_to_status_id = this.InReplyToStatusId };
 
             try
             {

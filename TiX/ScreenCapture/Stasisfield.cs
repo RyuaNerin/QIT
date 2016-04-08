@@ -139,7 +139,7 @@ namespace TiX.ScreenCapture
                     e.Graphics.DrawRectangle(Pens.Red, this.m_rect);
                 }
 
-                e.Graphics.DrawString(string.Format("{0}x{1} - {2}x{3}", this.m_rect.Left, this.m_rect.Top, this.m_rect.Right, this.m_rect.Bottom), this.Font, Brushes.Black, new Point(5, 5));
+                e.Graphics.DrawString(string.Format("{0}x{1} - {2}x{3}", this.m_rect.Left + 1, this.m_rect.Top + 1, this.m_rect.Right + 1, this.m_rect.Bottom + 1), this.Font, Brushes.Black, new Point(5, 5));
             }
 		}
 
