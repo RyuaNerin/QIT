@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
+using TiX.Utilities;
 using TiX.Windows;
 using CallbackData = TiX.Windows.frmMain.CallbackData;
 
@@ -46,7 +47,10 @@ namespace TiX.Core
                 data.IAsyncResult = frmMain.Instance.BeginInvoke(new Action<CallbackData>(frmMain.Callback), data);
             }
             else
+			{
+				ResizeImage.Resize( data.Collection[0] );
                 frmMain.Callback(data);
+			}
         }
     }
 }
