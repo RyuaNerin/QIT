@@ -76,8 +76,8 @@ namespace TiX.Windows
             }
 
             this.m_ic.LoadedImage += this.LoadedImage;
-            
-            StartNew();
+			this.txtText.Select( txtText.Text.Length - 1, 0 );
+			StartNew();
         }
 
         private void StartNew()
