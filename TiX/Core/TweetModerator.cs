@@ -33,7 +33,7 @@ namespace TiX.Core
             cbData.Collection = new ImageCollection();
             cbData.Collection.Add(image);
 
-			Tweet( cbData, autoStart, title, string.Format( "@{0} ", defaultText ), inReplyToStatusId );
+			Tweet( cbData, autoStart, title, string.Format( "{0} ", defaultText ), inReplyToStatusId );
 		}
         private static void Tweet(CallbackData data, bool autoStart = false, string title = null, string defaultText = null, string inReplyToStatusId = null)
         {
