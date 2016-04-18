@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using System.Security.Principal;
 using System.Windows.Forms;
 using TiX.Core;
+using Microsoft.Win32;
 
 namespace TiX.Windows
 {
@@ -33,6 +34,7 @@ namespace TiX.Windows
             this.chkReversedCtrl.Checked    = Settings.ReversedCtrl;
             this.ctlUniformity.Checked      = Settings.UniformityText;
             this.chkEnableShell.Checked     = Settings.EnabledShell;
+            this.chkEnableShellWithoutText.Checked     = Settings.EnabledShell2;
 
             this.m_loaded = true;
         }
@@ -43,21 +45,24 @@ namespace TiX.Windows
             Settings.ReversedCtrl   = this.chkReversedCtrl.Checked;
             Settings.UniformityText = this.ctlUniformity.Checked;
 
-            if (Settings.EnabledShell != this.chkEnableShell.Checked)
+            if (Settings.EnabledShell  != this.chkEnableShell.Checked ||
+                Settings.EnabledShell2 != this.chkEnableShellWithoutText.Checked)
             {
-                if (this.chkEnableShell.Checked)
+                if (this.chkEnableShell.Checked || this.chkEnableShellWithoutText.Checked)
                 {
-                    switch (ShellExtension.Install(Settings.Shells))
+                    switch (ShellExtension.Install(this.chkEnableShell.Checked, this.chkEnableShellWithoutText.Checked, Settings.Shells))
                     {
                     case ShellExtension.Result.NO_ERROR:
-                        Settings.EnabledShell = true;
+                        Settings.EnabledShell = this.chkEnableShell.Checked;
+                        Settings.EnabledShell2 = this.chkEnableShellWithoutText.Checked;
                         break;
 
                     case ShellExtension.Result.FAIL_REG:
                         MessageBox.Show(this, "DLL 을 등록하지 못했어요", TiXMain.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
                         break;
-
+                        
                     case ShellExtension.Result.DLL_CREATAION_FAIL:
+                    case ShellExtension.Result.FILE_USED:
                         MessageBox.Show(this, "DLL 파일을 만들지 못했어요", TiXMain.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
                         break;
 
@@ -92,6 +97,7 @@ namespace TiX.Windows
                         break;
                     }
                     Settings.EnabledShell = false;
+                    Settings.EnabledShell2 = false;
                 }
 
                 this.RestartExplorer();

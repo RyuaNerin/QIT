@@ -78,7 +78,6 @@ namespace TiX.ScreenCapture
 			}
 		}
 
-
 		#region 마우스 클릭 이벤트
 		private void Stasisfield_MouseMove( object sender, MouseEventArgs e )
 		{
@@ -126,7 +125,7 @@ namespace TiX.ScreenCapture
 
             if (!this.m_drag)
             {
-                e.Graphics.DrawString(string.Format("{0}x{1}", m_location[1].X, m_location[1].Y), this.Font, Brushes.Black, new Point(5, 5));
+                e.Graphics.DrawString(string.Format("{0}x{1}", m_location[1].X + 1, m_location[1].Y + 1), this.Font, Brushes.Black, new Point(5, 5));
             }
             else
             {

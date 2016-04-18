@@ -14,7 +14,7 @@ namespace TiX.Core
         private ImageSet(ImageCollection collection, int index)
         {
             this.Index = index;
-            this.RawStream = new MemoryStream(4 * 1024 * 1024);
+            this.RawStream = new MemoryStream(3 * 1024 * 1024);
             this.m_collection = collection;
             this.IsLoading  = new ManualResetEvent(false);
         }

@@ -35,6 +35,7 @@
             this.btnOK = new System.Windows.Forms.Button();
             this.lblCopyRight = new System.Windows.Forms.Label();
             this.chkEnableShell = new System.Windows.Forms.CheckBox();
+            this.chkEnableShellWithoutText = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // chkTopMost
@@ -73,7 +74,7 @@
             // btnCancel
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnCancel.Location = new System.Drawing.Point(221, 140);
+            this.btnCancel.Location = new System.Drawing.Point(221, 168);
             this.btnCancel.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(55, 28);
@@ -86,7 +87,7 @@
             // 
             this.btnOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnOK.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.btnOK.Location = new System.Drawing.Point(114, 140);
+            this.btnOK.Location = new System.Drawing.Point(114, 168);
             this.btnOK.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.btnOK.Name = "btnOK";
             this.btnOK.Size = new System.Drawing.Size(101, 28);
@@ -118,11 +119,24 @@
             this.chkEnableShell.UseVisualStyleBackColor = true;
             this.chkEnableShell.CheckedChanged += new System.EventHandler(this.chkEnableShell_CheckedChanged);
             // 
+            // chkShellNotext
+            // 
+            this.chkEnableShellWithoutText.AutoSize = true;
+            this.chkEnableShellWithoutText.Location = new System.Drawing.Point(12, 140);
+            this.chkEnableShellWithoutText.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.chkEnableShellWithoutText.Name = "chkShellNotext";
+            this.chkEnableShellWithoutText.Size = new System.Drawing.Size(256, 19);
+            this.chkEnableShellWithoutText.TabIndex = 6;
+            this.chkEnableShellWithoutText.Text = "우클릭 메뉴에 \"TiX 로 바로 트윗하기\" 추가";
+            this.chkEnableShellWithoutText.UseVisualStyleBackColor = true;
+            this.chkEnableShellWithoutText.CheckedChanged += new System.EventHandler(this.chkEnableShell_CheckedChanged);
+            // 
             // frmSettings
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(288, 181);
+            this.ClientSize = new System.Drawing.Size(288, 209);
+            this.Controls.Add(this.chkEnableShellWithoutText);
             this.Controls.Add(this.lblCopyRight);
             this.Controls.Add(this.btnOK);
             this.Controls.Add(this.btnCancel);
@@ -136,6 +150,7 @@
             this.MaximizeBox = false;
             this.Name = "frmSettings";
             this.ShowIcon = false;
+            this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "설정";
             this.Load += new System.EventHandler(this.frmSettings_Load);
@@ -153,5 +168,6 @@
         private System.Windows.Forms.Button btnOK;
         private System.Windows.Forms.Label lblCopyRight;
         private System.Windows.Forms.CheckBox chkEnableShell;
+        private System.Windows.Forms.CheckBox chkEnableShellWithoutText;
     }
 }

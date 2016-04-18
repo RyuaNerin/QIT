@@ -17,12 +17,12 @@ namespace TiX.Windows
         private static GlobalKeyboardHook m_manager;
         public frmMain()
         {
-            InitializeComponent();
-            this.Icon = TiX.Properties.Resources.TiX;
-
             frmMain.Instance = this;
 
+            InitializeComponent();
             this.Text = TiXMain.ProductName;
+            this.Icon = TiX.Properties.Resources.TiX;
+            
             this.TopMost = Settings.Topmost;
             if (Settings.ReversedCtrl)
                 this.lblCtrl.Text = "Ctrl을 눌러 [내용] 작성";
@@ -81,6 +81,7 @@ namespace TiX.Windows
                     e.Effect = DragDropEffects.Move;
             }
         }
+
         private void frmMain_DragDrop(object sender, DragEventArgs e)
         {
             var autoStart = (Settings.ReversedCtrl && ((e.KeyState & 8) != 8)) || (!Settings.ReversedCtrl && ((e.KeyState & 8) == 8));
@@ -99,7 +100,7 @@ namespace TiX.Windows
         {
             if (Interlocked.CompareExchange(ref this.m_stasis, 1, 0) == 1) return;
 
-            this.BeginInvoke(new Action(this.GlobalKeyboardHook_KeyDown));
+            this.Invoke(new Action(this.GlobalKeyboardHook_KeyDown));
         }
         private void GlobalKeyboardHook_KeyDown()
         {
@@ -158,7 +159,7 @@ namespace TiX.Windows
             {
                 var update = LastRelease.CheckNewVersion();
                 if (update != null)
-                    if (MessageBox.Show(this, "새 업데이트가 있어요!", this.Text, MessageBoxButtons.OKCancel, MessageBoxIcon.Information) == DialogResult.OK)
+                    if (MessageBox.Show(this, "새 업데이트가 있어요!", Application.ProductName, MessageBoxButtons.OKCancel, MessageBoxIcon.Information) == DialogResult.OK)
                         Process.Start(new ProcessStartInfo { UseShellExecute = true, FileName = string.Format("\"{0}\"", update.HtmlUrl) }).Dispose();
             }));
         }

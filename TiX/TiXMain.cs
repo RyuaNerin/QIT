@@ -53,8 +53,8 @@ namespace TiX
         [STAThread]
         static int Main(string[] args)
         {
-            if ((args.Length == 1 || args.Length == 2) && args[0].Equals("install", StringComparison.OrdinalIgnoreCase))
-                return (int)ShellExtension.Install(args.Length == 1 ? args[1] : null, true);
+            if ((args.Length == 4) && args[0].Equals("install", StringComparison.OrdinalIgnoreCase))
+                return (int)ShellExtension.Install(args[1] == "1", args[2] == "1", args[3], true);
 
             if (args.Length == 1 && args[0].Equals("uninstall", StringComparison.OrdinalIgnoreCase))
                 return (int)ShellExtension.Uninstall(true);
@@ -68,9 +68,10 @@ namespace TiX
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
             
 #if !DEBUG
-            System.Net.HttpWebRequest.DefaultCachePolicy = new System.Net.Cache.RequestCachePolicy(System.Net.Cache.RequestCacheLevel.NoCacheNoStore);
             System.Net.HttpWebRequest.DefaultWebProxy = null;
 #endif
+            System.Net.HttpWebRequest.DefaultCachePolicy = new System.Net.Cache.RequestCachePolicy(System.Net.Cache.RequestCacheLevel.NoCacheNoStore);
+            System.Net.ServicePointManager.MaxServicePoints = 20;
 
             Settings.Load();
             TiXMain.Twitter.UserToken  = Settings.UToken;

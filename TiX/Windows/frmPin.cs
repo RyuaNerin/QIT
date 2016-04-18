@@ -30,8 +30,8 @@ namespace TiX.Windows
 
 		private void frmPin_Load(object sender, EventArgs e)
         {
-            this.ajax.Left = this.pnl.Width  / 2 - 8;
-            this.ajax.Top  = this.pnl.Height / 2 - 8;
+            this.ajax.Left = this.ClientRectangle.Width  / 2 - 8;
+            this.ajax.Top  = this.ClientRectangle.Height / 2 - 8;
 
 			this.ajax.Start();
 			this.bgwBefore.RunWorkerAsync();

@@ -21,7 +21,6 @@ namespace TiX.Windows
             this.m_client = this.ClientRectangle;
             this.CalcMaxLocation();
             this.CheckPosition();
-            //this.Invalidate();
         }
 
         private void frmPreview_Load(object sender, EventArgs e)
@@ -48,8 +47,8 @@ namespace TiX.Windows
         Timer m_gifTimer;
         int m_gifIndex = -1;
 
-        ImageSet m_imageSet;
-        Size m_imgSize;
+        readonly ImageSet m_imageSet;
+        readonly Size m_imgSize;
 
         Point m_location = new Point(0, 0);
         Point m_locationMax;
@@ -180,7 +179,6 @@ namespace TiX.Windows
         private void pic_MouseDoubleClick(object sender, MouseEventArgs e)
         {
             this.m_viewOriginal = !this.m_viewOriginal;
-            this.CalcMaxLocation();
             this.CheckPosition();
 
             this.m_mousePoint = new Point(0, 0);
@@ -233,7 +231,8 @@ namespace TiX.Windows
 
         private void frmPreview_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.KeyCode == Keys.Escape)
+            if (e.KeyCode == Keys.Escape ||
+                e.KeyCode == Keys.Enter)
                 this.Close();
 
             if (e.KeyCode == Keys.Up)
@@ -247,6 +246,10 @@ namespace TiX.Windows
 
             if (e.KeyCode == Keys.Right)
                 this.m_location.X += this.m_imgSize.Width / 20;
+
+            if (e.KeyCode == Keys.Z)
+                this.m_viewOriginal = !this.m_viewOriginal;
+
 
             this.CheckPosition();
 

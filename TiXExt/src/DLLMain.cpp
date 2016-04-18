@@ -12,6 +12,7 @@ UINT g_ref;
 
 HANDLE m_menuImage = NULL;
 WCHAR m_exePath[MAX_PATH] = { 0 };
+DWORD m_option = FALSE;
 
 // {9CE5906A-DFBB-4A5A-9EBF-9D262E5D29B9}
 #define SHELLEXT_GUID   { 0x9ce5906a, 0xdfbb, 0x4a5a, { 0x9e, 0xbf, 0x9d, 0x26, 0x2e, 0x5d, 0x29, 0xb9 } }
@@ -24,7 +25,7 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD dwReason, LPVOID lpReserved)
         g_hInst = hModule;
 
         if (m_menuImage == NULL)
-            m_menuImage = LoadImage(g_hInst, MAKEINTRESOURCEW(IDB_ICON), IMAGE_BITMAP, 0, 0, LR_DEFAULTSIZE | LR_LOADTRANSPARENT | LR_LOADMAP3DCOLORS);
+            m_menuImage = LoadImageW(g_hInst, MAKEINTRESOURCEW(IDB_ICON), IMAGE_BITMAP, 0, 0, LR_DEFAULTSIZE | LR_LOADTRANSPARENT | LR_LOADMAP3DCOLORS);
 
         if (m_exePath[0] == 0)
         {
@@ -33,9 +34,15 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD dwReason, LPVOID lpReserved)
             {
                 DWORD len = sizeof(m_exePath);
                 RegGetValueW(hKey, NULL, L"TiX", REG_SZ, NULL, reinterpret_cast<LPBYTE>(&m_exePath), &len);
-                RegCloseKey(hKey);
 
-                DebugLog(L"GetExePath [%d] %s", len, m_exePath);
+                DWORD type = REG_DWORD;
+                len = sizeof(m_option);                
+                RegQueryValueExW(hKey, L"TiX-Option", NULL, &type, (LPBYTE)&m_option, &len);
+
+                DebugLog(L"Get ExePath [%d] %s", len, m_exePath);
+                DebugLog(L"Get Option [%d]", m_option);
+
+                RegCloseKey(hKey);
             }
         }
 
@@ -157,6 +164,7 @@ STDAPI DllUnregisterServer(void)
     if (RegOpenKeyW(HKEY_LOCAL_MACHINE, L"Software\\RyuaNerin", &hTmpKey) == ERROR_SUCCESS)
     {
         RegDeleteValueW(hTmpKey, L"TiX");
+        RegDeleteValueW(hTmpKey, L"TiX-Option");
         RegCloseKey(hTmpKey);
     }
 

@@ -20,7 +20,7 @@ namespace TiX
             FAIL_REG = 4,
             FILE_USED = 5
         }
-        public static Result Install(string oldShells, bool runas = false)
+        public static Result Install(bool withText, bool withoutText, string oldShells, bool runas = false)
         {
             var startup = new ProcessStartInfo();
             startup.WindowStyle = ProcessWindowStyle.Hidden;
@@ -29,8 +29,34 @@ namespace TiX
 
             if (TiXMain.IsAdministratorMode)
             {
+                try
+                {
+                    using (var key = Registry.LocalMachine.CreateSubKey(@"Software\RyuaNerin"))
+                    {
+                        key.SetValue("TiX", Application.ExecutablePath, RegistryValueKind.ExpandString);
+                        key.SetValue("TiX-Option", (withText ? 1 : 0) | (withoutText ? 2 : 0), RegistryValueKind.DWord);
+                    }
+                }
+                catch
+                {
+                    return Result.NOT_AUTHORIZED;
+                }
+
                 if (oldShells != null)
                     UninstallOldShells(oldShells);
+
+                bool installedDll = false;
+                try
+                {
+                	using (var key = Registry.ClassesRoot.OpenSubKey("*\\ShellEx\\ContextMenuHandlers\\00TiXExt"))
+                        installedDll = key.GetValue(null, null) != null;
+                }
+                catch
+                {
+                }
+
+                if (installedDll)
+                    return Result.NO_ERROR;
 
                 var dllPath = Path.Combine(Path.GetDirectoryName(Application.ExecutablePath), string.Format("TiXExt{0}.dll", IntPtr.Size == 8 ? 64 : 32));
                 try
@@ -44,16 +70,6 @@ namespace TiX
                 catch
                 {
                     return Result.DLL_CREATAION_FAIL;
-                }
-
-                try
-                {
-                    using (var key = Registry.LocalMachine.CreateSubKey(@"Software\RyuaNerin"))
-                        key.SetValue("TiX", Application.ExecutablePath, RegistryValueKind.ExpandString);
-                }
-                catch
-                {
-                    return Result.NOT_AUTHORIZED;
                 }
 
                 startup.FileName = "regsvr32";
@@ -73,7 +89,7 @@ namespace TiX
             else
             {
                 startup.FileName = Application.ExecutablePath;
-                startup.Arguments = oldShells == null ? "--install" : string.Format("--install \"{0}\"", oldShells);
+                startup.Arguments = string.Format("--install \"{0}\" \"{1}\"", withText ? 1 : 0, withoutText ? 1 : 0, oldShells);
                 startup.Verb = "runas";
 
                 using (var proc = Process.Start(startup))

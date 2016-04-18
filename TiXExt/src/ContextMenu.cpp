@@ -6,12 +6,16 @@
 #include "resource.h"
 #include "DebugLog.h"
 
+#define MENU_WITH_TEXT      0
+#define MENU_WITHOUT_TEXT   1
+
 // Dll Main
 extern HINSTANCE g_hInst;
 extern UINT g_ref;
 
 extern HANDLE m_menuImage;
 extern WCHAR m_exePath[MAX_PATH];
+extern DWORD m_option;
 
 #define VECTOR_RESERVE  32
 
@@ -130,29 +134,45 @@ STDMETHODIMP ContextMenu::QueryContextMenu(HMENU hMenu, UINT uMenuIndex, UINT ui
     if (uFlags & CMF_DEFAULTONLY)
         return MAKE_HRESULT(SEVERITY_SUCCESS, 0, 0);
 
-    MENUITEMINFO mii[2];
+    DWORD items = 0;
 
-    mii[0] = { sizeof(MENUITEMINFO) };
-    mii[0].fMask = MIIM_BITMAP | MIIM_STRING | MIIM_FTYPE | MIIM_ID | MIIM_STATE;
-    mii[0].wID = uidFirstCmd;
-    mii[0].fType = MFT_STRING;
-    mii[0].dwTypeData = L"TiX 로 트윗하기 (&8)";
-    mii[0].fState = MFS_ENABLED;
-    mii[0].hbmpItem = static_cast<HBITMAP>(m_menuImage);
+    DebugLog(L"QueryContextMenu / Option : [%d]", m_option);
 
-    mii[1] = { sizeof(MENUITEMINFO) };
-    mii[1].fMask = MIIM_BITMAP | MIIM_STRING | MIIM_FTYPE | MIIM_ID | MIIM_STATE;
-    mii[1].wID = uidFirstCmd + 1;
-    mii[1].fType = MFT_STRING;
-    mii[1].dwTypeData = L"TiX 로 바로 트윗하기 (&9)";
-    mii[1].fState = MFS_ENABLED;
-    mii[1].hbmpItem = static_cast<HBITMAP>(m_menuImage);
+    if (m_option & 1)
+    {
+        MENUITEMINFO mii;
 
+        mii = { sizeof(MENUITEMINFO) };
+        mii.fMask = MIIM_BITMAP | MIIM_STRING | MIIM_FTYPE | MIIM_ID | MIIM_STATE;
+        mii.wID = uidFirstCmd + items;
+        mii.fType = MFT_STRING;
+        mii.dwTypeData = L"TiX 로 트윗하기 (&8)";
+        mii.fState = MFS_ENABLED;
+        mii.hbmpItem = static_cast<HBITMAP>(m_menuImage);
 
-    if (!InsertMenuItem(hMenu, uMenuIndex + 0, TRUE, &mii[0])) return HRESULT_FROM_WIN32(GetLastError());
-    if (!InsertMenuItem(hMenu, uMenuIndex + 1, TRUE, &mii[1])) return HRESULT_FROM_WIN32(GetLastError());
+        if (!InsertMenuItem(hMenu, uMenuIndex + items, TRUE, &mii))
+            return HRESULT_FROM_WIN32(GetLastError());
+        items++;
+    }
 
-    return MAKE_HRESULT(SEVERITY_SUCCESS, 0, 2);
+    if (m_option & 2)
+    {
+        MENUITEMINFO mii;
+
+        mii = { sizeof(MENUITEMINFO) };
+        mii.fMask = MIIM_BITMAP | MIIM_STRING | MIIM_FTYPE | MIIM_ID | MIIM_STATE;
+        mii.wID = uidFirstCmd + items;
+        mii.fType = MFT_STRING;
+        mii.dwTypeData = L"TiX 로 바로 트윗하기 (&9)";
+        mii.fState = MFS_ENABLED;
+        mii.hbmpItem = static_cast<HBITMAP>(m_menuImage);
+
+        if (!InsertMenuItem(hMenu, uMenuIndex + items, TRUE, &mii))
+            return HRESULT_FROM_WIN32(GetLastError());
+        items++;
+    }
+
+    return MAKE_HRESULT(SEVERITY_SUCCESS, 0, items);
 }
 
 STDMETHODIMP ContextMenu::GetCommandString(UINT_PTR idCmd, UINT uFlags, UINT* pwReserved, LPSTR pszName, UINT cchMax)
@@ -175,9 +195,6 @@ STDMETHODIMP ContextMenu::GetCommandString(UINT_PTR idCmd, UINT uFlags, UINT* pw
 
 STDMETHODIMP ContextMenu::InvokeCommand(LPCMINVOKECOMMANDINFO pCmdInfo)
 {
-    if (HIWORD(pCmdInfo->lpVerb))
-        return E_INVALIDARG;
-
     if (m_exePath[0] == 0)
         return S_OK;
 
@@ -201,7 +218,9 @@ STDMETHODIMP ContextMenu::InvokeCommand(LPCMINVOKECOMMANDINFO pCmdInfo)
     startInfo.hStdError = GetStdHandle(STD_ERROR_HANDLE);
 
     DebugLog(L"Verb : %d", pCmdInfo->lpVerb);
-    if (LOWORD(pCmdInfo->lpVerb) == 1)
+    
+    if ((((m_option & 1) == 1) && LOWORD(pCmdInfo->lpVerb) == 1) ||
+        (((m_option & 1) == 0) && LOWORD(pCmdInfo->lpVerb) == 0))
         wsprintfW(wbuff, L"\"%s\" \"--pipe\" \"--notext\"", m_exePath);
     else
         wsprintfW(wbuff, L"\"%s\" \"--pipe\"", m_exePath);
