@@ -41,4 +41,4 @@
 
 - [MIT LICENSE](LICENSE)
 
-- [PSDFile](http://psdplugin.codeplex.com/)
+- [LoadPSD](https://gist.github.com/RyuaNerin/5740aa323acf16a192a8e4a8bd1b4c7a)
