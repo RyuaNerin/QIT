@@ -112,9 +112,9 @@
             this.chkEnableShell.Location = new System.Drawing.Point(12, 113);
             this.chkEnableShell.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.chkEnableShell.Name = "chkEnableShell";
-            this.chkEnableShell.Size = new System.Drawing.Size(106, 19);
+            this.chkEnableShell.Size = new System.Drawing.Size(228, 19);
             this.chkEnableShell.TabIndex = 3;
-            this.chkEnableShell.Text = "윈도우 셸 확장";
+            this.chkEnableShell.Text = "우클릭 메뉴에 \"TiX 로 트윗하기\" 추가";
             this.chkEnableShell.UseVisualStyleBackColor = true;
             this.chkEnableShell.CheckedChanged += new System.EventHandler(this.chkEnableShell_CheckedChanged);
             // 

@@ -21,7 +21,7 @@ namespace TiX.Core
                     e.Data.GetDataPresent(DataFormats.Dib) ||
                     e.Data.GetDataPresent(DataFormats.Tiff) ||
                     (e.Data.GetDataPresent(DataFormats.EnhancedMetafile) && e.Data.GetDataPresent(DataFormats.MetafilePict)) ||
-                    e.Data.GetDataPresent("HTML Format")
+                    e.Data.GetDataPresent(DataFormats.Html)
                 );
         }
 
@@ -53,7 +53,7 @@ namespace TiX.Core
                 this.LoadedImage.Invoke(sender, new EventArgs());
         }
 
-        private CancellationTokenSource m_cancel;
+        private readonly CancellationTokenSource m_cancel;
         public CancellationToken Token { get { return this.m_cancel.Token; } }
 
         public void Add(IDataObject e)
@@ -69,19 +69,24 @@ namespace TiX.Core
         }
         public void Add(string path)
         {
-            if (!Program.CheckFile(path)) return;
+            if (!TiXMain.CheckFile(path)) return;
 
             this.Add(new ImageSet(this, this.Count, DataTypes.File, path));
         }
-        public void Add(string[] paths)
+        public void Add(IEnumerable<string> paths)
         {
-            foreach (var path in paths.OrderBy(e => e, ExtendStringComparer.Instance))
+            foreach (var path in paths.OrderBy(ee => ee, ExtendStringComparer.Instance))
                 this.Add(path);
         }
         public void Add(Image image)
         {
             if (image == null) return;
             this.Add(new ImageSet(this, this.Count, image));
+        }
+
+        protected new void Add(ImageSet value)
+        {
+            base.Add(value);
         }
     }
 }

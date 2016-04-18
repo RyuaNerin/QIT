@@ -119,5 +119,25 @@ namespace TiX.Properties {
                 return ((System.Drawing.Icon)(obj));
             }
         }
+        
+        /// <summary>
+        ///   System.Byte[] 형식의 지역화된 리소스를 찾습니다.
+        /// </summary>
+        internal static byte[] TiXExt32 {
+            get {
+                object obj = ResourceManager.GetObject("TiXExt32", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   System.Byte[] 형식의 지역화된 리소스를 찾습니다.
+        /// </summary>
+        internal static byte[] TiXExt64 {
+            get {
+                object obj = ResourceManager.GetObject("TiXExt64", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
     }
 }

@@ -1,4 +1,4 @@
-![TiX](https://raw.githubusercontent.com/RyuaNerin/QIT/master/TiX-256.png)
+![TiX](Icon/256.png)
 
 # TiX (QIT > QITx > Quicx > TiX)
 
@@ -16,16 +16,20 @@
 
 - 브라우저를 통해 어플리케이션 승인 후 PIN코드를 어플리케이션에 입력해주세요!
 
-- 탐색기 혹은 브라우저에서 이미지를 TiX 로 드래그하거나
+- 탐색기 혹은 브라우저에서 **이미지를 TiX 로 드래그**하거나
 
-- 설정에서 **윈도우 쉘 확장**을 활성화한 후 이미지 파일을 우클릭하여 나오는 메뉴에서 'TiX 로 트윗하기' 선택
+- 설정에서 **우클릭 메뉴에 "TiX 로 트윗하기" 추가**을 활성화한 후 이미지 파일을 우클릭하여 나오는 메뉴에서 **TiX 로 트윗하기** 선택
+
+## 꿀팁
+
+- 웹 브라우저에서 이미지를 TiX 로 그래드 해도 트윗이 가능합니다
 
 ## 지원하는 포멧
 
 - bmp
 - emf
 - exif
-- gif (support animation)
+- gif (**support animation**)
 - ico
 - jpeg
 - png

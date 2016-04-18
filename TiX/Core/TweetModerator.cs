@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
-using TiX.Utilities;
 using TiX.Windows;
 using CallbackData = TiX.Windows.frmMain.CallbackData;
 

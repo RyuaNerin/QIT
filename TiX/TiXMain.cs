@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Linq;
+using System.Security.Principal;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using Limitation;
 using TiX.Core;
@@ -13,11 +14,12 @@ using TiX.Windows;
 
 namespace TiX
 {
-    static class Program
+    static class TiXMain
     {
-        public static string ProductName = String.Format("TiX rev.{0}", Application.ProductVersion);
-        public const  string UniqueName = "C0E6D64A-23D2-4676-93F7-F4B9D8CE25DF";
-        public const  string ShellName  = "C0E6D64A-23D2-4676-93F7-F4B9D8CE25DE";
+        public static string ProductName = String.Format("TiX rev.{0}", new Version(Application.ProductVersion).Revision);
+        public const  string InstanceName = "C0E6D64A-23D2-4676-93F7-F4B9D8CE25DF";
+
+        public static readonly bool IsAdministratorMode;
 
         public static readonly OAuth Twitter = new OAuth("lQJwJWJoFlbvr2UQnDbg", "DsuIRA1Ak9mmSCGl9wnNvjhmWJTmb9vZlRdQ7sMqXww");
 
@@ -35,29 +37,35 @@ namespace TiX
             return false;
         }
 
-        [STAThread]
-        static void Main( string[] args )
+        static TiXMain()
         {
-            if (args.Length == 1 && args[0].Equals("install", StringComparison.CurrentCultureIgnoreCase))
+            try
             {
-                Console.Write(ShellExtension.Install());
-                return;
+                using (var cur = WindowsIdentity.GetCurrent())
+                    IsAdministratorMode = new WindowsPrincipal(cur).IsInRole(WindowsBuiltInRole.Administrator);
             }
-            if (args.Length == 2 && args[0].Equals("uninstall", StringComparison.CurrentCultureIgnoreCase))
+            catch
             {
-                ShellExtension.Uninstall(args[1]);
-                return;
+                IsAdministratorMode = false;
             }
+        }
+
+        [STAThread]
+        static int Main(string[] args)
+        {
+            if ((args.Length == 1 || args.Length == 2) && args[0].Equals("install", StringComparison.OrdinalIgnoreCase))
+                return (int)ShellExtension.Install(args.Length == 1 ? args[1] : null, true);
+
+            if (args.Length == 1 && args[0].Equals("uninstall", StringComparison.OrdinalIgnoreCase))
+                return (int)ShellExtension.Uninstall(true);
             
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
             TiX.ExternalLibrary.Resolver.Init(typeof(Properties.Resources));
+            CrashReport.Init();
 
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
-            AppDomain.CurrentDomain.UnhandledException += (s, e) => WriteException(e.ExceptionObject as Exception);
-            TaskScheduler.UnobservedTaskException += (s, e) => WriteException(e.Exception);
-            Application.ThreadException += (s, e) => WriteException(e.Exception);
             
 #if !DEBUG
             System.Net.HttpWebRequest.DefaultCachePolicy = new System.Net.Cache.RequestCachePolicy(System.Net.Cache.RequestCacheLevel.NoCacheNoStore);
@@ -65,12 +73,12 @@ namespace TiX
 #endif
 
             Settings.Load();
-            Program.Twitter.UserToken  = Settings.UToken;
-            Program.Twitter.UserSecret = Settings.USecret;
+            TiXMain.Twitter.UserToken  = Settings.UToken;
+            TiXMain.Twitter.UserSecret = Settings.USecret;
 
             int i;
 
-            if (args.Length >= 1 && args[0].Equals("stasis", StringComparison.CurrentCultureIgnoreCase))
+            if (args.Length >= 1 && args[0].Equals("stasis", StringComparison.OrdinalIgnoreCase))
             {
                 Image cropedImage;
                 using (var stasisForm = new Stasisfield())
@@ -87,41 +95,46 @@ namespace TiX
                         TweetModerator.Tweet(cropedImage, false, "캡처 화면 전송중");
                 }
 
-                return;
+                return 0;
             }
             else if (args.Length >= 1)
             {
                 var data = new ImageCollection();
+                bool autoStart = args.Any(e => e.Equals("--notext", StringComparison.OrdinalIgnoreCase));
 
-                if (args.Length >= 2 && args[0].Equals("shell", StringComparison.CurrentCultureIgnoreCase))
+                var lst = new List<string>(args.Length);
+
+                if (args.Any(e => e.Equals("--pipe", StringComparison.OrdinalIgnoreCase)))
                 {
-                    var rawData = Encoding.UTF8.GetBytes(string.Join("\n", args, 1, args.Length - 1));
+                    var reader = new StreamReader(Console.OpenStandardInput(), Encoding.UTF8);
+                    string path;
+                    while (true)
+                    {
+                        path = reader.ReadLine();
+                        if (string.IsNullOrEmpty(path)) break;
 
-                    var byteList = new ShellHelper(ShellName).GetOrSend(rawData);
-                    if (byteList == null) return;
-                    
-                    var fileList = new List<string>();
-                    for (i = 0; i < byteList.Count; ++i)
-                        fileList.AddRange(Encoding.UTF8.GetString(byteList[i]).Split('\n'));
-                    fileList.Sort();
-
-                    for (i = 0; i < fileList.Count; ++i)
-                        data.Add(fileList[i]);
+                        if (CheckFile(path))
+                            lst.Add(path);
+                    }
                 }
                 else
                 {
                     for (i = 0; i < args.Length; ++i)
-                        data.Add(args[i]);
+                        if (CheckFile(args[i]))
+                            lst.Add(args[i]);
                 }
 
-                if (data.Count == 0) return;
+                if (lst.Count == 0) return 0;
 
-                Application.Run(new frmUpload(data, true) { AutoStart = false });
-                return;
+                data.Add(lst);
+
+
+                Application.Run(new frmUpload(data, true) { AutoStart = autoStart });
+                return 0;
             }
 
             Form frm;
-            using (var instance = new InstanceHelper(UniqueName))
+            using (var instance = new InstanceHelper(InstanceName))
             {
                 if (instance.Check())
                 {                    
@@ -132,7 +145,7 @@ namespace TiX
                             Application.Run(instance.MainWindow = frm);
 
                             if (frm.DialogResult != DialogResult.OK)
-                                return;
+                                return 0;
                         }
                     }
 
@@ -140,23 +153,8 @@ namespace TiX
                     Application.Run(instance.MainWindow = frm);
                 }
             }
-        }
 
-        private static void WriteException(Exception exception)
-        {
-            var date = DateTime.Now.ToString("yyyy-MM-dd-HH-mm-ss");
-            var file = string.Format("Crash-{0}.txt", date);
-
-            using (var writer = new StreamWriter(Path.Combine(Application.StartupPath, file)))
-            {
-                writer.WriteLine("Decchi Crash Report");
-                writer.WriteLine("Date    : " + date);
-                writer.WriteLine();
-                writer.WriteLine("Exception");
-                writer.WriteLine(exception.ToString());
-            }
-
-            Application.Exit();
+            return 0;
         }
     }
 }

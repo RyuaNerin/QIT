@@ -176,13 +176,13 @@ namespace TiX.Core
             }
 
             // HTML
-            else if (idata.GetDataPresent("HTML Format"))
+            else if (idata.GetDataPresent(DataFormats.Html))
             {
                 Uri uri;
                 string html;
                 string src;
 
-                html = (string)idata.GetData("HTML Format");
+                html = (string)idata.GetData(DataFormats.Html, false);
 
                 src = regSrc.Match(html).Groups[1].Value;
 

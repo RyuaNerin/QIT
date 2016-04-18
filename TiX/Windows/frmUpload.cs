@@ -48,7 +48,7 @@ namespace TiX.Windows
 
             this.m_ic = ic;
             
-            this.Text = String.Format("{0} (1-1 / {1})", Program.ProductName, ic.Count);
+            this.Text = String.Format("{0} (1-1 / {1})", TiXMain.ProductName, ic.Count);
             this.lblLength.Text = String.Format("0 / {0}", TextLength);
         }
 
@@ -127,7 +127,7 @@ namespace TiX.Windows
 
         private void SetTitle()
         {
-            this.Text = String.Format("{0} ({1}-{2} / {3})", Program.ProductName, this.m_uploadIndex + 1, this.m_uploadIndex + this.m_uploadRange, this.m_ic.Count);
+            this.Text = String.Format("{0} ({1}-{2} / {3})", TiXMain.ProductName, this.m_uploadIndex + 1, this.m_uploadIndex + this.m_uploadRange, this.m_ic.Count);
         }
 
         private void LoadedImage(object sender ,EventArgs e)
@@ -371,7 +371,7 @@ namespace TiX.Windows
             try
             {
                 var buff = Encoding.UTF8.GetBytes(OAuth.ToString(obj));
-                var req = Program.Twitter.CreateWebRequest("POST", "https://api.twitter.com/1.1/statuses/update.json", obj);
+                var req = TiXMain.Twitter.CreateWebRequest("POST", "https://api.twitter.com/1.1/statuses/update.json", obj);
                 req.GetRequestStream().Write(buff, 0, buff.Length);
 
                 using (var res = req.GetResponse())
@@ -411,7 +411,7 @@ namespace TiX.Windows
 
                 var boundary  = Helper.CreateString();
 
-                var req = Program.Twitter.CreateWebRequest("POST", "https://upload.twitter.com/1.1/media/upload.json");
+                var req = TiXMain.Twitter.CreateWebRequest("POST", "https://upload.twitter.com/1.1/media/upload.json");
                 req.ContentType = "multipart/form-data; charset=utf-8; boundary=" + boundary;
                 boundary = "--" + boundary;
 
@@ -452,7 +452,7 @@ namespace TiX.Windows
 
                     var err = e.Result as string;
                     if (err != null)
-                        MessageBox.Show(this, err, Program.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        MessageBox.Show(this, err, TiXMain.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
 
                     this.ajax.Stop();
                     this.txtText.Enabled = true;

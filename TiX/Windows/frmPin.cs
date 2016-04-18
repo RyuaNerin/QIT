@@ -60,16 +60,16 @@ namespace TiX.Windows
 
 		private void bgwBefore_DoWork(object sender, DoWorkEventArgs e)
 		{
-            Program.Twitter.UserToken  = null;
-            Program.Twitter.UserSecret = null;
-            e.Result = Program.Twitter.RequestToken(out this.m_token, out this.m_secret);
+            TiXMain.Twitter.UserToken  = null;
+            TiXMain.Twitter.UserSecret = null;
+            e.Result = TiXMain.Twitter.RequestToken(out this.m_token, out this.m_secret);
 		}
 
 		private void bgwBefore_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
 		{
             if (e.Result == null || (bool)e.Result == false)
             {
-                MessageBox.Show(this, "문제가 발생했어요 :(", Program.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this, "문제가 발생했어요 :(", TiXMain.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
                 this.Close();
                 return;
             }
@@ -117,12 +117,12 @@ namespace TiX.Windows
 
 		private void bgwAfter_DoWork(object sender, DoWorkEventArgs e)
         {
-            Program.Twitter.UserToken  = this.m_token;
-            Program.Twitter.UserSecret = this.m_secret;
+            TiXMain.Twitter.UserToken  = this.m_token;
+            TiXMain.Twitter.UserSecret = this.m_secret;
 
             try
             {
-                if (Program.Twitter.AccessToken((string)e.Argument, out this.m_token, out this.m_secret))
+                if (TiXMain.Twitter.AccessToken((string)e.Argument, out this.m_token, out this.m_secret))
                 {
                     Settings.UToken  = this.m_token;
                     Settings.USecret = this.m_secret;
@@ -142,7 +142,7 @@ namespace TiX.Windows
 
             if (e.Result == null || (bool)e.Result == false)
             {
-                MessageBox.Show(this, "문제가 발생했어요 :(", Program.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this, "문제가 발생했어요 :(", TiXMain.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
                 this.Close();
                 return;
             }

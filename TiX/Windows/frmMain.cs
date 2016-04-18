@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using TiX.Core;
 using TiX.ScreenCapture;
@@ -20,14 +22,13 @@ namespace TiX.Windows
 
             frmMain.Instance = this;
 
-            this.Text = Program.ProductName;
+            this.Text = TiXMain.ProductName;
             this.TopMost = Settings.Topmost;
             if (Settings.ReversedCtrl)
                 this.lblCtrl.Text = "Ctrl을 눌러 [내용] 작성";
             else
                 this.lblCtrl.Text = "Ctrl을 눌러 [바로] 작성";
-
-
+            
             m_manager = new GlobalKeyboardHook();
 			m_manager.Down.Add(Keys.C | Keys.Control | Keys.Shift);
             m_manager.KeyDown += GlobalKeyboardHook_KeyDown;
@@ -68,7 +69,7 @@ namespace TiX.Windows
                     allow = false;
                     for (int i = 0; i < paths.Length; ++i)
                     {
-                        if (Program.CheckFile(paths[i]))
+                        if (TiXMain.CheckFile(paths[i]))
                         {
                             allow = true;
                             break;
@@ -82,8 +83,7 @@ namespace TiX.Windows
         }
         private void frmMain_DragDrop(object sender, DragEventArgs e)
         {
-            //              (Settings.ReversedCtrl && ((e.KeyState & 8) != 8)) || (!Settings.ReversedCtrl && ((e.KeyState & 8) == 8))
-            var autoStart = (Settings.ReversedCtrl && ((e.KeyState & 8) != 8)) || ((e.KeyState & 8) == 8);
+            var autoStart = (Settings.ReversedCtrl && ((e.KeyState & 8) != 8)) || (!Settings.ReversedCtrl && ((e.KeyState & 8) == 8));
 
             TweetModerator.Tweet(e.Data, autoStart);
         }
@@ -150,6 +150,17 @@ namespace TiX.Windows
                 frm.Show(frmMain.Instance);
             else
                 Application.Run(frm);
+        }
+
+        private void frmMain_Shown(object sender, EventArgs e)
+        {
+            Task.Factory.StartNew(new Action(() =>
+            {
+                var update = LastRelease.CheckNewVersion();
+                if (update != null)
+                    if (MessageBox.Show(this, "새 업데이트가 있어요!", this.Text, MessageBoxButtons.OKCancel, MessageBoxIcon.Information) == DialogResult.OK)
+                        Process.Start(new ProcessStartInfo { UseShellExecute = true, FileName = string.Format("\"{0}\"", update.HtmlUrl) }).Dispose();
+            }));
         }
     }
 }

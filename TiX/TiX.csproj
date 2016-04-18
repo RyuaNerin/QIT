@@ -60,7 +60,7 @@
     <AssemblyOriginatorKeyFile>TiX.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>TiX.Program</StartupObject>
+    <StartupObject>TiX.TiXMain</StartupObject>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>TiX.ico</ApplicationIcon>
@@ -77,7 +77,9 @@
     <Compile Include="Core\ImageCollection.cs" />
     <Compile Include="Core\ImageSet.cs" />
     <Compile Include="Core\TweetModerator.cs" />
+    <Compile Include="CrashReport.cs" />
     <Compile Include="ExternalLibrary\Resolver.cs" />
+    <Compile Include="LastRelease.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -92,7 +94,6 @@
     <Compile Include="Utilities\InstanceHelper.cs" />
     <Compile Include="LoadPSD\LoadPSD.cs" />
     <Compile Include="Utilities\ResizeImage.cs" />
-    <Compile Include="Utilities\ShellHelper.cs" />
     <Compile Include="Utilities\ExtendStringComparer.cs" />
     <Compile Include="Windows\AjaxControl.cs" />
     <Compile Include="Windows\frmMain.cs">
@@ -127,7 +128,7 @@
     </Compile>
     <Compile Include="Core\Helper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TiX.cs">
+    <Compile Include="TiXMain.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="ScreenCapture\Stasisfield.cs">
@@ -179,6 +180,8 @@
     <None Include="TiX.snk" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="TiXExt\TiXExt32.dll" />
+    <None Include="TiXExt\TiXExt64.dll" />
     <None Include="ExternalLibrary\Jint\Jint.dll" />
     <None Include="ExternalLibrary\Jint\Jint.pdb" />
     <Content Include="TiX.ico" />
@@ -192,8 +195,11 @@
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.XML" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

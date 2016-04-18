@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Windows.Forms;
 using Microsoft.Win32;
 using TiX.Core;
@@ -9,110 +10,124 @@ namespace TiX
 {
     public static class ShellExtension
     {
-        public static void Install(bool isAdmin)
+        public enum Result : int
         {
-            string shells = null;
-            if (isAdmin)
+            UNKNOWN = -1,
+            NO_ERROR = 0,
+            NOT_AUTHORIZED = 1,
+            DLL_NOT_EXITED = 2,
+            DLL_CREATAION_FAIL = 3,
+            FAIL_REG = 4,
+            FILE_USED = 5
+        }
+        public static Result Install(string oldShells, bool runas = false)
+        {
+            var startup = new ProcessStartInfo();
+            startup.WindowStyle = ProcessWindowStyle.Hidden;
+            startup.UseShellExecute = true;
+            startup.WorkingDirectory = Environment.CurrentDirectory;
+
+            if (TiXMain.IsAdministratorMode)
             {
-                shells = Install();
+                if (oldShells != null)
+                    UninstallOldShells(oldShells);
+
+                var dllPath = Path.Combine(Path.GetDirectoryName(Application.ExecutablePath), string.Format("TiXExt{0}.dll", IntPtr.Size == 8 ? 64 : 32));
+                try
+                {
+                    File.WriteAllBytes(dllPath, IntPtr.Size == 8 ? Properties.Resources.TiXExt64 : Properties.Resources.TiXExt32);
+                }
+                catch (IOException)
+                {
+                    return Result.FILE_USED;
+                }
+                catch
+                {
+                    return Result.DLL_CREATAION_FAIL;
+                }
+
+                try
+                {
+                    using (var key = Registry.LocalMachine.CreateSubKey(@"Software\RyuaNerin"))
+                        key.SetValue("TiX", Application.ExecutablePath, RegistryValueKind.ExpandString);
+                }
+                catch
+                {
+                    return Result.NOT_AUTHORIZED;
+                }
+
+                startup.FileName = "regsvr32";
+                startup.Arguments = string.Format("/s \"{0}\"", dllPath);
+
+                using (var proc = Process.Start(startup))
+                {
+                    proc.WaitForExit();
+                    return proc.ExitCode == 0 ? Result.NO_ERROR : Result.FAIL_REG;
+                }
+            }
+            else if (runas)
+            {
+                // 관리자로 켰는데 관리자가 아닌 경우
+                return Result.NOT_AUTHORIZED;
             }
             else
             {
-                ProcessStartInfo startInfo = new ProcessStartInfo();
-                startInfo.UseShellExecute = true;
-                startInfo.WorkingDirectory = Environment.CurrentDirectory;
-                startInfo.FileName = Application.ExecutablePath;
-                startInfo.Arguments = "\"install\"";
-                startInfo.Verb = "runas";
+                startup.FileName = Application.ExecutablePath;
+                startup.Arguments = oldShells == null ? "--install" : string.Format("--install \"{0}\"", oldShells);
+                startup.Verb = "runas";
 
-                try
+                using (var proc = Process.Start(startup))
                 {
-                    using (var proc = Process.Start(startInfo))
-                    {
-                        shells = proc.StandardOutput.ReadToEnd();
-                        proc.WaitForExit();
-                    }
+                    proc.WaitForExit();
+                    return (Result)proc.ExitCode;
                 }
-                catch
-                { }
             }
-
-            Settings.EnabledShell = true;
-            Settings.Shells = shells;
-            Settings.Save();
         }
-        public static void Uninstall(bool isAdmin)
+        public static Result Uninstall(bool runas = false)
         {
-            if (isAdmin)
+            var startup = new ProcessStartInfo();
+            startup.WindowStyle = ProcessWindowStyle.Hidden;
+            startup.UseShellExecute = true;
+            startup.WorkingDirectory = Environment.CurrentDirectory;
+
+            if (TiXMain.IsAdministratorMode)
             {
-                Uninstall(Settings.Shells);
+                var dllPath = Path.Combine(Path.GetDirectoryName(Application.ExecutablePath), string.Format("TiXExt{0}.dll", IntPtr.Size == 8 ? 64 : 32));
+                if (!File.Exists(dllPath))
+                    return Result.DLL_NOT_EXITED;
+
+                startup.FileName = "regsvr32";
+                startup.Arguments = string.Format("/s /u \"{0}\"", dllPath);
+
+                Result r;
+                using (var proc = Process.Start(startup))
+                {
+                    proc.WaitForExit();
+                    r =  proc.ExitCode == 0 ? Result.NO_ERROR : Result.FAIL_REG;
+                }
+
+                return r;
+            }
+            else if (runas)
+            {
+                // 관리자로 켰는데 관리자가 아닌 경우
+                return Result.NOT_AUTHORIZED;
             }
             else
             {
-                ProcessStartInfo startInfo = new ProcessStartInfo();
-                startInfo.UseShellExecute = true;
-                startInfo.WorkingDirectory = Environment.CurrentDirectory;
-                startInfo.FileName = Application.ExecutablePath;
-                startInfo.Arguments = string.Format("\"uninstall\" \"{0}\"", Settings.Shells);
-                startInfo.Verb = "runas";
+                startup.FileName = Application.ExecutablePath;
+                startup.Arguments = "--unisntall";
+                startup.Verb = "runas";
 
-                try
+                using (var proc = Process.Start(startup))
                 {
-                    using (var proc = Process.Start(startInfo))
-                        proc.WaitForExit();
+                    proc.WaitForExit();
+                    return (Result)proc.ExitCode;
                 }
-                catch
-                { }
             }
-
-            Settings.EnabledShell = false;
-            Settings.Shells = null;
-            Settings.Save();
         }
 
-        public static string Install()
-        {
-            var lst = new List<string>();
-            string shell   = null;
-            string regPath = null;
-
-            var iconPath  = string.Format("\"{0}\"", Application.ExecutablePath);
-            var shellPath = string.Format("\"{0}\" \"shell\" \"%1\"", Application.ExecutablePath);
-
-            foreach (var type in Program.AllowExtension)
-            {
-                try
-                {
-                    using (var key = Registry.ClassesRoot.CreateSubKey(type))
-                        shell = key.GetValue(null, null) as string;
-                }
-                catch
-                { }
-
-                if (string.IsNullOrEmpty(shell)) continue;
-
-                regPath = string.Format(@"{0}\shell\TiXShell", shell);
-
-                try
-                {
-                    using (var key = Registry.ClassesRoot.CreateSubKey(regPath))
-                    {
-                        key.SetValue(null, "T&iX 로 트윗하기 (I)", RegistryValueKind.ExpandString);
-                        key.SetValue("Icon", iconPath, RegistryValueKind.ExpandString);
-
-                        using (var command = key.CreateSubKey("command"))
-                            command.SetValue(null, shellPath, RegistryValueKind.ExpandString);
-                    }
-                }
-                catch
-                { }
-
-                lst.Add(shell);
-            }
-
-            return string.Join(",", lst.ToArray());
-        }
-        public static void Uninstall(string shells)
+        public static void UninstallOldShells(string shells)
         {
             string regPath;
 

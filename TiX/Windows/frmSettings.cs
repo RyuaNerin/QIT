@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
 using System.Windows.Forms;
@@ -17,14 +18,12 @@ namespace TiX.Windows
             internal const int BCM_SETSHIELD = (BCM_FIRST + 0x000C);
         }
 
-        private bool    m_admin;
+        private bool m_loaded = false;
 
         public frmSettings()
         {
             InitializeComponent();
             this.Icon = TiX.Properties.Resources.TiX;
-
-            this.m_admin = IsAdministrator();
         }
         private void frmSettings_Load(object sender, EventArgs e)
         {
@@ -34,24 +33,8 @@ namespace TiX.Windows
             this.chkReversedCtrl.Checked    = Settings.ReversedCtrl;
             this.ctlUniformity.Checked      = Settings.UniformityText;
             this.chkEnableShell.Checked     = Settings.EnabledShell;
-        }
 
-        public static bool IsAdministrator()
-        {
-            try
-            {
-                using (var identity = WindowsIdentity.GetCurrent())
-                {
-                    if (identity == null) return false;
-
-                    var principal = new WindowsPrincipal(identity);
-                    return principal.IsInRole(WindowsBuiltInRole.Administrator);
-                }
-            }
-            catch
-            {
-                return false;
-            }
+            this.m_loaded = true;
         }
 
         private void btnOK_Click(object sender, EventArgs e)
@@ -64,14 +47,56 @@ namespace TiX.Windows
             {
                 if (this.chkEnableShell.Checked)
                 {
-                    MessageBox.Show(this, "TiX를 삭제하기 전에 본 옵션의 체크를 해제하십시오.", "경고", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    ShellExtension.Install(this.m_admin);
+                    switch (ShellExtension.Install(Settings.Shells))
+                    {
+                    case ShellExtension.Result.NO_ERROR:
+                        Settings.EnabledShell = true;
+                        break;
+
+                    case ShellExtension.Result.FAIL_REG:
+                        MessageBox.Show(this, "DLL 을 등록하지 못했어요", TiXMain.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        break;
+
+                    case ShellExtension.Result.DLL_CREATAION_FAIL:
+                        MessageBox.Show(this, "DLL 파일을 만들지 못했어요", TiXMain.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        break;
+
+                    case ShellExtension.Result.NOT_AUTHORIZED:
+                        MessageBox.Show(this, "관리자 권한으로 실행해주세요!", TiXMain.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        break;
+
+                    case ShellExtension.Result.UNKNOWN:
+                        MessageBox.Show(this, "알 수 없는 문제가 발생했어요!", TiXMain.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        break;
+                    }
+                    Settings.Shells = null;
                 }
                 else
                 {
-                    ShellExtension.Uninstall(this.m_admin);
+                    switch (ShellExtension.Uninstall())
+                    {
+                    case ShellExtension.Result.FAIL_REG:
+                        MessageBox.Show(this, "DLL 을 등록 해제하지 못했어요", TiXMain.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        break;
+
+                    case ShellExtension.Result.DLL_NOT_EXITED:
+                        MessageBox.Show(this, "DLL 파일이 없어요", TiXMain.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        break;
+
+                    case ShellExtension.Result.NOT_AUTHORIZED:
+                        MessageBox.Show(this, "관리자 권한으로 실행해주세요!", TiXMain.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        break;
+
+                    case ShellExtension.Result.UNKNOWN:
+                        MessageBox.Show(this, "알 수 없는 문제가 발생했어요!", TiXMain.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        break;
+                    }
+                    Settings.EnabledShell = false;
                 }
+
+                this.RestartExplorer();
             }
+
             Settings.Save();
             this.Close();
         }
@@ -83,18 +108,38 @@ namespace TiX.Windows
 
         private void lblCopyRight_Click(object sender, EventArgs e)
         {
-            using (System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo { UseShellExecute = true, FileName = "\"https://github.com/RyuaNerin/QIT\"" }))
-            { }
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo { UseShellExecute = true, FileName = "\"https://github.com/RyuaNerin/QIT\"" }).Dispose();
         }
 
+        private static bool m_showShellMessage = true;
         private void chkEnableShell_CheckedChanged(object sender, EventArgs e)
         {
-            if (!this.m_admin)
+            if (!this.m_loaded) return;
+
+            if (m_showShellMessage && this.chkEnableShell.Checked)
+            {
+                MessageBox.Show(this, "TiX를 삭제하기 전에 이 옵션을 체크 해제해주세요!", TiXMain.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Information);
+                m_showShellMessage = false;
+            }
+
+            if (!TiXMain.IsAdministratorMode)
             {
                 if (Settings.EnabledShell != this.chkEnableShell.Checked)
                     NativeMethods.SendMessage(this.btnOK.Handle, NativeMethods.BCM_SETSHIELD, IntPtr.Zero, new IntPtr(1));
                 else
                     NativeMethods.SendMessage(this.btnOK.Handle, NativeMethods.BCM_SETSHIELD, IntPtr.Zero, new IntPtr(0));
+            }
+        }
+
+        private void RestartExplorer()
+        {
+            if (MessageBox.Show(this, "적용을 위해 탐색기를 재시작 할까요?", TiXMain.ProductName, MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+            {
+                //taskkill /IM explorer.exe /F & explorer.exe
+                using (var proc = Process.Start(new ProcessStartInfo { Arguments = "/IM explorer.exe /F", FileName = "taskkill", WindowStyle = ProcessWindowStyle.Hidden, UseShellExecute = true }))
+                    proc.WaitForExit();
+
+                Process.Start("explorer.exe").Dispose();
             }
         }
     }

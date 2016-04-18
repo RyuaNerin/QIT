@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 
 namespace TiX.Utilities
 {
@@ -46,7 +47,10 @@ namespace TiX.Utilities
                 if (xlen == 0 || ylen == 0)
                     c = xlen.CompareTo(ylen);
 
-                else if (char.IsDigit(x[xindex]) && char.IsDigit(y[yindex]) && int.TryParse(x.Substring(xindex, xlen), out xint) && int.TryParse(y.Substring(yindex, ylen), out yint))
+                else if (char.IsDigit(x[xindex]) &&
+                         char.IsDigit(y[yindex]) &&
+                         int.TryParse(x.Substring(xindex, xlen), out xint) &&
+                         int.TryParse(y.Substring(yindex, ylen), out yint))
                     c = xint.CompareTo(yint);
 
                 else
