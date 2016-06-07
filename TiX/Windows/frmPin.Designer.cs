@@ -30,8 +30,8 @@
 		{
             this.bgwBefore = new System.ComponentModel.BackgroundWorker();
             this.bgwAfter = new System.ComponentModel.BackgroundWorker();
-            this.ajax = new TiX.Windows.AjaxControl();
             this.txtPin = new System.Windows.Forms.TextBox();
+            this.ajax = new TiX.Windows.AjaxControl();
             this.SuspendLayout();
             // 
             // bgwBefore
@@ -44,15 +44,6 @@
             this.bgwAfter.DoWork += new System.ComponentModel.DoWorkEventHandler(this.bgwAfter_DoWork);
             this.bgwAfter.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.bgwAfter_RunWorkerCompleted);
             // 
-            // ajax
-            // 
-            this.ajax.Is16 = true;
-            this.ajax.Location = new System.Drawing.Point(68, 19);
-            this.ajax.Name = "ajax";
-            this.ajax.Size = new System.Drawing.Size(16, 16);
-            this.ajax.TabIndex = 4;
-            this.ajax.Visible = false;
-            // 
             // txtPin
             // 
             this.txtPin.Enabled = false;
@@ -62,6 +53,16 @@
             this.txtPin.Size = new System.Drawing.Size(124, 23);
             this.txtPin.TabIndex = 3;
             this.txtPin.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.txtPin.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtPin_KeyDown);
+            // 
+            // ajax
+            // 
+            this.ajax.Is16 = true;
+            this.ajax.Location = new System.Drawing.Point(68, 19);
+            this.ajax.Name = "ajax";
+            this.ajax.Size = new System.Drawing.Size(16, 16);
+            this.ajax.TabIndex = 4;
+            this.ajax.Visible = false;
             // 
             // frmPin
             // 
