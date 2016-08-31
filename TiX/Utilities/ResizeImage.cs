@@ -16,7 +16,7 @@ namespace TiX.Utilities
 {
     public static class ResizeImage
     {
-        private const int ImgMaxSize = 5 * 1024 * 1024;
+        private const int ImgMaxSize = 3 * 1024 * 1024;
         private const int GifMaxSize = 5 * 1024 * 1024;
         private const double JpgCompressionRatio = 10.0d; // : 1
         private const double PngCompressionRatio =  2.5d; // : 1
