@@ -1,14 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Windows.Forms;
 using Microsoft.Win32;
-using TiX.Core;
 
 namespace TiX
 {
-    public static class ShellExtension
+    internal static class ShellExtension
     {
         public enum Result : int
         {

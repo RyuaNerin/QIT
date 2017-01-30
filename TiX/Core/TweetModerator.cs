@@ -6,7 +6,7 @@ using CallbackData = TiX.Windows.frmMain.CallbackData;
 
 namespace TiX.Core
 {
-    public static class TweetModerator
+    internal static class TweetModerator
     {
         public static void Tweet(IDataObject dataObject, bool autoStart = false, string title = null, string defaultText = null, string inReplyToStatusId = null)
         {

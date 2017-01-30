@@ -5,13 +5,13 @@ using System.Drawing.Imaging;
 
 namespace TiX.Utilities
 {
-    public class GifFrame
+    internal class GifFrame
     {
         public Bitmap Image { get; set; }
         public int Dalay { get; set; }
     }
 
-    public class GifFrames : List<GifFrame>, IDisposable
+    internal class GifFrames : List<GifFrame>, IDisposable
     {
         public const int DefaultDelay = 80;
 

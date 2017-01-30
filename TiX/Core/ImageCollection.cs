@@ -8,9 +8,9 @@ using TiX.Utilities;
 
 namespace TiX.Core
 {
-    public enum DataTypes { Image, File, IDataObject }
+    internal enum DataTypes { Image, File, IDataObject }
 
-    public class ImageCollection : List<ImageSet>, IDisposable
+    internal class ImageCollection : List<ImageSet>, IDisposable
     {
         public static bool IsAvailable(DragEventArgs e)
         {

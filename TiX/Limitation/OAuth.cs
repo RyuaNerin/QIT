@@ -11,7 +11,7 @@ using System.Text.RegularExpressions;
 
 namespace Limitation
 {
-    public class OAuth
+    internal class OAuth
     {
         static OAuth()
         {

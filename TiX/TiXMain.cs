@@ -14,7 +14,7 @@ using TiX.Windows;
 
 namespace TiX
 {
-    static class TiXMain
+    internal static class TiXMain
     {
         public static string ProductName = String.Format("TiX rev.{0}", new Version(Application.ProductVersion).Revision);
         public const  string InstanceName = "C0E6D64A-23D2-4676-93F7-F4B9D8CE25DF";
@@ -62,7 +62,6 @@ namespace TiX
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
-            TiX.ExternalLibrary.Resolver.Init(typeof(Properties.Resources));
             CrashReport.Init();
 
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);

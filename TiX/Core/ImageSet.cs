@@ -9,7 +9,7 @@ using TiX.Utilities;
 
 namespace TiX.Core
 {
-    public class ImageSet : IDisposable
+    internal class ImageSet : IDisposable
     {
         private ImageSet(ImageCollection collection, int index)
         {

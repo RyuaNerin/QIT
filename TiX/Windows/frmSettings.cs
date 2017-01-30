@@ -8,7 +8,7 @@ using Microsoft.Win32;
 
 namespace TiX.Windows
 {
-    public partial class frmSettings : Form
+    internal partial class frmSettings : Form
     {
         private static class NativeMethods
         {

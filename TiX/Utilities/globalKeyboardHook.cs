@@ -5,7 +5,7 @@ using System.Windows.Forms;
 
 namespace TiX.Utilities
 {
-    public class KeyHookEventArgs : EventArgs
+    internal class KeyHookEventArgs : EventArgs
     {
         public KeyHookEventArgs(Keys key)
         {
@@ -15,7 +15,7 @@ namespace TiX.Utilities
         public Keys  Keys     { get; private set; }
     }
 
-	public class GlobalKeyboardHook : IDisposable
+	internal class GlobalKeyboardHook : IDisposable
 	{
         private List<Keys> m_down = new List<Keys>();
         public IList<Keys> Down { get { return this.m_down; } }

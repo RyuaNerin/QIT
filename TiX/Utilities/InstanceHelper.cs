@@ -5,7 +5,7 @@ using System.Windows.Forms;
 
 namespace TiX.Utilities
 {
-    public sealed class InstanceHelper : IDisposable
+    internal sealed class InstanceHelper : IDisposable
     {
         private const uint CustomMsg = 0x7A8F;
 

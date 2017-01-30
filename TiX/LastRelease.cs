@@ -42,7 +42,7 @@ namespace TiX
 
                 var req = HttpWebRequest.Create("https://api.github.com/repos/RyuaNerin/QIT/releases/latest") as HttpWebRequest;
                 req.Timeout = 5000;
-                req.UserAgent = "Kisbo";
+                req.UserAgent = "QIT";
                 using (var res = req.GetResponse())
                 using (var stream = res.GetResponseStream())
                     last = LastestRealease.Parse(stream);

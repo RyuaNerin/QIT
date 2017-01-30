@@ -7,7 +7,7 @@ using Timer = System.Threading.Timer;
 
 namespace TiX.Windows
 {
-    public partial class frmPreview : Form
+    internal partial class frmPreview : Form
     {
         public frmPreview(ImageSet imageSet)
         {

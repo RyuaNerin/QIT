@@ -10,7 +10,7 @@ using TiX.Utilities;
 
 namespace TiX.Windows
 {
-    public partial class frmMain : Form
+    internal partial class frmMain : Form
     {
         public static Form Instance { get; private set; }
 

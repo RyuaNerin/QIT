@@ -12,7 +12,7 @@ using TiX.Core;
 
 namespace TiX.Windows
 {
-    public partial class frmUpload : Form
+    internal partial class frmUpload : Form
     {
         private ImageCollection m_ic;
         
@@ -409,7 +409,7 @@ namespace TiX.Windows
                 if (imageSet.Status == ImageSet.Statues.Error)
                     return;
 
-                var boundary  = Helper.CreateString();
+                var boundary  = Helper.CreateRandomString();
 
                 var req = TiXMain.Twitter.CreateWebRequest("POST", "https://upload.twitter.com/1.1/media/upload.json");
                 req.ContentType = "multipart/form-data; charset=utf-8; boundary=" + boundary;

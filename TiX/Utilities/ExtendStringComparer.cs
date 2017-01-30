@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace TiX.Utilities
 {
-    public sealed class ExtendStringComparer : IComparer<string>
+    internal sealed class ExtendStringComparer : IComparer<string>
     {
         public static readonly Comparison<string> Comparison = new Comparison<string>(CompareTo);
         public static readonly ExtendStringComparer Instance = new ExtendStringComparer();

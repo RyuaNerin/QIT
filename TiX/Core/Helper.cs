@@ -3,7 +3,7 @@ using System.Text;
 
 namespace TiX.Core
 {
-	public static class Helper
+	internal static class Helper
 	{
 		private readonly static Random rnd = new Random(DateTime.Now.Millisecond);
 
@@ -25,7 +25,7 @@ namespace TiX.Core
 			'5', '6', '7', '8', '9'
 		};
 
-		public static string CreateString(int length = 40)
+		public static string CreateRandomString(int length = 40)
 		{
 			StringBuilder stringBuilder = new StringBuilder(length + 1);
 

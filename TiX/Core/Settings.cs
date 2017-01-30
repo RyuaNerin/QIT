@@ -8,7 +8,7 @@ using System.Windows.Forms;
 
 namespace TiX.Core
 {
-    public static class Settings
+    internal static class Settings
     {
         private sealed class Attr : Attribute
         { }

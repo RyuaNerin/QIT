@@ -7,7 +7,7 @@ using TiX.Core;
 
 namespace TiX.Windows
 {
-	public partial class frmPin : Form
+	internal partial class frmPin : Form
 	{
         private static class NativeMethods
         {

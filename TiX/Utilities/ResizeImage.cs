@@ -14,7 +14,7 @@ using TiX.Core;
 
 namespace TiX.Utilities
 {
-    public static class ResizeImage
+    internal static class ResizeImage
     {
         private const int ImgMaxSize = 3 * 1024 * 1024;
         private const int GifMaxSize = 5 * 1024 * 1024;
