@@ -10,7 +10,7 @@
 
 ## [다운로드](https://github.com/RyuaNerin/QIT/releases/latest)
 
-- [.Net Framework 4.0](https://www.microsoft.com/ko-kr/download/details.aspx?id=17851) 이상이 필요해요
+- [.Net Framework 4.5](https://www.microsoft.com/ko-kr/download/details.aspx?id=17851) 이상이 필요해요
 
 ## 사용법
 
@@ -79,6 +79,4 @@
 
 ## LICENSE
 
-- [MIT LICENSE](LICENSE.txt)
-
-- [LoadPSD](https://gist.github.com/RyuaNerin/5740aa323acf16a192a8e4a8bd1b4c7a)
+- [LGPL v3](LICENSE.txt)
