@@ -5,6 +5,7 @@
 
 #include <windows.h>
 #include <cwchar>
+#include <memory>
 
 static CRITICAL_SECTION* cs;
 
@@ -23,15 +24,14 @@ void DebugLog(const wchar_t *fmt, ...)
 
     INT len = _scwprintf(L"TiXExt: ") + _vscwprintf(fmt, args) + 1;
 
-    WCHAR* str = new WCHAR[len];
-    len = wsprintfW(str, L"TiXExt: ");
-    wvsprintfW(str + len, fmt, args);
+    std::unique_ptr<WCHAR[]> str(new WCHAR[len]);
+
+    len = wsprintfW(str.get(), L"TiXExt: ");
+    wvsprintfW(str.get() + len, fmt, args);
 
     va_end(args);
 
-    OutputDebugStringW(str);
-
-    delete[] str;
+    OutputDebugStringW(str.get());
 
     LeaveCriticalSection(cs);
 }
