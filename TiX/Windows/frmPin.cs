@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using TiX.Core;
+using System.Threading.Tasks;
 
 namespace TiX.Windows
 {
@@ -28,20 +29,6 @@ namespace TiX.Windows
             this.Icon = TiX.Properties.Resources.TiX;
 		}
 
-		private void frmPin_Load(object sender, EventArgs e)
-        {
-            this.ajax.Left = this.ClientRectangle.Width  / 2 - 8;
-            this.ajax.Top  = this.ClientRectangle.Height / 2 - 8;
-
-			this.ajax.Start();
-			this.bgwBefore.RunWorkerAsync();
-		}
-
-        private void frmPin_FormClosing(object sender, FormClosingEventArgs e)
-        {
-            NativeMethods.RemoveClipboardFormatListener(this.Handle);
-        }
-
         protected override void WndProc(ref Message m)
         {
             if (m.Msg == 0x031D) // WM_CLIPBOARDUPDATE
@@ -58,16 +45,27 @@ namespace TiX.Windows
             base.WndProc(ref m);
         }
 
-		private void bgwBefore_DoWork(object sender, DoWorkEventArgs e)
-		{
-            TiXMain.Twitter.UserToken  = null;
-            TiXMain.Twitter.UserSecret = null;
-            e.Result = TiXMain.Twitter.RequestToken(out this.m_token, out this.m_secret);
+		private void frmPin_Load(object sender, EventArgs e)
+        {
+            this.ajax.Left = this.ClientRectangle.Width  / 2 - 8;
+            this.ajax.Top  = this.ClientRectangle.Height / 2 - 8;
+
+			this.ajax.Start();
+
+            GetRequestToken();
 		}
 
-		private void bgwBefore_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
-		{
-            if (e.Result == null || (bool)e.Result == false)
+        private void frmPin_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            NativeMethods.RemoveClipboardFormatListener(this.Handle);
+        }
+
+        private async void GetRequestToken()
+        {
+            TiXMain.Twitter.UserToken  = null;
+            TiXMain.Twitter.UserSecret = null;
+            
+            if (!await Task.Factory.StartNew<bool>(() => TiXMain.Twitter.RequestToken(out this.m_token, out this.m_secret)))
             {
                 MessageBox.Show(this, "문제가 발생했어요 :(", TiXMain.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
                 this.Close();
@@ -77,13 +75,13 @@ namespace TiX.Windows
             NativeMethods.AddClipboardFormatListener(this.Handle);
 
             var url = String.Format("\"https://api.twitter.com/oauth/authorize?oauth_token={0}\"", this.m_token);
-			using (var proc = Process.Start(new ProcessStartInfo { FileName = url, UseShellExecute = true }))
+            using (var proc = Process.Start(new ProcessStartInfo { FileName = url, UseShellExecute = true }))
             { }
 
-			this.ajax.Stop();
-			this.txtPin.Enabled = true;
-			this.txtPin.Focus();
-		}
+            this.ajax.Stop();
+            this.txtPin.Enabled = true;
+            this.txtPin.Focus();
+        }
 
         private void txtPin_KeyDown(object sender, KeyEventArgs e)
         {
@@ -94,7 +92,8 @@ namespace TiX.Windows
                 this.txtPin.Enabled = false;
                 
                 this.ajax.Start();
-                this.bgwAfter.RunWorkerAsync(this.txtPin.Text);
+                GetAccessToken(this.txtPin.Text);
+                return;
             }
 
             if (e.KeyCode == Keys.Escape)
@@ -115,41 +114,42 @@ namespace TiX.Windows
             e.Handled = true;
         }
 
-		private void bgwAfter_DoWork(object sender, DoWorkEventArgs e)
+		private async void GetAccessToken(string pin)
         {
             TiXMain.Twitter.UserToken  = this.m_token;
             TiXMain.Twitter.UserSecret = this.m_secret;
 
+            bool success = false;
             try
             {
-                if (TiXMain.Twitter.AccessToken((string)e.Argument, out this.m_token, out this.m_secret))
+                if (!await Task.Factory.StartNew<bool>(() => TiXMain.Twitter.AccessToken(pin, out this.m_token, out this.m_secret)))
                 {
                     Settings.UToken  = this.m_token;
                     Settings.USecret = this.m_secret;
 
                     Settings.Save();
-
-                    e.Result = true;
+                    success = true;
                 }
             }
             catch
             {
             }
-		}
 
-		private void bgwAfter_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
-		{
-
-            if (e.Result == null || (bool)e.Result == false)
+            if (!success)
             {
                 MessageBox.Show(this, "문제가 발생했어요 :(", TiXMain.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
                 this.Close();
                 return;
             }
-
-			this.ajax.Stop();
+        
+            this.ajax.Stop();
             this.DialogResult = DialogResult.OK;
-			this.Close();
+            this.Close();
+		}
+
+		private void bgwAfter_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+		{
+
 		}
 	}
 }

@@ -131,7 +131,7 @@ namespace TiX.Utilities
             }
 
             // 크기가 일정 기준 이하면 리사이징을 하지 않고 넘어간다
-            if (0 < imageSet.RawStream.Length && imageSet.RawStream.Length <= ImgMaxSize)
+            if (0 < imageSet.RawStream.Length && imageSet.RawStream.Length < ImgMaxSize)
                 return;
 
             bool containsAlpha;
@@ -160,7 +160,7 @@ namespace TiX.Utilities
             {
                 imageSet.Image.Save(imageSet.RawStream, codec, param);
 
-                if (0 < imageSet.RawStream.Length && imageSet.RawStream.Length <= ImgMaxSize)
+                if (0 < imageSet.RawStream.Length && imageSet.RawStream.Length < ImgMaxSize)
                     return;
             }
 
@@ -172,7 +172,7 @@ namespace TiX.Utilities
             int i;
             int w = imageSet.Image.Width;
             int h = imageSet.Image.Height;
-            bool requireResize = imageSet.RawStream.Length > GifMaxSize;
+            bool requireResize = imageSet.RawStream.Length >= GifMaxSize;
 
             // Resolution should be <= 1280x1080 (width x height)
             if (w > 1280 || h > 1080)
@@ -210,7 +210,7 @@ namespace TiX.Utilities
             
 
             Bitmap[] image = new Bitmap[imageSet.GifFrames.Count];
-            while (requireResize && imageSet.RawStream.Length > GifMaxSize)
+            while (requireResize && imageSet.RawStream.Length >= GifMaxSize)
             {
                 w = (int)(w * 0.9d);
                 h = (int)(h * 0.9d);
@@ -350,7 +350,7 @@ namespace TiX.Utilities
 
                 w = (int)(w * 0.9f);
                 h = (int)(h * 0.9f);
-            } while (imageSet.RawStream.Length > ImgMaxSize);
+            } while (imageSet.RawStream.Length >= ImgMaxSize);
 
             imageSet.Image.Dispose();
             imageSet.Image = newImage;

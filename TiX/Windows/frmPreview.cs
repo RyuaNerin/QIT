@@ -16,7 +16,7 @@ namespace TiX.Windows
 
             InitializeComponent();
             this.Icon = TiX.Properties.Resources.TiX;
-            this.Text = String.Format("미리보기 : {0} x {1} ({2:##0.0} %) : {3}", this.m_imgSize.Width, this.m_imgSize.Height, imageSet.Ratio, Helper.ToCapString(imageSet.RawStream.Length));
+            this.Text = String.Format("{0} x {1} ({2:##0.0} %) : {3}", this.m_imgSize.Width, this.m_imgSize.Height, imageSet.Ratio, Helper.ToCapString(imageSet.RawStream.Length));
             
             this.m_client = this.ClientRectangle;
             this.CalcMaxLocation();

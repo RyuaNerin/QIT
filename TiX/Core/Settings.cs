@@ -22,6 +22,7 @@ namespace TiX.Core
         [Attr] public static bool   UniformityText      { get; set; }
         [Attr] public static bool   EnabledShell        { get; set; }
         [Attr] public static bool   EnabledShell2       { get; set; }
+        [Attr] public static bool   EnabledInReply      { get; set; }
         [Attr] public static string Shells              { get; set; }
 
         private readonly static PropertyInfo[] m_properties;

@@ -28,21 +28,9 @@
 		/// </summary>
 		private void InitializeComponent()
 		{
-            this.bgwBefore = new System.ComponentModel.BackgroundWorker();
-            this.bgwAfter = new System.ComponentModel.BackgroundWorker();
             this.txtPin = new System.Windows.Forms.TextBox();
             this.ajax = new TiX.Windows.AjaxControl();
             this.SuspendLayout();
-            // 
-            // bgwBefore
-            // 
-            this.bgwBefore.DoWork += new System.ComponentModel.DoWorkEventHandler(this.bgwBefore_DoWork);
-            this.bgwBefore.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.bgwBefore_RunWorkerCompleted);
-            // 
-            // bgwAfter
-            // 
-            this.bgwAfter.DoWork += new System.ComponentModel.DoWorkEventHandler(this.bgwAfter_DoWork);
-            this.bgwAfter.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.bgwAfter_RunWorkerCompleted);
             // 
             // txtPin
             // 
@@ -88,8 +76,6 @@
 
 		#endregion
 
-        private System.ComponentModel.BackgroundWorker bgwBefore;
-        private System.ComponentModel.BackgroundWorker bgwAfter;
         private AjaxControl ajax;
         private System.Windows.Forms.TextBox txtPin;
 	}

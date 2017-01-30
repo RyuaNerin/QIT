@@ -30,12 +30,13 @@
         {
             this.chkTopMost = new System.Windows.Forms.CheckBox();
             this.chkReversedCtrl = new System.Windows.Forms.CheckBox();
-            this.ctlUniformity = new System.Windows.Forms.CheckBox();
+            this.chkUniformity = new System.Windows.Forms.CheckBox();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOK = new System.Windows.Forms.Button();
             this.lblCopyRight = new System.Windows.Forms.Label();
             this.chkEnableShell = new System.Windows.Forms.CheckBox();
             this.chkEnableShellWithoutText = new System.Windows.Forms.CheckBox();
+            this.chkInreply = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // chkTopMost
@@ -62,19 +63,19 @@
             // 
             // ctlUniformity
             // 
-            this.ctlUniformity.AutoSize = true;
-            this.ctlUniformity.Location = new System.Drawing.Point(12, 86);
-            this.ctlUniformity.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
-            this.ctlUniformity.Name = "ctlUniformity";
-            this.ctlUniformity.Size = new System.Drawing.Size(254, 19);
-            this.ctlUniformity.TabIndex = 2;
-            this.ctlUniformity.Text = "한번에 여러 사진을 올리는 경우 내용 통일";
-            this.ctlUniformity.UseVisualStyleBackColor = true;
+            this.chkUniformity.AutoSize = true;
+            this.chkUniformity.Location = new System.Drawing.Point(12, 86);
+            this.chkUniformity.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.chkUniformity.Name = "ctlUniformity";
+            this.chkUniformity.Size = new System.Drawing.Size(254, 19);
+            this.chkUniformity.TabIndex = 2;
+            this.chkUniformity.Text = "한번에 여러 사진을 올리는 경우 내용 통일";
+            this.chkUniformity.UseVisualStyleBackColor = true;
             // 
             // btnCancel
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnCancel.Location = new System.Drawing.Point(221, 168);
+            this.btnCancel.Location = new System.Drawing.Point(221, 199);
             this.btnCancel.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(55, 28);
@@ -87,7 +88,7 @@
             // 
             this.btnOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnOK.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.btnOK.Location = new System.Drawing.Point(114, 168);
+            this.btnOK.Location = new System.Drawing.Point(114, 199);
             this.btnOK.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.btnOK.Name = "btnOK";
             this.btnOK.Size = new System.Drawing.Size(101, 28);
@@ -119,29 +120,41 @@
             this.chkEnableShell.UseVisualStyleBackColor = true;
             this.chkEnableShell.CheckedChanged += new System.EventHandler(this.chkEnableShell_CheckedChanged);
             // 
-            // chkShellNotext
+            // chkEnableShellWithoutText
             // 
             this.chkEnableShellWithoutText.AutoSize = true;
             this.chkEnableShellWithoutText.Location = new System.Drawing.Point(12, 140);
             this.chkEnableShellWithoutText.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
-            this.chkEnableShellWithoutText.Name = "chkShellNotext";
+            this.chkEnableShellWithoutText.Name = "chkEnableShellWithoutText";
             this.chkEnableShellWithoutText.Size = new System.Drawing.Size(256, 19);
             this.chkEnableShellWithoutText.TabIndex = 6;
             this.chkEnableShellWithoutText.Text = "우클릭 메뉴에 \"TiX 로 바로 트윗하기\" 추가";
             this.chkEnableShellWithoutText.UseVisualStyleBackColor = true;
             this.chkEnableShellWithoutText.CheckedChanged += new System.EventHandler(this.chkEnableShell_CheckedChanged);
             // 
+            // chkInreply
+            // 
+            this.chkInreply.AutoSize = true;
+            this.chkInreply.Location = new System.Drawing.Point(12, 167);
+            this.chkInreply.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.chkInreply.Name = "chkInreply";
+            this.chkInreply.Size = new System.Drawing.Size(118, 19);
+            this.chkInreply.TabIndex = 7;
+            this.chkInreply.Text = "트윗 타래로 연결";
+            this.chkInreply.UseVisualStyleBackColor = true;
+            // 
             // frmSettings
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(288, 209);
+            this.ClientSize = new System.Drawing.Size(288, 240);
+            this.Controls.Add(this.chkInreply);
             this.Controls.Add(this.chkEnableShellWithoutText);
             this.Controls.Add(this.lblCopyRight);
             this.Controls.Add(this.btnOK);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.chkEnableShell);
-            this.Controls.Add(this.ctlUniformity);
+            this.Controls.Add(this.chkUniformity);
             this.Controls.Add(this.chkReversedCtrl);
             this.Controls.Add(this.chkTopMost);
             this.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
@@ -163,11 +176,12 @@
 
         private System.Windows.Forms.CheckBox chkTopMost;
         private System.Windows.Forms.CheckBox chkReversedCtrl;
-        private System.Windows.Forms.CheckBox ctlUniformity;
+        private System.Windows.Forms.CheckBox chkUniformity;
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Button btnOK;
         private System.Windows.Forms.Label lblCopyRight;
         private System.Windows.Forms.CheckBox chkEnableShell;
         private System.Windows.Forms.CheckBox chkEnableShellWithoutText;
+        private System.Windows.Forms.CheckBox chkInreply;
     }
 }

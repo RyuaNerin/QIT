@@ -10,5 +10,6 @@
 #include <Olectl.h>
 #include <unknwn.h>
 #include <vector>
+#include <string>
 
 #endif

@@ -35,20 +35,13 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.bgwTweet = new System.ComponentModel.BackgroundWorker();
             this.picImage = new System.Windows.Forms.PictureBox();
             this.txtText = new System.Windows.Forms.TextBox();
-            this.bgwResize = new System.ComponentModel.BackgroundWorker();
             this.ajax = new TiX.Windows.AjaxControl();
             this.lblRange = new System.Windows.Forms.Label();
             this.lblLength = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.picImage)).BeginInit();
             this.SuspendLayout();
-            // 
-            // bgwTweet
-            // 
-            this.bgwTweet.DoWork += new System.ComponentModel.DoWorkEventHandler(this.bgwTweet_DoWork);
-            this.bgwTweet.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.bgwTweet_RunWorkerCompleted);
             // 
             // picImage
             // 
@@ -131,11 +124,9 @@
 
         #endregion
 
-        private System.ComponentModel.BackgroundWorker bgwTweet;
         private System.Windows.Forms.PictureBox picImage;
         private AjaxControl ajax;
         private System.Windows.Forms.TextBox txtText;
-        private System.ComponentModel.BackgroundWorker bgwResize;
         private System.Windows.Forms.Label lblRange;
         private System.Windows.Forms.Label lblLength;
     }

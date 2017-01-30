@@ -16,7 +16,6 @@ namespace TiX.Core
             this.Index = index;
             this.RawStream = new MemoryStream(3 * 1024 * 1024);
             this.m_collection = collection;
-            this.IsLoading  = new ManualResetEvent(false);
         }
         
         public ImageSet(ImageCollection collection, int index, DataTypes type, object dataObject) : this(collection, index)
@@ -36,7 +35,7 @@ namespace TiX.Core
 
         public void Dispose()
         {
-            if (this.IsLoading  != null) this.IsLoading.Dispose();
+            if (this.Task       != null) this.Task.Dispose();
             if (this.Image      != null) this.Image.Dispose();
             if (this.Thumbnail  != null) this.Thumbnail.Dispose();
             if (this.RawStream  != null) this.RawStream.Dispose();
@@ -64,7 +63,7 @@ namespace TiX.Core
 
         public DataTypes DataType { get; private set; }
         public object DataObject { get; private set; }
-        public ManualResetEvent IsLoading { get; private set; }
+        public Task Task { get; private set; }
 
         public Image Image { get; set; }
         public GifFrames GifFrames { get; set; }
@@ -75,9 +74,11 @@ namespace TiX.Core
 
         public string TwitterMediaId { get; set; }
 
+
+
         public void StartLoad()
         {
-            Task.Factory.StartNew(new Action<object>(this.StartLoadPriv), this.m_collection.Token);
+            this.Task = Task.Factory.StartNew(new Action<object>(this.StartLoadPriv), this.m_collection.Token);
         }
 
         private void StartLoadPriv(object ocancel)
@@ -117,7 +118,6 @@ namespace TiX.Core
 
             try
             {
-                this.IsLoading.Set();
                 this.m_collection.RaiseEvent(this);
             }
             catch

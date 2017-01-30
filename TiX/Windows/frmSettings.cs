@@ -32,9 +32,10 @@ namespace TiX.Windows
 
             this.chkTopMost.Checked         = Settings.Topmost;
             this.chkReversedCtrl.Checked    = Settings.ReversedCtrl;
-            this.ctlUniformity.Checked      = Settings.UniformityText;
+            this.chkUniformity.Checked      = Settings.UniformityText;
             this.chkEnableShell.Checked     = Settings.EnabledShell;
-            this.chkEnableShellWithoutText.Checked     = Settings.EnabledShell2;
+            this.chkInreply.Checked         = Settings.EnabledInReply;
+            this.chkEnableShellWithoutText.Checked = Settings.EnabledShell2;
 
             this.m_loaded = true;
         }
@@ -43,8 +44,9 @@ namespace TiX.Windows
         {
             Settings.Topmost        = this.chkTopMost.Checked;
             Settings.ReversedCtrl   = this.chkReversedCtrl.Checked;
-            Settings.UniformityText = this.ctlUniformity.Checked;
-
+            Settings.UniformityText = this.chkUniformity.Checked;
+            Settings.EnabledInReply = this.chkInreply.Checked;
+            
             if (Settings.EnabledShell  != this.chkEnableShell.Checked ||
                 Settings.EnabledShell2 != this.chkEnableShellWithoutText.Checked)
             {

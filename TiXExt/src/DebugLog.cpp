@@ -4,7 +4,6 @@
 #include "DebugLog.h"
 
 #include <windows.h>
-#include <cwchar>
 #include <memory>
 
 static CRITICAL_SECTION* cs;

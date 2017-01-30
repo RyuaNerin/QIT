@@ -317,7 +317,7 @@ namespace TiX.Windows
                 e.Handled = true;
         }
 
-        public void Tweet()
+        public async void Tweet()
         {
             for (int i = 0; i < this.m_uploadRange; ++i)
                 if (this.m_ic[i].Status == ImageSet.Statues.None)
@@ -325,11 +325,32 @@ namespace TiX.Windows
 
             this.txtText.Enabled = false;
             this.ajax.Start();
-            this.bgwTweet.RunWorkerAsync(this.txtText.Text.Replace("/N/", (this.m_tweeted + 1).ToString()));
+
+            var result = await Task.Factory.StartNew<object>(this.TweetTask, this.txtText.Text.Replace("/N/", (this.m_tweeted + 1).ToString()));
+
+
+            if (result is int)
+            {
+                this.ajax.Stop();
+                this.StartNew();
+            }
+            else
+            {
+                System.Media.SystemSounds.Asterisk.Play();
+
+                var err = result as string;
+                if (err != null)
+                    MessageBox.Show(this, err, TiXMain.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+                this.ajax.Stop();
+                this.txtText.Enabled = true;
+                this.txtText.Focus();
+            }
         }
 
-        private static Regex regError = new Regex("\"message\"[ \t]*:[ \t]*\"([^\"]+)\"", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        private void bgwTweet_DoWork(object sender, DoWorkEventArgs e)
+        private static Regex regError = new Regex("\"message\"[ \t]*:[ \t]*\"([^\"]+)\"", RegexOptions.IgnoreCase);
+        private static Regex regTweetId = new Regex("\"id_str\"[ \t]*:[ \t]*\"([^\"]+)\"", RegexOptions.IgnoreCase);
+        private object TweetTask(object textObject)
         {
             int i;
 
@@ -358,15 +379,14 @@ namespace TiX.Windows
 
                 if (k == 0)
                 {
-                    e.Result = 0;
-                    return;
+                    return 0;
                 }
 
                 sb.Remove(sb.Length - 1, 1);
 
                 media_ids = sb.ToString();
             }
-            var obj = new { status = (string)e.Argument, media_ids = media_ids, in_reply_to_status_id = this.InReplyToStatusId };
+            var obj = new { status = (string)textObject, media_ids = media_ids, in_reply_to_status_id = this.InReplyToStatusId };
 
             try
             {
@@ -375,9 +395,18 @@ namespace TiX.Windows
                 req.GetRequestStream().Write(buff, 0, buff.Length);
 
                 using (var res = req.GetResponse())
-                { }
-
-                e.Result = 0;
+                {
+                    using (var stream = res.GetResponseStream())
+                    using (var reader = new StreamReader(stream, Encoding.UTF8))
+                    {
+                        if (Settings.EnabledInReply)
+                        {
+                            var m = regError.Match(reader.ReadToEnd());
+                            if (m.Success)
+                                this.InReplyToStatusId = m.Groups[1].Value;
+                        }
+                    }
+                }
             }
             catch (WebException ex)
             {
@@ -385,20 +414,23 @@ namespace TiX.Windows
                 {
                     using (var res = ex.Response)
                     using (var stream = res.GetResponseStream())
-                    using (var reader = new StreamReader(stream))
+                    using (var reader = new StreamReader(stream, Encoding.UTF8))
                     {
                         var m = regError.Match(reader.ReadToEnd());
                         if (m.Success)
-                            e.Result = m.Groups[1].Value;
+                            return m.Groups[1].Value;
                     }
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                return ex.Message;
             }
+
+            return 0;
         }
 
-        private static Regex regMedia = new Regex("\"media_id_string\"[ \t]*:[ \t]*\"([^\"]+)\"", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static Regex regMedia = new Regex("\"media_id_string\"[ \t]*:[ \t]*\"([^\"]+)\"", RegexOptions.IgnoreCase);
         private void UploadImage(ImageSet imageSet)
         {
             try
@@ -431,33 +463,6 @@ namespace TiX.Windows
                 using (var res = req.GetResponse())
                 using (var reader = new StreamReader(res.GetResponseStream()))
                     imageSet.TwitterMediaId = regMedia.Match(reader.ReadToEnd()).Groups[1].Value;
-            }
-            catch
-            {
-            }
-        }
-
-        private void bgwTweet_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
-        {
-            try
-            {
-                if (e.Result is int)
-                {
-                    this.ajax.Stop();
-                    this.StartNew();
-                }
-                else
-                {
-                    System.Media.SystemSounds.Asterisk.Play();
-
-                    var err = e.Result as string;
-                    if (err != null)
-                        MessageBox.Show(this, err, TiXMain.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
-
-                    this.ajax.Stop();
-                    this.txtText.Enabled = true;
-                    this.txtText.Focus();
-                }
             }
             catch
             {
