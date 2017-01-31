@@ -11,30 +11,42 @@ namespace TiX.Core
     internal static class Settings
     {
         private sealed class Attr : Attribute
-        { }
+        {
+            public Attr(object DefulatValue)
+            {
 
-        public readonly static string FilePath = Path.Combine(Application.StartupPath, "TiX.ini");
+            }
+            public object DefaultValue { get; private set; }
+        }
 
-        [Attr] public static string UToken              { get; set; }
-        [Attr] public static string USecret             { get; set; }
-        [Attr] public static bool   Topmost             { get; set; }
-        [Attr] public static bool   ReversedCtrl        { get; set; }
-        [Attr] public static bool   UniformityText      { get; set; }
-        [Attr] public static bool   EnabledShell        { get; set; }
-        [Attr] public static bool   EnabledShell2       { get; set; }
-        [Attr] public static bool   EnabledInReply      { get; set; }
-        [Attr] public static string Shells              { get; set; }
+        public readonly static string FilePath;
+        
+        [Attr(null)]    public static string UToken              { get; set; }
+        [Attr(null)]    public static string USecret             { get; set; }
+        [Attr(true)]    public static bool   Topmost             { get; set; }
+        [Attr(false)]   public static bool   ReversedCtrl        { get; set; }
+        [Attr(false)]   public static bool   UniformityText      { get; set; }
+        [Attr(true)]    public static bool   EnabledInReply      { get; set; }
+        [Attr(true)]    public static bool   EnabledErrorReport  { get; set; }
+        [Attr(false)]   public static bool   EnabledShell        { get; set; }
+        [Attr(false)]   public static bool   EnabledShell2       { get; set; }
+        [Attr(null)]    public static string Shells        { get; set; }
 
         private readonly static PropertyInfo[] m_properties;
         static Settings()
         {
+            Settings.FilePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "TiX.ini");
             Settings.m_properties = typeof(Settings).GetProperties().Where(e => e.GetCustomAttributes(false).Any(ee => ee is Attr)).ToArray();
         }
 
         public static void Load()
         {
             if (!File.Exists(Settings.FilePath))
+            {
+                foreach (var prop in m_properties)
+                    prop.SetValue(null, (m_properties.GetType().GetCustomAttribute(typeof(Attr)) as Attr).DefaultValue, null);
                 return;
+            }
 
             string str;
             foreach (var prop in m_properties)

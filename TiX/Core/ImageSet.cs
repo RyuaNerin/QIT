@@ -98,14 +98,17 @@ namespace TiX.Core
                     }
 
                     if (cancel.IsCancellationRequested)
-                        throw new Exception();
+                        throw new Exception("_");
 
                     ResizeImage.Resize(this);
 
                     this.Status = Statues.Success;
                 }
-                catch
+                catch (Exception ex)
                 {
+                    if (ex.Message != "_")
+                        CrashReport.Error(ex, null);
+
                     if (this.Image != null)
                     {
                         this.Image.Dispose();

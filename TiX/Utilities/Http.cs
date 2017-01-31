@@ -64,8 +64,9 @@ namespace TiX.Utilities
 
                 return BypassCloudFlare(body, cookies, refresh, uri, stream, cancel);
             }
-            catch
+            catch (Exception ex)
             {
+                CrashReport.Error(ex, null);
             }
 
             return false;

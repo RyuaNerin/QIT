@@ -1,58 +1,72 @@
 ﻿using System;
-using System.IO;
 using System.Windows.Forms;
+using SharpRaven;
+using SharpRaven.Data;
+using TiX.Core;
 
 namespace TiX
 {
     internal static class CrashReport
     {
+        private static readonly RavenClient ravenClient;
+
+        static CrashReport()
+        {
+            ravenClient = new RavenClient("https://b2d115a75b1f485a8a0b49cd51aabfc6:b55540eaf7274e549c3f1864694a171b@sentry.io/133868");
+            ravenClient.Environment = Application.ProductName;
+            ravenClient.Logger = Application.ProductName;
+            ravenClient.Release = Application.ProductVersion;
+        }
+
         public static void Init()
         {
-            AppDomain.CurrentDomain.UnhandledException += (s, e) => ShowCrashReport((Exception)e.ExceptionObject);
+            AppDomain.CurrentDomain.UnhandledException += (s, e) => ShowCrashReport(e.ExceptionObject as Exception);
             System.Threading.Tasks.TaskScheduler.UnobservedTaskException += (s, e) => ShowCrashReport(e.Exception);
             Application.ThreadException += (s, e) => ShowCrashReport(e.Exception);
         }
 
-        private static void ShowCrashReport(Exception exception)
+        public static void ShowCrashReport(Exception ex)
         {
-            var date = DateTime.Now.ToString("yyyy-MM-dd-HH-mm-ss");
-            var file = string.Format("Crash-{0}.txt", date);
+            if (ex == null)
+                return;
 
-            using (var writer = new StreamWriter(Path.Combine(Path.GetDirectoryName(Application.ExecutablePath), file)))
-            {
-                writer.WriteLine("Crash Report");
-                writer.WriteLine("Date    : " + date);
-                writer.WriteLine("Version : " + Application.ProductVersion);
-                writer.WriteLine();
-                writer.WriteLine("OS Ver  : " + GetOSInfomation());
-                writer.WriteLine("SPack   : " + System.Environment.OSVersion.VersionString);
-                writer.WriteLine();
-                writer.WriteLine("Exception");
-                writer.WriteLine(exception.ToString());
-            }
+            if (Settings.EnabledErrorReport)
+                return;
+
+            Error(ex, null);
         }
 
-        private static string GetOSInfomation()
+        public static void Info(object data, string format, params object[] args)
         {
-            try
-            {
-                using (var key = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(@"Software\Microsoft\Windows NT\CurrentVersion"))
-                    return key.GetValue("ProductName").ToString();
-            }
-            catch
-            {
-            }
+            if (Settings.EnabledErrorReport)
+                return;
 
-            try
-            {
-                using (var key = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(@"Software\Wow6432Node\Microsoft\Windows NT\CurrentVersion"))
-                    return key.GetValue("ProductName").ToString();
-            }
-            catch
-            {
-            }
+            SentryEvent ev = new SentryEvent(new SentryMessage(format, args));
+            ev.Level = ErrorLevel.Info;
+            ev.Extra = data;
 
-            return "Operating System Information unavailable";
+            Report(ev);
+        }
+
+        public static void Error(Exception ex, object data)
+        {
+            if (Settings.EnabledErrorReport)
+                return;
+
+            var ev = new SentryEvent(ex);
+            ev.Level = ErrorLevel.Error;
+            ev.Extra = data;
+
+            Report(ev);
+        }
+
+        private static void Report(SentryEvent @event)
+        {
+            @event.Tags.Add("ARCH", Environment.Is64BitOperatingSystem ? "x64" : "x86");
+            @event.Tags.Add("OS", Environment.OSVersion.VersionString);
+            @event.Tags.Add("NET", Environment.Version.ToString());
+
+            ravenClient.CaptureAsync(@event);
         }
     }
 }

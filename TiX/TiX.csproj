@@ -180,6 +180,7 @@
     <None Include="app.config" />
     <None Include="ILMerge.props" />
     <None Include="packages.config" />
+    <None Include="SharpReven.snk" />
     <None Include="TiX.snk" />
   </ItemGroup>
   <ItemGroup>

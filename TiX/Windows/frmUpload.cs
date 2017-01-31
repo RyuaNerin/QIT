@@ -1,5 +1,4 @@
 ﻿using System;
-using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Net;
@@ -120,8 +119,9 @@ namespace TiX.Windows
                 for (int i = 0; i < this.m_uploadRange; ++i)
                     this.m_ic[this.m_uploadIndex + i].StartLoad();
             }
-            catch
+            catch (Exception ex)
             {
+                CrashReport.Error(ex, null);
             }
         }
 
@@ -424,6 +424,7 @@ namespace TiX.Windows
             }
             catch (Exception ex)
             {
+                CrashReport.Error(ex, null);
                 return ex.Message;
             }
 
@@ -436,7 +437,7 @@ namespace TiX.Windows
             try
             {
                 if (imageSet.Status == ImageSet.Statues.None)
-                    imageSet.IsLoading.WaitOne();
+                    imageSet.Task.Wait();
 
                 if (imageSet.Status == ImageSet.Statues.Error)
                     return;
@@ -464,8 +465,12 @@ namespace TiX.Windows
                 using (var reader = new StreamReader(res.GetResponseStream()))
                     imageSet.TwitterMediaId = regMedia.Match(reader.ReadToEnd()).Groups[1].Value;
             }
-            catch
+            catch (WebException)
             {
+            }
+            catch (Exception ex)
+            {
+                CrashReport.Error(ex, null);
             }
         }
 

@@ -83,8 +83,9 @@ namespace TiX.Utilities
             {
                 ResizeImagePrivate(imageSet);
             }
-            catch
+            catch (Exception ex)
             {
+                CrashReport.Error(ex, null);
                 return false;
             }
             var szAfter = imageSet.Image.Size;
@@ -110,8 +111,10 @@ namespace TiX.Utilities
                 {
                     imageSet.GifFrames = new GifFrames(imageSet.Image);
                 }
-                catch
+                catch (Exception ex)
                 {
+                    if (ex.Message != "_")
+                        CrashReport.Error(ex, null);
                 }
 
                 // 프레임이 포함된 애니메이션일 경우

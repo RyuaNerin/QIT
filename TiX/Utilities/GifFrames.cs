@@ -20,7 +20,7 @@ namespace TiX.Utilities
         public GifFrames(Image image)
         {
             int frames = image.GetFrameCount(FrameDimension.Time);
-            if (frames <= 1) throw new Exception();
+            if (frames <= 1) throw new Exception("_");
 
             byte[] times = image.GetPropertyItem(0x5100).Value;
             int delay;
