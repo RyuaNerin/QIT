@@ -86,6 +86,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="TiX.cs" />
     <Compile Include="ShellExtension.cs" />
     <Compile Include="Utilities\GifFrames.cs">
       <SubType>Code</SubType>

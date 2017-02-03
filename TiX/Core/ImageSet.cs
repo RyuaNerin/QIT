@@ -11,6 +11,14 @@ namespace TiX.Core
 {
     internal class ImageSet : IDisposable
     {
+        public ImageSet(Bitmap bitmap)
+        {
+            this.Index = -1;
+            this.RawStream = new MemoryStream(3 * 1024 * 1024);
+            this.DataObject = bitmap;
+            this.DataType = DataTypes.Image;
+        }
+
         private ImageSet(ImageCollection collection, int index)
         {
             this.Index = index;
@@ -22,20 +30,16 @@ namespace TiX.Core
         {
             this.DataType   = type;
             this.DataObject = dataObject;
-
-            this.Status = Statues.None;
         }
         public ImageSet(ImageCollection collection, int index, Image image) : this(collection, index)
         {
             this.DataType = DataTypes.Image;
             this.Image = image;
-
-            this.Status = Statues.Success;
         }
 
         public void Dispose()
         {
-            if (this.Task       != null) this.Task.Dispose();
+            if (this.InnerTask       != null) this.InnerTask.Dispose();
             if (this.Image      != null) this.Image.Dispose();
             if (this.Thumbnail  != null) this.Thumbnail.Dispose();
             if (this.RawStream  != null) this.RawStream.Dispose();
@@ -63,7 +67,7 @@ namespace TiX.Core
 
         public DataTypes DataType { get; private set; }
         public object DataObject { get; private set; }
-        public Task Task { get; private set; }
+        public Task<Image> InnerTask { get; private set; }
 
         public Image Image { get; set; }
         public GifFrames GifFrames { get; set; }
@@ -73,15 +77,13 @@ namespace TiX.Core
         public double Ratio { get; set; }
 
         public string TwitterMediaId { get; set; }
-
-
-
-        public void StartLoad()
+        
+        public Task StartLoad()
         {
-            this.Task = Task.Factory.StartNew(new Action<object>(this.StartLoadPriv), this.m_collection.Token);
+            return this.InnerTask = Task.Factory.StartNew<Image>(new Func<object, Image>(this.StartLoadPriv), this.m_collection.Token);
         }
 
-        private void StartLoadPriv(object ocancel)
+        private Image StartLoadPriv(object ocancel)
         {
             var cancel = (CancellationToken)ocancel;
 
@@ -119,13 +121,18 @@ namespace TiX.Core
                 }
             }
 
-            try
+            if (this.m_collection != null)
             {
-                this.m_collection.RaiseEvent(this);
+                try
+                {
+                    this.m_collection.RaiseEvent(this);
+                }
+                catch
+                {
+                }
             }
-            catch
-            {
-            }
+
+            return this.Image;
         }
 
         private void GetImageFromFile()

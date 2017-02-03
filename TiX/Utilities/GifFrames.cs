@@ -5,19 +5,19 @@ using System.Drawing.Imaging;
 
 namespace TiX.Utilities
 {
-    internal class GifFrame
+    public class GifFrame
     {
-        public Bitmap Image { get; set; }
-        public int Dalay { get; set; }
+        public Bitmap Image { get; internal set; }
+        public int Dalay { get; internal set; }
     }
 
-    internal class GifFrames : List<GifFrame>, IDisposable
+    public class GifFrames : List<GifFrame>, IDisposable
     {
         public const int DefaultDelay = 80;
 
-        public GifFrames()
+        internal GifFrames()
         { }
-        public GifFrames(Image image)
+        internal GifFrames(Image image)
         {
             int frames = image.GetFrameCount(FrameDimension.Time);
             if (frames <= 1) throw new Exception("_");

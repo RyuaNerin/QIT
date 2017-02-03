@@ -43,7 +43,7 @@ namespace TiX.Windows
         {
             if (e.Button == System.Windows.Forms.MouseButtons.Right)
             {
-                using (var frm = new frmSettings())
+                using (var frm = new frmSettings(false))
                     frm.ShowDialog();
 
                 this.TopMost = Settings.Topmost;

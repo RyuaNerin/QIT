@@ -51,7 +51,16 @@ namespace TiX.Windows
             this.lblLength.Text = String.Format("0 / {0}", TextLength);
         }
 
-        public bool AutoStart { get; set; }
+        private bool m_autoStart;
+        public bool AutoStart
+        {
+            get { return this.m_autoStart; }
+            set
+            {
+                this.m_autoStart = value;
+                this.txtText.Enabled = !value;
+            }
+        }
         private string m_tweetString;
         public string TweetString
         {
@@ -88,6 +97,7 @@ namespace TiX.Windows
             this.m_uploadIndex += this.m_uploadRange;
             if (this.m_uploadIndex >= this.m_ic.Count)
             {
+                this.DialogResult = DialogResult.OK;
                 this.Close();
                 return;
             }
@@ -437,7 +447,7 @@ namespace TiX.Windows
             try
             {
                 if (imageSet.Status == ImageSet.Statues.None)
-                    imageSet.Task.Wait();
+                    imageSet.InnerTask.Wait();
 
                 if (imageSet.Status == ImageSet.Statues.Error)
                     return;

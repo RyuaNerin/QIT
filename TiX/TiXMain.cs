@@ -62,6 +62,10 @@ namespace TiX
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
+            Settings.Load();
+            TiXMain.Twitter.UserToken  = Settings.UToken;
+            TiXMain.Twitter.UserSecret = Settings.USecret;
+
             CrashReport.Init();
 
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
@@ -72,9 +76,6 @@ namespace TiX
             System.Net.HttpWebRequest.DefaultCachePolicy = new System.Net.Cache.RequestCachePolicy(System.Net.Cache.RequestCacheLevel.NoCacheNoStore);
             System.Net.ServicePointManager.MaxServicePoints = 20;
 
-            Settings.Load();
-            TiXMain.Twitter.UserToken  = Settings.UToken;
-            TiXMain.Twitter.UserSecret = Settings.USecret;
 
             int i;
 
@@ -137,7 +138,7 @@ namespace TiX
             using (var instance = new InstanceHelper(InstanceName))
             {
                 if (instance.Check())
-                {                    
+                {
                     if (String.IsNullOrEmpty(Settings.UToken) | String.IsNullOrEmpty(Settings.USecret))
                     {
                         using (frm = new frmPin())

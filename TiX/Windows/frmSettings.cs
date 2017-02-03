@@ -21,10 +21,16 @@ namespace TiX.Windows
 
         private bool m_loaded = false;
 
-        public frmSettings()
+        public frmSettings(bool @public)
         {
             InitializeComponent();
             this.Icon = TiX.Properties.Resources.TiX;
+
+            if (!@public)
+            {
+                this.chkEnableShell.Enabled = false;
+                this.chkEnableShellWithoutText.Enabled = false;
+            }
         }
         private void frmSettings_Load(object sender, EventArgs e)
         {
