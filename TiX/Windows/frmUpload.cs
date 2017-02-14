@@ -2,6 +2,8 @@
 using System.Drawing;
 using System.IO;
 using System.Net;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Json;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -327,17 +329,25 @@ namespace TiX.Windows
                 e.Handled = true;
         }
 
+        private object m_tweetSync = new object();
+        private volatile bool m_tweetSyncb;
         public async void Tweet()
         {
             for (int i = 0; i < this.m_uploadRange; ++i)
                 if (this.m_ic[i].Status == ImageSet.Statues.None)
                     return;
 
+            lock (this.m_tweetSync)
+            {
+                if (this.m_tweetSyncb)
+                    return;
+                this.m_tweetSyncb = true;
+            }
+
             this.txtText.Enabled = false;
             this.ajax.Start();
 
             var result = await Task.Factory.StartNew<object>(this.TweetTask, this.txtText.Text.Replace("/N/", (this.m_tweeted + 1).ToString()));
-
 
             if (result is int)
             {
@@ -356,10 +366,25 @@ namespace TiX.Windows
                 this.txtText.Enabled = true;
                 this.txtText.Focus();
             }
-        }
 
-        private static Regex regError = new Regex("\"message\"[ \t]*:[ \t]*\"([^\"]+)\"", RegexOptions.IgnoreCase);
-        private static Regex regTweetId = new Regex("\"id_str\"[ \t]*:[ \t]*\"([^\"]+)\"", RegexOptions.IgnoreCase);
+            lock (this.m_tweetSync)
+                this.m_tweetSyncb = false;
+        }
+        
+        [DataContract]
+        private class ErrorObject
+        {
+            [DataMember(Name = "message")]
+            public string Message { get; set; }
+        }
+        [DataContract]
+        private class TweetObject
+        {
+            [DataMember(Name = "id_str")]
+            public string Id { get; set; }
+        }
+        private static DataContractJsonSerializer ErrorSerializer = new DataContractJsonSerializer(typeof(ErrorObject));
+        private static DataContractJsonSerializer TweetSerializer = new DataContractJsonSerializer(typeof(TweetObject));
         private object TweetTask(object textObject)
         {
             int i;
@@ -406,14 +431,11 @@ namespace TiX.Windows
 
                 using (var res = req.GetResponse())
                 {
-                    using (var stream = res.GetResponseStream())
-                    using (var reader = new StreamReader(stream, Encoding.UTF8))
+                    if (Settings.EnabledInReply)
                     {
-                        if (Settings.EnabledInReply)
+                        using (var stream = res.GetResponseStream())
                         {
-                            var m = regError.Match(reader.ReadToEnd());
-                            if (m.Success)
-                                this.InReplyToStatusId = m.Groups[1].Value;
+                            this.InReplyToStatusId = ((TweetObject)TweetSerializer.ReadObject(stream)).Id;
                         }
                     }
                 }
@@ -424,11 +446,8 @@ namespace TiX.Windows
                 {
                     using (var res = ex.Response)
                     using (var stream = res.GetResponseStream())
-                    using (var reader = new StreamReader(stream, Encoding.UTF8))
                     {
-                        var m = regError.Match(reader.ReadToEnd());
-                        if (m.Success)
-                            return m.Groups[1].Value;
+                        return ((ErrorObject)ErrorSerializer.ReadObject(stream)).Message;
                     }
                 }
             }
