@@ -5,22 +5,22 @@ using System.Runtime.InteropServices;
 // 어셈블리의 일반 정보는 다음 특성 집합을 통해 제어됩니다.
 // 어셈블리와 관련된 정보를 수정하려면
 // 이 특성 값을 변경하십시오.
-[assembly: AssemblyTitle("TiX")]
+[assembly: AssemblyTitle("TiXd")]
 [assembly: AssemblyDescription("TiX 와 함께 트위터에 이미지를 트윗해요")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("TiX")]
+[assembly: AssemblyProduct("TiXd")]
 [assembly: AssemblyCopyright("CopyRight (C) 2014-2017, RyuaNerin & Sasarino MARi")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
 // ComVisible을 false로 설정하면 이 어셈블리의 형식이 COM 구성 요소에 
-// 표시되지 않습니다. COM에서 이 어셈블리의 형식에 액세스하려면 
+// 표시되지 않습니다.  COM에서 이 어셈블리의 형식에 액세스하려면 
 // 해당 형식에 대해 ComVisible 특성을 true로 설정하십시오.
 [assembly: ComVisible(false)]
 
 // 이 프로젝트가 COM에 노출되는 경우 다음 GUID는 typelib의 ID를 나타냅니다.
-[assembly: Guid("91bec1e7-f053-4fcf-a165-4379e8db50cb")]
+[assembly: Guid("117b711b-02c8-4c66-a561-01b7ce164077")]
 
 // 어셈블리의 버전 정보는 다음 네 가지 값으로 구성됩니다.
 //
