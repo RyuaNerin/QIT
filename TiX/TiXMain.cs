@@ -66,7 +66,9 @@ namespace TiX
             TiXMain.Twitter.UserToken  = Settings.UToken;
             TiXMain.Twitter.UserSecret = Settings.USecret;
 
+#if !TiXd
             CrashReport.Init();
+#endif
 
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
             
@@ -75,8 +77,7 @@ namespace TiX
 #endif
             System.Net.HttpWebRequest.DefaultCachePolicy = new System.Net.Cache.RequestCachePolicy(System.Net.Cache.RequestCacheLevel.NoCacheNoStore);
             System.Net.ServicePointManager.MaxServicePoints = 20;
-
-
+            
             int i;
 
             if (args.Length >= 1 && args[0].Equals("stasis", StringComparison.OrdinalIgnoreCase))
@@ -127,7 +128,7 @@ namespace TiX
 
                 if (lst.Count == 0) return 0;
 
-                data.Add(lst);
+                data.Add(lst, true);
 
 
                 Application.Run(new frmUpload(data, true) { AutoStart = autoStart });

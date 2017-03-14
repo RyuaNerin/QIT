@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -38,6 +38,7 @@ namespace TiX.Core
             {
                 this.m_cancel.Cancel();
                 this.m_cancel.Dispose();
+                this.m_cancel = null;
             }
 
             for (int i = 0; i < this.Count; ++i)
@@ -53,14 +54,14 @@ namespace TiX.Core
                 this.LoadedImage.Invoke(sender, new EventArgs());
         }
 
-        private readonly CancellationTokenSource m_cancel;
+        private CancellationTokenSource m_cancel;
         public CancellationToken Token { get { return this.m_cancel.Token; } }
 
         public void Add(IDataObject e)
         {
             if (e.GetDataPresent(DataFormats.FileDrop))
             {
-                this.Add((string[])e.GetData(DataFormats.FileDrop));
+                this.Add((string[])e.GetData(DataFormats.FileDrop), true);
             }
             else
             {
@@ -73,15 +74,24 @@ namespace TiX.Core
 
             this.Add(new ImageSet(this, this.Count, DataTypes.File, path));
         }
-        public void Add(IEnumerable<string> paths)
+        public void Add(IEnumerable<string> paths, bool orderByPath)
         {
-            foreach (var path in paths.OrderBy(ee => ee, ExtendStringComparer.Instance))
-                this.Add(path);
+            if (orderByPath)
+                foreach (var path in paths.OrderBy(ee => ee, ExtendStringComparer.Instance))
+                    this.Add(path);
+            else
+                foreach (var path in paths)
+                    this.Add(path);
         }
         public void Add(Image image)
         {
             if (image == null) return;
             this.Add(new ImageSet(this, this.Count, image));
+        }
+        public void Add(IEnumerable<Image> images)
+        {
+            foreach (var image in images)
+                this.Add(image);
         }
 
         protected new void Add(ImageSet value)

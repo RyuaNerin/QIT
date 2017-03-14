@@ -1,0 +1,180 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{0992F7A2-2E01-4A6C-81E9-6964F0010197}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>TiX</RootNamespace>
+    <AssemblyName>TiXd</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\bin\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;TiXd</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>..\bin\Release\</OutputPath>
+    <DefineConstants>TRACE;TiXd</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>true</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup>
+    <DelaySign>false</DelaySign>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AssemblyOriginatorKeyFile>TiXd.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.XML" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\TiX\Core\Helper.cs" />
+    <Compile Include="..\TiX\Core\ImageCollection.cs" />
+    <Compile Include="..\TiX\Core\ImageSet.cs" />
+    <Compile Include="..\TiX\Core\Settings.cs" />
+    <Compile Include="..\TiX\Core\TweetModerator.cs" />
+    <Compile Include="..\TiX\LastRelease.cs" />
+    <Compile Include="..\TiX\Limitation\OAuth.cs" />
+    <Compile Include="..\TiX\LoadPSD\LoadPSD.cs" />
+    <Compile Include="..\TiX\Properties\Resources.Designer.cs">
+      <Link>Properties\Resources.Designer.cs</Link>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="..\TiX\ScreenCapture\Stasisfield.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="..\TiX\ScreenCapture\Stasisfield.Designer.cs">
+      <DependentUpon>Stasisfield.cs</DependentUpon>
+    </Compile>
+    <Compile Include="..\TiX\ShellExtension.cs" />
+    <Compile Include="..\TiX\TiXMain.cs" />
+    <Compile Include="..\TiX\Utilities\ExtendStringComparer.cs" />
+    <Compile Include="..\TiX\Utilities\GifFrames.cs" />
+    <Compile Include="..\TiX\Utilities\globalKeyboardHook.cs" />
+    <Compile Include="..\TiX\Utilities\InstanceHelper.cs" />
+    <Compile Include="..\TiX\Utilities\ResizeImage.cs" />
+    <Compile Include="..\TiX\Windows\AjaxControl.cs">
+      <Link>AjaxControl.cs</Link>
+    </Compile>
+    <Compile Include="..\TiX\Windows\frmMain.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="..\TiX\Windows\frmMain.Designer.cs">
+      <DependentUpon>frmMain.cs</DependentUpon>
+    </Compile>
+    <Compile Include="..\TiX\Windows\frmPin.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="..\TiX\Windows\frmPin.Designer.cs">
+      <DependentUpon>frmPin.cs</DependentUpon>
+    </Compile>
+    <Compile Include="..\TiX\Windows\frmPreview.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="..\TiX\Windows\frmPreview.Designer.cs">
+      <DependentUpon>frmPreview.cs</DependentUpon>
+    </Compile>
+    <Compile Include="..\TiX\Windows\frmSettings.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="..\TiX\Windows\frmSettings.Designer.cs">
+      <DependentUpon>frmSettings.cs</DependentUpon>
+    </Compile>
+    <Compile Include="..\TiX\Windows\frmUpload.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="..\TiX\Windows\frmUpload.Designer.cs">
+      <DependentUpon>frmUpload.cs</DependentUpon>
+    </Compile>
+    <Compile Include="TiX.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="..\TiX\ScreenCapture\Stasisfield.resx">
+      <DependentUpon>Stasisfield.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\TiX\Windows\frmMain.resx">
+      <DependentUpon>frmMain.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\TiX\Windows\frmPin.resx">
+      <DependentUpon>frmPin.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\TiX\Windows\frmPreview.resx">
+      <DependentUpon>frmPreview.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\TiX\Windows\frmSettings.resx">
+      <DependentUpon>frmSettings.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\TiX\Windows\frmUpload.resx">
+      <DependentUpon>frmUpload.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\TiX\Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <SubType>Designer</SubType>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <Link>Properties\Resources.resx</Link>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\TiX\app.config" />
+    <None Include="..\TiX\packages.config" />
+    <None Include="..\TiX\TiXExt\TiXExt32.dll" />
+    <None Include="ILMerge.props" />
+    <None Include="TiXd.snk" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\TiX\TiXExt\TiXExt64.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="ILMergeOrder.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\submodules\CloudFlareUtilities\CloudFlareUtilities\CloudFlareUtilities.csproj">
+      <Project>{0e2c040d-3f8d-4d96-94a4-eb752b8503c5}</Project>
+      <Name>CloudFlareUtilities</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\MSBuild.ILMerge.Task.1.0.5\build\MSBuild.ILMerge.Task.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\MSBuild.ILMerge.Task.1.0.5\build\MSBuild.ILMerge.Task.props'))" />
+    <Error Condition="!Exists('..\packages\MSBuild.ILMerge.Task.1.0.5\build\MSBuild.ILMerge.Task.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\MSBuild.ILMerge.Task.1.0.5\build\MSBuild.ILMerge.Task.targets'))" />
+  </Target>
+  <Import Project="..\packages\MSBuild.ILMerge.Task.1.0.5\build\MSBuild.ILMerge.Task.targets" Condition="Exists('..\packages\MSBuild.ILMerge.Task.1.0.5\build\MSBuild.ILMerge.Task.targets')" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

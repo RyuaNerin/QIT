@@ -83,9 +83,14 @@ namespace TiX.Utilities
             {
                 ResizeImagePrivate(imageSet);
             }
+#if !TiXd
             catch (Exception ex)
             {
                 CrashReport.Error(ex, null);
+#else
+            catch
+            {
+#endif
                 return false;
             }
             var szAfter = imageSet.Image.Size;
@@ -111,10 +116,15 @@ namespace TiX.Utilities
                 {
                     imageSet.GifFrames = new GifFrames(imageSet.Image);
                 }
+#if !TiXd
                 catch (Exception ex)
                 {
                     if (ex.Message != "_")
                         CrashReport.Error(ex, null);
+#else
+                catch
+                {
+#endif
                 }
 
                 // 프레임이 포함된 애니메이션일 경우
@@ -188,12 +198,18 @@ namespace TiX.Utilities
             }
 
             // Number of frames <= 350
-            while (imageSet.GifFrames.Count > 350)
+            if (imageSet.GifFrames.Count > 350)
             {
-                requireResize = true;
+                var delCount = imageSet.GifFrames.Count - 350;
+                var sep = imageSet.GifFrames.Count / (delCount + 1);
+                
+                for (i = 0; i < delCount; ++i)
+                {
+                    requireResize = true;
 
-                imageSet.GifFrames[350].Image.Dispose();
-                imageSet.GifFrames.RemoveAt(350);
+                    imageSet.GifFrames[sep * i].Image.Dispose();
+                    imageSet.GifFrames.RemoveAt(sep * i);
+                }
             }
 
             // Number of pixels (width * height * num_frames) <= 300,000,000

@@ -86,13 +86,11 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="TiX.cs" />
     <Compile Include="ShellExtension.cs" />
     <Compile Include="Utilities\GifFrames.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Utilities\globalKeyboardHook.cs" />
-    <Compile Include="Utilities\Http.cs" />
     <Compile Include="Utilities\InstanceHelper.cs" />
     <Compile Include="LoadPSD\LoadPSD.cs" />
     <Compile Include="Utilities\ResizeImage.cs" />
@@ -190,27 +188,30 @@
     <Content Include="TiX.ico" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="jint, Version=2.10.3.0, Culture=neutral, PublicKeyToken=2e92ba9c8d81157f, processorArchitecture=MSIL">
-      <HintPath>..\packages\jint.2.10.3\lib\net45\jint.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.6.0.6\lib\net45\Newtonsoft.Json.dll</HintPath>
-      <Private>True</Private>
+      <Private>False</Private>
     </Reference>
     <Reference Include="SharpRaven, Version=2.1.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\SharpRaven.2.1.0\lib\net45\SharpRaven.dll</HintPath>
-      <Private>True</Private>
+      <Private>False</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Diagnostics.Contracts" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Net.Http" />
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.XML" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\submodules\CloudFlareUtilities\CloudFlareUtilities\CloudFlareUtilities.csproj">
+      <Project>{0e2c040d-3f8d-4d96-94a4-eb752b8503c5}</Project>
+      <Name>CloudFlareUtilities</Name>
+      <Private>False</Private>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>

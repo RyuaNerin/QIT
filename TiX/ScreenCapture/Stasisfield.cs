@@ -5,7 +5,7 @@ using System.Windows.Forms;
 
 namespace TiX.ScreenCapture
 {
-	public partial class Stasisfield : Form
+	internal partial class Stasisfield : Form
 	{
 		/// <summary>
 		/// 이 멋진 함수는 화면 캡쳐를 위한 정지장을 생성합니다.

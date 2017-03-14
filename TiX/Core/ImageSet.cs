@@ -1,22 +1,25 @@
-﻿﻿using System;
+﻿using System;
 using System.Drawing;
 using System.IO;
+using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using CloudFlareUtilities;
 using TiX.Utilities;
 
 namespace TiX.Core
 {
     internal class ImageSet : IDisposable
     {
-        public ImageSet(Bitmap bitmap)
+        public ImageSet(Image bitmap)
         {
             this.Index = -1;
             this.RawStream = new MemoryStream(3 * 1024 * 1024);
-            this.DataObject = bitmap;
+            this.Image = bitmap.Clone() as Image;
             this.DataType = DataTypes.Image;
+            this.m_collection = new ImageCollection();
         }
 
         private ImageSet(ImageCollection collection, int index)
@@ -39,7 +42,7 @@ namespace TiX.Core
 
         public void Dispose()
         {
-            if (this.InnerTask       != null) this.InnerTask.Dispose();
+            if (this.InnerTask  != null) this.InnerTask.Dispose();
             if (this.Image      != null) this.Image.Dispose();
             if (this.Thumbnail  != null) this.Thumbnail.Dispose();
             if (this.RawStream  != null) this.RawStream.Dispose();
@@ -106,10 +109,15 @@ namespace TiX.Core
 
                     this.Status = Statues.Success;
                 }
+#if !TiXd
                 catch (Exception ex)
                 {
                     if (ex.Message != "_")
                         CrashReport.Error(ex, null);
+#else
+                catch
+                {
+#endif
 
                     if (this.Image != null)
                     {
@@ -155,10 +163,10 @@ namespace TiX.Core
             }
         }
         
-        private static Regex regSrc             = new Regex(@"<img.*?src=[""'](.*?)[""'].*>", RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.IgnoreCase);
-        private static Regex regFragmentStart   = new Regex(@"^StartFragment:(\d+)", RegexOptions.Compiled | RegexOptions.Multiline);
-        private static Regex regFragmentEnd     = new Regex(@"^EndFragment:(\d+)", RegexOptions.Compiled | RegexOptions.Multiline);
-        private static Regex regBaseUrl         = new Regex(@"http://.*?/", RegexOptions.Compiled | RegexOptions.Multiline);
+        private static Regex regSrc             = new Regex(@"<img.*?src=[""'](.*?)[""'].*>", RegexOptions.Singleline | RegexOptions.IgnoreCase);
+        private static Regex regFragmentStart   = new Regex(@"^StartFragment:(\d+)", RegexOptions.Multiline);
+        private static Regex regFragmentEnd     = new Regex(@"^EndFragment:(\d+)", RegexOptions.Multiline);
+        private static Regex regBaseUrl         = new Regex(@"http://.*?/", RegexOptions.Multiline);
         private void GetImageFromIData(CancellationToken cancel)
         {
             var idata = this.DataObject as IDataObject;
@@ -206,16 +214,37 @@ namespace TiX.Core
                     uri = new Uri(new Uri(baseUrl), src);
                 }
 
-                if (!Http.GetResponse(uri, this.RawStream, cancel))
+                var handler = new ClearanceHandler();
+                using (var client = new HttpClient(handler))
                 {
-                    this.RawStream.SetLength(0);
-                    this.RawStream.Capacity = 0;
-                }
+                    try
+                    {
+                        var getStream = client.GetStreamAsync(uri);
 
-                if (this.RawStream.Length > 0)
-                {
-                    this.RawStream.Position = 0;
-                    this.Image = Image.FromStream(this.RawStream);
+                        do
+                        {
+                            if (cancel.IsCancellationRequested)
+                            {
+                                break;
+                            }
+                        } while (!getStream.Wait(0));
+                    
+                        if (getStream.IsCompleted)
+                        {
+                            this.RawStream.SetLength(0);
+                            this.RawStream.Capacity = 0;
+                        }
+
+                        getStream.Result.CopyTo(this.RawStream);
+
+                        this.RawStream.Position = 0;
+                        this.Image = Image.FromStream(this.RawStream);
+                    }
+                    catch
+                    {
+                        this.RawStream.SetLength(0);
+                        this.RawStream.Capacity = 0;
+                    }
                 }
             }
         }

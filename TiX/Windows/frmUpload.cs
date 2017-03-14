@@ -131,9 +131,14 @@ namespace TiX.Windows
                 for (int i = 0; i < this.m_uploadRange; ++i)
                     this.m_ic[this.m_uploadIndex + i].StartLoad();
             }
+#if !TiXd
             catch (Exception ex)
             {
                 CrashReport.Error(ex, null);
+#else
+            catch
+            {
+#endif
             }
         }
 
@@ -247,7 +252,7 @@ namespace TiX.Windows
 
         //////////////////////////////////////////////////////////////////////////
 
-        private static Regex regUrl = new Regex(@"https?:\/\/(-\.)?([^\s\/?\.#-]+\.?)+(\/[^\s]*)?", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static Regex regUrl = new Regex(@"https?:\/\/(-\.)?([^\s\/?\.#-]+\.?)+(\/[^\s]*)?", RegexOptions.IgnoreCase);
         private void txtText_TextChanged(object sender, EventArgs e)
         {
             try
@@ -453,7 +458,9 @@ namespace TiX.Windows
             }
             catch (Exception ex)
             {
+#if !TiXd
                 CrashReport.Error(ex, null);
+#endif
                 return ex.Message;
             }
 
@@ -497,9 +504,14 @@ namespace TiX.Windows
             catch (WebException)
             {
             }
+#if !TiXd
             catch (Exception ex)
             {
                 CrashReport.Error(ex, null);
+#else
+            catch
+            {
+#endif
             }
         }
 

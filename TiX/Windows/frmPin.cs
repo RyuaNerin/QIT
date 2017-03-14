@@ -1,10 +1,9 @@
 ﻿using System;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using TiX.Core;
-using System.Threading.Tasks;
 
 namespace TiX.Windows
 {
@@ -122,7 +121,7 @@ namespace TiX.Windows
             bool success = false;
             try
             {
-                if (!await Task.Factory.StartNew<bool>(() => TiXMain.Twitter.AccessToken(pin, out this.m_token, out this.m_secret)))
+                if (await Task.Factory.StartNew<bool>(() => TiXMain.Twitter.AccessToken(pin, out this.m_token, out this.m_secret)))
                 {
                     Settings.UToken  = this.m_token;
                     Settings.USecret = this.m_secret;
@@ -145,11 +144,6 @@ namespace TiX.Windows
             this.ajax.Stop();
             this.DialogResult = DialogResult.OK;
             this.Close();
-		}
-
-		private void bgwAfter_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
-		{
-
 		}
 	}
 }

@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using System.Security.Principal;
 using System.Windows.Forms;
 using TiX.Core;
-using Microsoft.Win32;
 
 namespace TiX.Windows
 {
@@ -26,7 +24,7 @@ namespace TiX.Windows
             InitializeComponent();
             this.Icon = TiX.Properties.Resources.TiX;
 
-            if (!@public)
+            if (@public)
             {
                 this.chkEnableShell.Enabled = false;
                 this.chkEnableShellWithoutText.Enabled = false;
