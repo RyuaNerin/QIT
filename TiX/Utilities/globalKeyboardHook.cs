@@ -24,9 +24,6 @@ namespace TiX.Utilities
         public IList<Keys> Up { get { return this.m_up; } }
         
 		IntPtr m_hwnd = IntPtr.Zero;
-        Keys m_control = Keys.None;
-        Keys m_shift   = Keys.None;
-        Keys m_alt     = Keys.None;
 		
 		public event EventHandler<KeyHookEventArgs> KeyDown;
 		public event EventHandler<KeyHookEventArgs> KeyUp;
@@ -35,7 +32,7 @@ namespace TiX.Utilities
 
 		public GlobalKeyboardHook()
 		{
-			khp = new NativeMethods.keyboardHookProc(hookProc);
+            this.khp = new NativeMethods.keyboardHookProc(this.hookProc);
 			Hook();
 		}
 
@@ -64,21 +61,21 @@ namespace TiX.Utilities
         private static IntPtr m_hLibrary = IntPtr.Zero;
 		public void Hook()
 		{
-            if (m_hwnd == IntPtr.Zero)
+            if (this.m_hwnd == IntPtr.Zero)
             {
                 if (m_hLibrary == IntPtr.Zero)
                     m_hLibrary = NativeMethods.LoadLibrary("User32");
 
-                m_hwnd = NativeMethods.SetWindowsHookEx(NativeMethods.WH_KEYBOARD_LL, khp, m_hLibrary, 0);
+                this.m_hwnd = NativeMethods.SetWindowsHookEx(NativeMethods.WH_KEYBOARD_LL, this.khp, m_hLibrary, 0);
             }
 		}
 
 		public void Unhook()
 		{
-            if (m_hwnd != IntPtr.Zero)
+            if (this.m_hwnd != IntPtr.Zero)
             {
-			    NativeMethods.UnhookWindowsHookEx(m_hwnd);
-                m_hwnd = IntPtr.Zero;
+			    NativeMethods.UnhookWindowsHookEx(this.m_hwnd);
+                this.m_hwnd = IntPtr.Zero;
             }
 		}
 
@@ -88,37 +85,8 @@ namespace TiX.Utilities
 			{
                 var key = (Keys)lParam.vkCode;
 				var wparam = wParam.ToInt64();
-				bool d = (wparam == NativeMethods.WM_KEYDOWN || wparam == NativeMethods.WM_SYSKEYDOWN);
-				bool u = (wparam == NativeMethods.WM_KEYUP   || wparam == NativeMethods.WM_SYSKEYUP);
 
-                if (d ^ u)
-                {
-                    switch (key)
-                    {
-                        case Keys.Control:
-                        case Keys.ControlKey:
-                        case Keys.LControlKey:
-                        case Keys.RControlKey:
-                            this.m_control = d ? Keys.Control : Keys.None;
-                            break;
-
-                        case Keys.Shift:
-                        case Keys.ShiftKey:
-                        case Keys.LShiftKey:
-                        case Keys.RShiftKey:
-                            this.m_shift = d ? Keys.Shift : Keys.None;
-                            break;
-
-                        case Keys.Alt:
-                        case Keys.Menu:
-                        case Keys.RMenu:
-                        case Keys.LMenu:
-                            this.m_alt = d ? Keys.Alt : Keys.None;
-                            break;
-                    }
-                }
-
-                key = key | this.m_control | this.m_shift | this.m_alt;
+                key = key | Control.ModifierKeys;
 
                 if (this.KeyUp != null && this.Up.Contains(key))
                 {
@@ -136,7 +104,7 @@ namespace TiX.Utilities
                         return new IntPtr(1);
                 }
 			}
-			return NativeMethods.CallNextHookEx(m_hwnd, code, wParam, ref lParam);
+			return NativeMethods.CallNextHookEx(this.m_hwnd, code, wParam, ref lParam);
 		}
 
 		private static class NativeMethods

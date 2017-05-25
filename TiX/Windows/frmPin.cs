@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using TiX.Core;
+using TiX.Utilities;
 
 namespace TiX.Windows
 {
@@ -66,14 +67,14 @@ namespace TiX.Windows
             
             if (!await Task.Factory.StartNew<bool>(() => TiXMain.Twitter.RequestToken(out this.m_token, out this.m_secret)))
             {
-                MessageBox.Show(this, "문제가 발생했어요 :(", TiXMain.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                this.Error("문제가 발생했어요 :(");
                 this.Close();
                 return;
             }
 
             NativeMethods.AddClipboardFormatListener(this.Handle);
 
-            var url = String.Format("\"https://api.twitter.com/oauth/authorize?oauth_token={0}\"", this.m_token);
+            var url = string.Format("\"https://api.twitter.com/oauth/authorize?oauth_token={0}\"", this.m_token);
             using (var proc = Process.Start(new ProcessStartInfo { FileName = url, UseShellExecute = true }))
             { }
 
@@ -98,7 +99,7 @@ namespace TiX.Windows
             if (e.KeyCode == Keys.Escape)
                 this.Close();
 
-            if (Char.IsNumber((char)e.KeyValue) ||
+            if (char.IsNumber((char)e.KeyValue) ||
 				(e.KeyCode == Keys.Back) ||
                 (e.KeyCode == Keys.Delete))
                 return;
@@ -123,10 +124,10 @@ namespace TiX.Windows
             {
                 if (await Task.Factory.StartNew<bool>(() => TiXMain.Twitter.AccessToken(pin, out this.m_token, out this.m_secret)))
                 {
-                    Settings.UToken  = this.m_token;
-                    Settings.USecret = this.m_secret;
+                    Settings.Instance.UToken  = this.m_token;
+                    Settings.Instance.USecret = this.m_secret;
 
-                    Settings.Save();
+                    Settings.Instance.Save();
                     success = true;
                 }
             }
@@ -136,7 +137,7 @@ namespace TiX.Windows
 
             if (!success)
             {
-                MessageBox.Show(this, "문제가 발생했어요 :(", TiXMain.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                this.Error("문제가 발생했어요 :(");
                 this.Close();
                 return;
             }

@@ -6,24 +6,22 @@
 #include "resource.h"
 #include "DebugLog.h"
 
-#define MENU_WITH_TEXT      0
-#define MENU_WITHOUT_TEXT   1
-
 // Dll Main
 extern HINSTANCE g_hInst;
 extern UINT g_ref;
 
-extern HANDLE m_menuImage;
-extern WCHAR m_exePath[MAX_PATH];
-extern DWORD m_option;
+extern HBITMAP m_menuImage;
+extern WCHAR   m_exePath[MAX_PATH];
+extern bool    m_option_with_text;
+extern bool    m_option_without_text;
 
-#define VECTOR_RESERVE  32
+#define TIXEXT_DEFAULT_VECTOR_SIZE  32
 
 ContextMenu::ContextMenu()
 {
     DebugLog(L"ContextMenu");
 
-    m_files.reserve(VECTOR_RESERVE);
+    m_files.reserve(TIXEXT_DEFAULT_VECTOR_SIZE);
     m_refCnt = 1;
 
     InterlockedIncrement(&g_ref);
@@ -126,6 +124,19 @@ STDMETHODIMP ContextMenu::Initialize(LPCITEMIDLIST pidlFolder, LPDATAOBJECT pdto
 #pragma endregion IShellExtInit
 
 #pragma region IContextMenu
+
+bool InsertTiXMenu(HMENU hMenu, UINT uMenuIndex, UINT uidFirstCmd, LPWSTR dwTypedata, DWORD *tixMenuIndex)
+{
+    MENUITEMINFO mii = { sizeof(MENUITEMINFO) };
+    mii.fMask = MIIM_BITMAP | MIIM_STRING | MIIM_FTYPE | MIIM_ID | MIIM_STATE;
+    mii.wID = uidFirstCmd + *tixMenuIndex;
+    mii.fType = MFT_STRING;
+    mii.dwTypeData = dwTypedata;
+    mii.fState = MFS_ENABLED;
+    mii.hbmpItem = m_menuImage;
+
+    return InsertMenuItemW(hMenu, uMenuIndex + *tixMenuIndex, TRUE, &mii) == TRUE;
+}
 STDMETHODIMP ContextMenu::QueryContextMenu(HMENU hMenu, UINT uMenuIndex, UINT uidFirstCmd, UINT uidLastCmd, UINT uFlags)
 {
     if (m_exePath[0] == 0)
@@ -136,40 +147,24 @@ STDMETHODIMP ContextMenu::QueryContextMenu(HMENU hMenu, UINT uMenuIndex, UINT ui
 
     DWORD items = 0;
 
-    DebugLog(L"QueryContextMenu / Option : [%d]", m_option);
+    DebugLog(L"QueryContextMenu");
+    DebugLog(L"WithText    : [%d]", m_option_with_text);
+    DebugLog(L"WithoutText : [%d]", m_option_without_text);
 
-    if (m_option & 1)
+    if (m_option_with_text)
     {
-        MENUITEMINFO mii;
-
-        mii = { sizeof(MENUITEMINFO) };
-        mii.fMask = MIIM_BITMAP | MIIM_STRING | MIIM_FTYPE | MIIM_ID | MIIM_STATE;
-        mii.wID = uidFirstCmd + items;
-        mii.fType = MFT_STRING;
-        mii.dwTypeData = L"TiX 로 트윗하기 (&8)";
-        mii.fState = MFS_ENABLED;
-        mii.hbmpItem = static_cast<HBITMAP>(m_menuImage);
-
-        if (!InsertMenuItem(hMenu, uMenuIndex + items, TRUE, &mii))
+        if (!InsertTiXMenu(hMenu, uMenuIndex, uidFirstCmd, L"TiX 로 트윗하기 (&8)", &items))
             return HRESULT_FROM_WIN32(GetLastError());
-        items++;
+
+        this->m_id_withText = items++;
     }
 
-    if (m_option & 2)
+    if (m_option_with_text)
     {
-        MENUITEMINFO mii;
-
-        mii = { sizeof(MENUITEMINFO) };
-        mii.fMask = MIIM_BITMAP | MIIM_STRING | MIIM_FTYPE | MIIM_ID | MIIM_STATE;
-        mii.wID = uidFirstCmd + items;
-        mii.fType = MFT_STRING;
-        mii.dwTypeData = L"TiX 로 바로 트윗하기 (&9)";
-        mii.fState = MFS_ENABLED;
-        mii.hbmpItem = static_cast<HBITMAP>(m_menuImage);
-
-        if (!InsertMenuItem(hMenu, uMenuIndex + items, TRUE, &mii))
+        if (!InsertTiXMenu(hMenu, uMenuIndex, uidFirstCmd, L"TiX 로 바로 트윗하기 (&9)", &items))
             return HRESULT_FROM_WIN32(GetLastError());
-        items++;
+
+        this->m_id_withoutText = items++;
     }
 
     return MAKE_HRESULT(SEVERITY_SUCCESS, 0, items);
@@ -195,6 +190,9 @@ STDMETHODIMP ContextMenu::GetCommandString(UINT_PTR idCmd, UINT uFlags, UINT* pw
 
 STDMETHODIMP ContextMenu::InvokeCommand(LPCMINVOKECOMMANDINFO pCmdInfo)
 {
+    if (HIWORD(pCmdInfo->lpVerb))
+        return E_INVALIDARG;
+
     if (m_exePath[0] == 0)
         return S_OK;
 
@@ -212,18 +210,17 @@ STDMETHODIMP ContextMenu::InvokeCommand(LPCMINVOKECOMMANDINFO pCmdInfo)
 
     PROCESS_INFORMATION	procInfo = { 0 };
     STARTUPINFO startInfo = { sizeof(STARTUPINFO), 0 };
-    startInfo.dwFlags = STARTF_USESTDHANDLES;
-    startInfo.hStdInput = hRead;
-    startInfo.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
-    startInfo.hStdError = GetStdHandle(STD_ERROR_HANDLE);
+    startInfo.dwFlags     = STARTF_USESTDHANDLES;
+    startInfo.hStdInput   = hRead;
+    startInfo.hStdOutput  = GetStdHandle(STD_OUTPUT_HANDLE);
+    startInfo.hStdError   = GetStdHandle(STD_ERROR_HANDLE);
 
     DebugLog(L"Verb : %d", pCmdInfo->lpVerb);
+
+    DWORD menuIndex = LOWORD(pCmdInfo->lpVerb);
     
-    if ((((m_option & 1) == 1) && LOWORD(pCmdInfo->lpVerb) == 1) ||
-        (((m_option & 1) == 0) && LOWORD(pCmdInfo->lpVerb) == 0))
-        wsprintfW(wbuff, L"\"%s\" \"--pipe\" \"--notext\"", m_exePath);
-    else
-        wsprintfW(wbuff, L"\"%s\" \"--pipe\"", m_exePath);
+         if (menuIndex == this->m_id_withText)    wsprintfW(wbuff, L"\"%s\" \"--pipe\"",              m_exePath);
+    else if (menuIndex == this->m_id_withoutText) wsprintfW(wbuff, L"\"%s\" \"--pipe\" \"--notext\"", m_exePath);
 
     BOOL ret = CreateProcessW(m_exePath, wbuff, 0, 0, TRUE, CREATE_DEFAULT_ERROR_MODE, 0, 0, &startInfo, &procInfo);
 
@@ -238,8 +235,7 @@ STDMETHODIMP ContextMenu::InvokeCommand(LPCMINVOKECOMMANDINFO pCmdInfo)
     }
 
     CloseHandle(hWrite);
-
-
+    
     return S_OK;
 }
 
@@ -253,8 +249,8 @@ void ContextMenu::WriteToHandle(LPWSTR buffUni, LPSTR buffUtf8, HANDLE hWnd)
         lenUni  = wsprintfW(buffUni, *iter);
         lenUni += wsprintfW(buffUni + lenUni, L"\n");
         
-        len = WideCharToMultiByte(CP_UTF8, 0, buffUni, lenUni, NULL, 0, NULL, NULL);
-        WideCharToMultiByte(CP_UTF8, 0, buffUni, lenUni, buffUtf8, len, NULL, NULL);
+        len = WideCharToMultiByte(CP_UTF8, 0, buffUni, lenUni, NULL,     0,   NULL, NULL);
+              WideCharToMultiByte(CP_UTF8, 0, buffUni, lenUni, buffUtf8, len, NULL, NULL);
 
         WriteFile(hWnd, buffUtf8, len * sizeof(char), &len, 0);
 
@@ -272,6 +268,6 @@ void ContextMenu::ClearFiles()
         delete *iter;
     m_files.clear();
 
-    if (m_files.capacity() > VECTOR_RESERVE * 2)
-        m_files.reserve(VECTOR_RESERVE);
+    if (m_files.capacity() > TIXEXT_DEFAULT_VECTOR_SIZE * 2)
+        m_files.reserve(TIXEXT_DEFAULT_VECTOR_SIZE);
 }

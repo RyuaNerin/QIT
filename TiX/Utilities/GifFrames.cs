@@ -20,7 +20,7 @@ namespace TiX.Utilities
         internal GifFrames(Image image)
         {
             int frames = image.GetFrameCount(FrameDimension.Time);
-            if (frames < 1) throw new Exception("_");
+            if (frames < 1) throw new NotSupportedException();
 
             byte[] times = image.GetPropertyItem(0x5100).Value;
             int delay;
@@ -36,8 +36,22 @@ namespace TiX.Utilities
 
         public Size Size { get { return this.Count > 0 ? this[0].Image.Size : Size.Empty; } }
 
+        ~GifFrames()
+        {
+            this.Dispose(false);
+        }
         public void Dispose()
         {
+            this.Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+        private bool m_disposed = false;
+        private void Dispose(bool disposing)
+        {
+            if (this.m_disposed)
+                return;
+            this.m_disposed = true;
+
             for (int i = 0; i < this.Count; ++i)
             {
                 try
@@ -49,10 +63,8 @@ namespace TiX.Utilities
             }
 
             this.Clear();
-
-            GC.SuppressFinalize(this);
         }
-
+        
         private static Bitmap CopyImage(Image orig)
         {
             var bitmap = new Bitmap(orig.Width, orig.Height, PixelFormat.Format24bppRgb);

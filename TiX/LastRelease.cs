@@ -1,39 +1,32 @@
 ﻿using System;
 using System.IO;
 using System.Net;
-using System.Runtime.Serialization;
-using System.Runtime.Serialization.Json;
 using System.Windows.Forms;
+using Newtonsoft.Json;
 
 namespace TiX
 {
     internal static class LastRelease
     {
-        [DataContract]
         public class LastestRealease
         {
-            public static LastestRealease Parse(Stream stream)
-            {
-                var serializer = new DataContractJsonSerializer(typeof(LastestRealease));
-                return (LastestRealease)serializer.ReadObject(stream);
-            }
-
-            [DataMember(Name = "tag_name")]
+            [JsonProperty("tag_name")]
             public string TagName { get; set; }
 
-            [DataMember(Name = "html_url")]
+            [JsonProperty("html_url")]
             public string HtmlUrl { get; set; }
 
-            [DataMember(Name = "assets")]
+            [JsonProperty("assets")]
             public Asset[] Assets { get; set; }
 
-            [DataContract]
+            [JsonObject]
             public class Asset
             {
-                [DataMember(Name = "browser_download_url")]
+                [JsonProperty("browser_download_url")]
                 public string BrowserDownloadUrl { get; set; }
             }
         }
+
         public static LastestRealease CheckNewVersion()
         {
             try
@@ -44,8 +37,16 @@ namespace TiX
                 req.Timeout = 5000;
                 req.UserAgent = "QIT";
                 using (var res = req.GetResponse())
-                using (var stream = res.GetResponseStream())
-                    last = LastestRealease.Parse(stream);
+                {
+                    var json = new JsonSerializer();
+
+                    using (var rStream = res.GetResponseStream())
+                    using (var sReader = new StreamReader(rStream))
+                    using (var jReader = new JsonTextReader(sReader))
+                    {
+                        last = json.Deserialize<LastestRealease>(jReader);
+                    }
+                }
 
                 return new Version(last.TagName) > new Version(Application.ProductVersion) ? last : null;
             }

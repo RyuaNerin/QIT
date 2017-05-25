@@ -1,3 +1,7 @@
 [submodule "submodules/CloudFlareUtilities"]
 	path = submodules/CloudFlareUtilities
 	url = git@github.com:elcattivo/CloudFlareUtilities.git
+[submodule "submodules/libwebp"]
+	path = submodules/libwebp
+	url = git@github.com:webmproject/libwebp.git
+	branch = 0.5.2

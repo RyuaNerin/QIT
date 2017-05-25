@@ -78,8 +78,6 @@ namespace Limitation
                     sbData.AppendFormat("{0}=\"{1}\",", st.Key, Convert.ToString(st.Value));
             sbData.Remove(sbData.Length - 1, 1);
 
-            var str = sbData.ToString();
-
             var req = (HttpWebRequest)WebRequest.Create(uri);
             req.Method = method;
             req.AutomaticDecompression = DecompressionMethods.Deflate | DecompressionMethods.GZip;

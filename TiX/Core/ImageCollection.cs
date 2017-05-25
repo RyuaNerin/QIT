@@ -8,50 +8,46 @@ using TiX.Utilities;
 
 namespace TiX.Core
 {
-    internal enum DataTypes { Image, File, IDataObject }
+    internal enum DataTypes {
+        Image,
+        Uri,
+        IDataObject,
+        Bytes,
+    }
 
     internal class ImageCollection : List<ImageSet>, IDisposable
     {
-        public static bool IsAvailable(DragEventArgs e)
-        {
-            return e == null ? false :
-                (
-                    e.Data.GetDataPresent(DataFormats.FileDrop) ||
-                    e.Data.GetDataPresent(DataFormats.Bitmap) ||
-                    e.Data.GetDataPresent(DataFormats.Dib) ||
-                    e.Data.GetDataPresent(DataFormats.Tiff) ||
-                    (e.Data.GetDataPresent(DataFormats.EnhancedMetafile) && e.Data.GetDataPresent(DataFormats.MetafilePict)) ||
-                    e.Data.GetDataPresent(DataFormats.Html)
-                );
-        }
-
-        //////////////////////////////////////////////////////////////////////////
-
         public ImageCollection()
         {
             this.m_cancel = new CancellationTokenSource();
         }
-
+        ~ImageCollection()
+        {
+            this.Dispose(false);
+        }
         public void Dispose()
         {
-            if (this.m_cancel != null)
-            {
-                this.m_cancel.Cancel();
-                this.m_cancel.Dispose();
-                this.m_cancel = null;
-            }
+            this.Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+        private bool m_disposed = false;
+        protected void Dispose(bool disposing)
+        {
+            if (this.m_disposed)
+                return;
+            this.m_disposed = true;
+            
+            this.m_cancel.Cancel();
+            this.m_cancel.Dispose();
 
             for (int i = 0; i < this.Count; ++i)
                 this[i].Dispose();
-
-            GC.SuppressFinalize(this);
         }
         
         public event EventHandler LoadedImage;
         public void RaiseEvent(ImageSet sender)
         {
-            if (this.LoadedImage != null)
-                this.LoadedImage.Invoke(sender, new EventArgs());
+            this.LoadedImage?.Invoke(sender, new EventArgs());
         }
 
         private CancellationTokenSource m_cancel;
@@ -59,23 +55,57 @@ namespace TiX.Core
 
         public void Add(IDataObject e)
         {
+            if (e == null)
+                return;
+
             if (e.GetDataPresent(DataFormats.FileDrop))
             {
-                this.Add((string[])e.GetData(DataFormats.FileDrop), true);
+                Uri uri;
+                foreach (var path in (string[])e.GetData(DataFormats.FileDrop))
+                    if (Uri.TryCreate(path, UriKind.RelativeOrAbsolute, out uri))
+                        this.Add(uri);
             }
             else
             {
-                this.Add(new ImageSet(this, this.Count, DataTypes.IDataObject, e));
+                this.Add(new ImageSet(this, this.Count, e));
             }
+        }
+        public void Add(byte[] rawData)
+        {
+            if (rawData == null)
+                return;
+
+            this.Add(new ImageSet(this, this.Count, rawData));
         }
         public void Add(string path)
         {
-            if (!TiXMain.CheckFile(path)) return;
+            if (path == null)
+                return;
 
-            this.Add(new ImageSet(this, this.Count, DataTypes.File, path));
+            if (!TiXMain.CheckFile(path))
+                return;
+
+            Uri uri;
+            if (!Uri.TryCreate(path, UriKind.RelativeOrAbsolute, out uri))
+                return;
+
+            this.Add(new ImageSet(this, this.Count, uri));
+        }
+        public void Add(Uri uri)
+        {
+            if (uri == null)
+                return;
+
+            if (!TiXMain.CheckFile(uri))
+                return;
+
+            this.Add(new ImageSet(this, this.Count, uri));
         }
         public void Add(IEnumerable<string> paths, bool orderByPath)
         {
+            if (paths == null)
+                return;
+
             if (orderByPath)
                 foreach (var path in paths.OrderBy(ee => ee, ExtendStringComparer.Instance))
                     this.Add(path);
@@ -83,13 +113,38 @@ namespace TiX.Core
                 foreach (var path in paths)
                     this.Add(path);
         }
+        public void Add(IEnumerable<Uri> uris, bool orderByPath)
+        {
+            if (uris == null)
+                return;
+
+            if (orderByPath)
+                foreach (var uri in uris.OrderBy(ee => ee.IsFile ? ee.LocalPath : ee.AbsolutePath, ExtendStringComparer.Instance))
+                    this.Add(uri);
+            else
+                foreach (var uri in uris)
+                    this.Add(uri);
+        }
+        public void Add(IEnumerable<byte[]> datas)
+        {
+            if (datas == null)
+                return;
+
+            foreach (var data in datas)
+                this.Add(data);
+        }
         public void Add(Image image)
         {
-            if (image == null) return;
+            if (image == null)
+                return;
+
             this.Add(new ImageSet(this, this.Count, image));
         }
         public void Add(IEnumerable<Image> images)
         {
+            if (images == null)
+                return;
+
             foreach (var image in images)
                 this.Add(image);
         }

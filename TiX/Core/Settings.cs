@@ -7,70 +7,79 @@ using System.Text;
 
 namespace TiX.Core
 {
-    internal static class Settings
+    internal class Settings
     {
+        private static readonly Settings m_settings = new Settings();
+        public static Settings Instance => m_settings;
+
         private sealed class Attr : Attribute
         {
-            public Attr(object defulatValue)
-            {
-                this.DefaultValue = defulatValue;
-            }
-            public object DefaultValue { get; private set; }
         }
 
-        public readonly static string FilePath;
-        
-        [Attr(null )] public static string UToken              { get; set; }
-        [Attr(null )] public static string USecret             { get; set; }
-        [Attr(true )] public static bool   Topmost             { get; set; }
-        [Attr(false)] public static bool   ReversedCtrl        { get; set; }
-        [Attr(false)] public static bool   UniformityText      { get; set; }
-        [Attr(true )] public static bool   EnabledInReply      { get; set; }
-        [Attr(true )] public static bool   EnabledErrorReport  { get; set; }
-        [Attr(false)] public static bool   EnabledShell        { get; set; }
-        [Attr(false)] public static bool   EnabledShell2       { get; set; }
-        [Attr(null )] public static string Shells              { get; set; }
+        public  const           string FileName = "TiX.ini";
+        public  readonly static string DefaultPath;
 
         private readonly static PropertyInfo[] m_properties;
+        
+        [Attr] public string UToken             { get; set; } = null;
+        [Attr] public string USecret            { get; set; } = null;
+        [Attr] public bool   Topmost            { get; set; } = true;
+        [Attr] public bool   ReversedCtrl       { get; set; } = false;
+        [Attr] public bool   UniformityText     { get; set; } = false;
+        [Attr] public bool   EnabledInReply     { get; set; } = true;
+        [Attr] public bool   EnabledErrorReport { get; set; } = true;
+        [Attr] public bool   StartWithWindows   { get; set; } = false;
+        [Attr] public bool   StartInTray        { get; set; } = false;
+        [Attr] public bool   MinizeToTray       { get; set; } = false;
+        [Attr] public bool   SEWithText         { get; set; } = true;
+        [Attr] public bool   SEWithoutText      { get; set; } = true;
+        [Attr] public bool   PreviewHighQuality { get; set; } = true;
+
         static Settings()
         {
-            Settings.FilePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "TiX.ini");
-            Settings.m_properties = typeof(Settings).GetProperties().Where(e => e.GetCustomAttributes(false).Any(ee => ee is Attr)).ToArray();
+            Settings.DefaultPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), FileName);
+            Settings.m_properties = typeof(Settings).GetProperties().Where(e => e.GetCustomAttributes<Attr>() != null).ToArray();
+        }
+        private Settings()
+        {
         }
 
-        public static void Load()
+        public void Load()
         {
-            if (!File.Exists(Settings.FilePath))
+            if (!File.Exists(Settings.DefaultPath))
             {
-                foreach (var prop in m_properties)
-                {
-                    prop.SetValue(null, prop.GetCustomAttribute<Attr>().DefaultValue, null);
-                }
                 return;
             }
 
             string str;
             foreach (var prop in m_properties)
             {
-                str = NativeMethods.Get(FilePath, "TiX", prop.Name);
+                str = NativeMethods.Get(DefaultPath, "TiX", prop.Name);
                 if (!string.IsNullOrEmpty(str))
-                    prop.SetValue(null, Str2Obj(str, prop.PropertyType), null);
+                    prop.SetValue(this, Str2Obj(str, prop.PropertyType), null);
             }
         }
-
-        public static void Save()
+        public void Save()
+        {
+            this.Save(Settings.DefaultPath);
+        }
+        public void SaveInDirectory(string dir)
+        {
+            this.Save(Path.Combine(dir, FileName));
+        }
+        private void Save(string path)
         {
             string val;
             foreach (var prop in m_properties)
             {
-                val = Obj2Str(prop.GetValue(null, null));
+                val = Obj2Str(prop.GetValue(this, null));
 
                 if (val != null)
-                    NativeMethods.Set(FilePath, "TiX", prop.Name, val);
+                    NativeMethods.Set(path, "TiX", prop.Name, val);
             }
         }
 
-        public static object Str2Obj(string val, Type toType)
+        private static object Str2Obj(string val, Type toType)
         {
             if (toType == typeof(bool))   return val == "1";
             if (toType == typeof(string))
@@ -80,7 +89,7 @@ namespace TiX.Core
             }
             return null;
         }
-        public static string Obj2Str(object val)
+        private static string Obj2Str(object val)
         {
             if (val is string) return val as string;
             if (val is bool)   return (bool)val ? "1" : "0";
@@ -94,12 +103,12 @@ namespace TiX.Core
             public static string Get(string path, string section, string key)
             {
                 var sb = new StringBuilder(64);
-                GetPrivateProfileString(section, key, null, sb, 64, path);
+                GetPrivateProfileString(section, key, null, sb, (uint)sb.Capacity, path);
 
                 return sb.ToString();
             }
 
-            [DllImport("kernel32.dll", CharSet=CharSet.Unicode, SetLastError=true)]
+            [DllImport("kernel32.dll", CharSet=CharSet.Unicode)]
             [return: MarshalAs(UnmanagedType.Bool)]
             private static extern bool WritePrivateProfileString(string lpAppName, string lpKeyName, string lpString, string lpFileName);
             public static void Set(string path, string section, string key, string value)

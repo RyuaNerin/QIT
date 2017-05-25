@@ -28,10 +28,14 @@
 		/// </summary>
         private void InitializeComponent()
 		{
+            this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmMain));
             this.lblStasis = new System.Windows.Forms.Label();
             this.lblCtrl = new System.Windows.Forms.Label();
             this.lblDragTweet = new System.Windows.Forms.Label();
             this.lblSetting = new System.Windows.Forms.Label();
+            this.ofd = new System.Windows.Forms.OpenFileDialog();
+            this.ntf = new System.Windows.Forms.NotifyIcon(this.components);
             this.SuspendLayout();
             // 
             // lblStasis
@@ -40,9 +44,9 @@
             this.lblStasis.ForeColor = System.Drawing.SystemColors.ControlText;
             this.lblStasis.Location = new System.Drawing.Point(12, 85);
             this.lblStasis.Name = "lblStasis";
-            this.lblStasis.Size = new System.Drawing.Size(200, 19);
+            this.lblStasis.Size = new System.Drawing.Size(200, 66);
             this.lblStasis.TabIndex = 27;
-            this.lblStasis.Text = "Ctrl + Shift + C로 그거 하기";
+            this.lblStasis.Text = "PrintScreen 으로 캡쳐하기\r\n+ Alt : 현재 모니터\r\n+ Ctrl : 현재 창 캡쳐하기\r\n+ Shift : 잘라서 캡쳐하기";
             this.lblStasis.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.lblStasis.MouseUp += new System.Windows.Forms.MouseEventHandler(this.frmMain_MouseUp);
             // 
@@ -65,7 +69,7 @@
             this.lblDragTweet.Name = "lblDragTweet";
             this.lblDragTweet.Size = new System.Drawing.Size(200, 25);
             this.lblDragTweet.TabIndex = 26;
-            this.lblDragTweet.Text = "사진을 드래그하여 트윗하기";
+            this.lblDragTweet.Text = "두번 누르거나 드래그하기";
             this.lblDragTweet.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.lblDragTweet.MouseUp += new System.Windows.Forms.MouseEventHandler(this.frmMain_MouseUp);
             // 
@@ -81,12 +85,24 @@
             this.lblSetting.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.lblSetting.MouseUp += new System.Windows.Forms.MouseEventHandler(this.frmMain_MouseUp);
             // 
+            // ofd
+            // 
+            this.ofd.Filter = "지원하는 모든 파일|*.bmp;*.emf;*.exif;*.gif;*.ico;*.jpg;*.jpeg;*.png;*.tif;*.tiff;*.wmf;*" +
+    ".psd";
+            this.ofd.Multiselect = true;
+            this.ofd.Title = "트윗할 이미지들을 선택해주세요";
+            // 
+            // ntf
+            // 
+            this.ntf.Icon = ((System.Drawing.Icon)(resources.GetObject("ntf.Icon")));
+            this.ntf.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.ntf_MouseDoubleClick);
+            // 
             // frmMain
             // 
             this.AllowDrop = true;
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(224, 113);
+            this.ClientSize = new System.Drawing.Size(224, 160);
             this.Controls.Add(this.lblStasis);
             this.Controls.Add(this.lblCtrl);
             this.Controls.Add(this.lblDragTweet);
@@ -99,12 +115,14 @@
             this.Name = "frmMain";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.frmMain_FormClosing);
+            this.Load += new System.EventHandler(this.frmMain_Load);
             this.Shown += new System.EventHandler(this.frmMain_Shown);
             this.DragDrop += new System.Windows.Forms.DragEventHandler(this.frmMain_DragDrop);
             this.DragEnter += new System.Windows.Forms.DragEventHandler(this.frmMain_DragOverOrEnter);
             this.DragOver += new System.Windows.Forms.DragEventHandler(this.frmMain_DragOverOrEnter);
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.frmMain_KeyDown);
             this.MouseUp += new System.Windows.Forms.MouseEventHandler(this.frmMain_MouseUp);
+            this.Resize += new System.EventHandler(this.frmMain_Resize);
             this.ResumeLayout(false);
 
 		}
@@ -115,8 +133,7 @@
         private System.Windows.Forms.Label lblCtrl;
         private System.Windows.Forms.Label lblDragTweet;
         private System.Windows.Forms.Label lblSetting;
-
-
-
+        private System.Windows.Forms.OpenFileDialog ofd;
+        private System.Windows.Forms.NotifyIcon ntf;
     }
 }

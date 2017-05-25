@@ -2,7 +2,7 @@
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <!--                                                                                   -->
-    <!-- ILMerge project-specific settings. Almost never need to be set explicitly.       -->
+    <!-- ILMerge project-specific Settings.Instance. Almost never need to be set explicitly.       -->
     <!-- for details, see http://research.microsoft.com/en-us/people/mbarnett/ilmerge.aspx -->
     <!--                                                                                   -->
     <!-- *** set this file to Type=None, CopyToOutput=Never ***                            -->

@@ -29,7 +29,7 @@
 		private void InitializeComponent()
 		{
             this.txtPin = new System.Windows.Forms.TextBox();
-            this.ajax = new TiX.Windows.AjaxControl();
+            this.ajax = new TiX.Windows.ProgressCircle();
             this.SuspendLayout();
             // 
             // txtPin
@@ -45,7 +45,7 @@
             // 
             // ajax
             // 
-            this.ajax.Is16 = true;
+            this.ajax.SmallSize = true;
             this.ajax.Location = new System.Drawing.Point(68, 19);
             this.ajax.Name = "ajax";
             this.ajax.Size = new System.Drawing.Size(16, 16);
@@ -76,7 +76,7 @@
 
 		#endregion
 
-        private AjaxControl ajax;
+        private ProgressCircle ajax;
         private System.Windows.Forms.TextBox txtPin;
 	}
 }

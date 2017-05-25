@@ -647,10 +647,16 @@
         YII=
 </value>
   </data>
+  <data name="libwebp_x64" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\libwebp\release-dynamic\x64\bin\libwebp.dll;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="libwebp_x86" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\libwebp\release-dynamic\x86\bin\libwebp.dll;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="TiXExt32" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\tixext\tixext32.dll;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>..\TiXExt\TiXExt32.dll;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="TiXExt64" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\tixext\tixext64.dll;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>..\TiXExt\TiXExt64.dll;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
 </root>

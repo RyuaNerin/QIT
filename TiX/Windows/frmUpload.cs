@@ -2,32 +2,35 @@
 using System.Drawing;
 using System.IO;
 using System.Net;
-using System.Runtime.Serialization;
-using System.Runtime.Serialization.Json;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Limitation;
+using Newtonsoft.Json;
 using TiX.Core;
+using TiX.Utilities;
 
 namespace TiX.Windows
 {
     internal partial class frmUpload : Form
     {
         private ImageCollection m_ic;
+        private readonly Action m_closeEvent;
         
         private int m_uploadIndex = 0;
         private int m_uploadRange = 0;
         private int m_viewIndex   = 0;
 
-        private int m_tweeted = 0;
+        private int m_tweetUploadedCount = 0;
+
+        private bool m_tweetUploaded = false;
 
         internal string InReplyToStatusId { get; set; }
 
         private const int MaxUploadPerTweet = 4;
         private const int TextLength = 140 - UrlLength;
-        private const int UrlLength = 24;
+        private const int UrlLength = 25;
         private static readonly Color[] TextColors;
         static frmUpload()
         {
@@ -40,17 +43,19 @@ namespace TiX.Windows
 
         //////////////////////////////////////////////////////////////////////////
 
-        public frmUpload(ImageCollection ic, bool mainWnd = false)
+        public frmUpload(ImageCollection ic, Action closeEvent, bool mainWnd = false)
         {
             InitializeComponent();
             this.Icon = TiX.Properties.Resources.TiX;
+
+            this.m_closeEvent = closeEvent;
 
             this.ShowInTaskbar = mainWnd;
 
             this.m_ic = ic;
             
-            this.Text = String.Format("{0} (1-1 / {1})", TiXMain.ProductName, ic.Count);
-            this.lblLength.Text = String.Format("0 / {0}", TextLength);
+            this.Text = $"{TiXMain.ProductName} (1-1 / {ic.Count})";
+            this.lblLength.Text = $"0 / {TextLength}";
         }
 
         private bool m_autoStart;
@@ -86,9 +91,24 @@ namespace TiX.Windows
             }
 
             this.m_ic.LoadedImage += this.LoadedImage;
-			if ( txtText.Text.Length > 0 ) this.txtText.SelectionStart = this.txtText.TextLength;
+			if (this.txtText.Text.Length > 0) this.txtText.SelectionStart = this.txtText.TextLength;
 			StartNew();
-		}
+        }
+
+        private void StartProgress(int value = -1)
+        {
+            this.picImage.Visible = false;
+            this.progress.Visible = true;
+            this.progress.Value   = value;
+            this.progress.Start();
+        }
+
+        private void StopProgress()
+        {
+            this.picImage.Visible = true;
+            this.progress.Visible = false;
+            this.progress.Stop();
+        }
 
         private void StartNew()
         {            
@@ -116,7 +136,7 @@ namespace TiX.Windows
                 {
                     this.txtText.Text = this.TweetString;
                 }
-                else if (!Settings.UniformityText)
+                else if (!Settings.Instance.UniformityText)
                 {
                     this.txtText.Text = "";
                 }
@@ -125,26 +145,22 @@ namespace TiX.Windows
 
                 this.lblRange.Text = "1 / " + this.m_uploadRange;
 
-                this.txtText.Enabled = true;
-                this.ajax.Start();
+                this.txtText.Enabled = !this.AutoStart || (Settings.Instance.UniformityText && this.m_uploadIndex == 0);
+
+                this.StartProgress();
                 
                 for (int i = 0; i < this.m_uploadRange; ++i)
                     this.m_ic[this.m_uploadIndex + i].StartLoad();
             }
-#if !TiXd
             catch (Exception ex)
             {
                 CrashReport.Error(ex, null);
-#else
-            catch
-            {
-#endif
             }
         }
 
         private void SetTitle()
         {
-            this.Text = String.Format("{0} ({1}-{2} / {3})", TiXMain.ProductName, this.m_uploadIndex + 1, this.m_uploadIndex + this.m_uploadRange, this.m_ic.Count);
+            this.Text = string.Format("{0} ({1}-{2} / {3})", TiXMain.ProductName, this.m_uploadIndex + 1, this.m_uploadIndex + this.m_uploadRange, this.m_ic.Count);
         }
 
         private void LoadedImage(object sender ,EventArgs e)
@@ -162,7 +178,7 @@ namespace TiX.Windows
         private object m_rangeSync = new object();
         private void SetRange()
         {
-            lock (m_rangeSync)
+            lock (this.m_rangeSync)
             {
                 for (int i = 0; i < this.m_uploadRange; ++i)
                 {
@@ -200,7 +216,7 @@ namespace TiX.Windows
         private void SetThumbnail()
         {
             if (this.m_viewIndex >= this.m_uploadIndex + this.m_uploadRange)
-                this.m_viewIndex = this.m_uploadIndex + this.m_uploadRange - 1;
+                this.m_viewIndex  = this.m_uploadIndex + this.m_uploadRange - 1;
             
             this.lblRange.Text = string.Format("{0} / {1}", this.m_viewIndex - this.m_uploadIndex + 1, this.m_uploadRange);
 
@@ -213,18 +229,55 @@ namespace TiX.Windows
                 if (this.m_ic[this.m_uploadIndex + i].Status == ImageSet.Statues.None)
                     return;
 
-            this.ajax.Stop();
-
-            if (this.AutoStart && (!Settings.UniformityText || this.m_uploadIndex > 0))
+            // 모든 이미지 로딩이 실패하면 다음 이미지로 넘어간다
+            bool skip = true;
+            for (int i = 0; i < this.m_uploadRange; ++i)
             {
-                // 자동 트윗이거나,
-                // 내용 통일이 아니거나,
-                // 내용 통일이고 index 가 0 이 아닐때 자동트윗
-                this.Tweet();
+                if (this.m_ic[this.m_uploadIndex + i].Status != ImageSet.Statues.Error)
+                {
+                    skip = false;
+                    break;
+                }
             }
-            else if (Settings.UniformityText && this.m_uploadIndex > 0)
-                this.Tweet();
 
+            if (skip)
+            {
+                if (this.m_uploadIndex + this.m_uploadRange < this.m_ic.Count)
+                    this.StartNew();
+                else
+                {
+                    if (this.m_tweetUploaded)
+                        this.Close();
+                    else
+                    {
+                        this.Error("지원되는 형식의 이미지가 없어요!");
+                        this.Close();
+                    }
+
+                    return;
+                }
+            }
+
+            // 자동 트윗이 아니면 자동시작 안함
+            if (this.AutoStart)
+            {
+                // 내용 통일이면 두번재 트윗부터, 내용 통일이 아니면 첫번째 트윗부터 자동 트윗
+                if (Settings.Instance.UniformityText)
+                {
+                    if (this.m_tweetUploaded)
+                    {
+                        this.Tweet();
+                        return;
+                    }
+                }
+                else
+                {
+                    this.Tweet();
+                    return;
+                }
+            }
+
+            this.StopProgress();
             this.txtText.Focus();
         }
 
@@ -267,7 +320,7 @@ namespace TiX.Windows
                     m = m.NextMatch();
                 }
 
-                this.lblLength.Text = String.Format("{0} / {1}", len, TextLength);
+                this.lblLength.Text = $"{len} / {TextLength}";
 
                 if (len > TextLength)
                     len = TextLength;
@@ -309,19 +362,11 @@ namespace TiX.Windows
             }
             else if (e.Control && e.KeyCode == Keys.Left)
             {
-                if (this.m_uploadIndex < this.m_viewIndex)
-                    this.m_viewIndex--;
-                else
-                    this.m_viewIndex = this.m_uploadIndex + this.m_uploadRange - 1;
-                this.SetThumbnail();
+                this.MoveImagePrevious();
             }
             else if (e.Control && e.KeyCode == Keys.Right)
             {
-                if (this.m_viewIndex < this.m_uploadIndex + this.m_uploadRange - 1)
-                    this.m_viewIndex++;
-                else
-                    this.m_viewIndex = this.m_uploadIndex;
-                this.SetThumbnail();
+                this.MoveImageNext();
             }
             else
             {
@@ -330,7 +375,7 @@ namespace TiX.Windows
         }
         private void txtText_KeyPress(object sender, KeyPressEventArgs e)
         {
-            if (m_handledText == true)
+            if (this.m_handledText == true)
                 e.Handled = true;
         }
 
@@ -350,24 +395,27 @@ namespace TiX.Windows
             }
 
             this.txtText.Enabled = false;
-            this.ajax.Start();
 
-            var result = await Task.Factory.StartNew<object>(this.TweetTask, this.txtText.Text.Replace("/N/", (this.m_tweeted + 1).ToString()));
+            this.StartProgress(0);
+
+            var result = await Task.Factory.StartNew<object>(this.TweetTask,
+                Regex.Replace(this.txtText.Text, @"^\\N\\|[^\\]\\N\\$|[^\\]\\N\\[^\\]", this.m_tweetUploadedCount.ToString()));
+
+            this.StopProgress();
 
             if (result is int)
             {
-                this.ajax.Stop();
+                this.m_tweetUploadedCount++;
+                this.m_tweetUploaded = true;
                 this.StartNew();
             }
             else
             {
                 System.Media.SystemSounds.Asterisk.Play();
 
-                var err = result as string;
-                if (err != null)
-                    MessageBox.Show(this, err, TiXMain.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
-
-                this.ajax.Stop();
+                if (result is string err)
+                    this.Error(err);
+                
                 this.txtText.Enabled = true;
                 this.txtText.Focus();
             }
@@ -376,32 +424,52 @@ namespace TiX.Windows
                 this.m_tweetSyncb = false;
         }
         
-        [DataContract]
         private class ErrorObject
         {
-            [DataMember(Name = "message")]
+            [JsonProperty("message")]
             public string Message { get; set; }
         }
-        [DataContract]
         private class TweetObject
         {
-            [DataMember(Name = "id_str")]
+            [JsonProperty("id")]
             public string Id { get; set; }
         }
-        private static DataContractJsonSerializer ErrorSerializer = new DataContractJsonSerializer(typeof(ErrorObject));
-        private static DataContractJsonSerializer TweetSerializer = new DataContractJsonSerializer(typeof(TweetObject));
+        private class MediaObject
+        {
+            [JsonProperty("media_id_string")]
+            public string MediaId { get; set; }
+        }
+        
+        private class ImageSetUpload
+        {
+            public int      Index          { get; set; }
+            public int[]    ProgressValue  { get; set; }
+            public string   TwitterMediaId { get; set; }
+            public ImageSet ImageSet       { get; set; }
+        }
         private object TweetTask(object textObject)
         {
             int i;
 
-            var lst = new ImageSet[this.m_uploadRange];
-            for (i = 0; i < this.m_uploadRange; ++i)
-                lst[i] = this.m_ic[this.m_uploadIndex + i];
+            this.m_uploadValue = new int[4];
 
-            var option = new ParallelOptions();
-            option.MaxDegreeOfParallelism = 4;
-            Parallel.ForEach(lst, option, UploadImage);
+            var lst = new ImageSetUpload[this.m_uploadRange];
+            for (i = 0; i < this.m_uploadRange; ++i)
+                lst[i] = new ImageSetUpload
+                {
+                    Index         = i,
+                    ImageSet      = this.m_ic[this.m_uploadIndex + i],
+                    ProgressValue = this.m_uploadValue
+                };
             
+            this.m_uploadCount = lst.Length;
+            
+            var tasks = new Task[lst.Length];
+            for (i = 0; i < this.m_uploadRange; ++i)
+                tasks[i] = Task.Factory.StartNew(new Action<object>(this.UploadImage), lst[i]);
+
+            Task.WaitAll(tasks);
+
             string media_ids;
             {
                 var sb = new StringBuilder(32);
@@ -418,16 +486,21 @@ namespace TiX.Windows
                 }
 
                 if (k == 0)
-                {
                     return 0;
-                }
 
                 sb.Remove(sb.Length - 1, 1);
 
                 media_ids = sb.ToString();
             }
-            var obj = new { status = (string)textObject, media_ids = media_ids, in_reply_to_status_id = this.InReplyToStatusId };
 
+            var obj = new
+            {
+                status                = (string)textObject,
+                media_ids             = media_ids,
+                in_reply_to_status_id = this.InReplyToStatusId
+            };
+
+            var json = new JsonSerializer();
             try
             {
                 var buff = Encoding.UTF8.GetBytes(OAuth.ToString(obj));
@@ -436,11 +509,13 @@ namespace TiX.Windows
 
                 using (var res = req.GetResponse())
                 {
-                    if (Settings.EnabledInReply)
+                    if (Settings.Instance.EnabledInReply)
                     {
-                        using (var stream = res.GetResponseStream())
+                        using (var rStream = res.GetResponseStream())
+                        using (var sReader = new StreamReader(rStream))
+                        using (var jReader = new JsonTextReader(sReader))
                         {
-                            this.InReplyToStatusId = ((TweetObject)TweetSerializer.ReadObject(stream)).Id;
+                            this.InReplyToStatusId = json.Deserialize<TweetObject>(jReader).Id;
                         }
                     }
                 }
@@ -450,77 +525,124 @@ namespace TiX.Windows
                 if (ex.Response != null)
                 {
                     using (var res = ex.Response)
-                    using (var stream = res.GetResponseStream())
+                    using (var rStream = res.GetResponseStream())
+                    using (var sReader = new StreamReader(rStream))
+                    using (var jReader = new JsonTextReader(sReader))
                     {
-                        return ((ErrorObject)ErrorSerializer.ReadObject(stream)).Message;
+                        return json.Deserialize<ErrorObject>(jReader).Message;
                     }
                 }
             }
             catch (Exception ex)
             {
-#if !TiXd
                 CrashReport.Error(ex, null);
-#endif
                 return ex.Message;
             }
 
             return 0;
         }
 
-        private static Regex regMedia = new Regex("\"media_id_string\"[ \t]*:[ \t]*\"([^\"]+)\"", RegexOptions.IgnoreCase);
-        private void UploadImage(ImageSet imageSet)
+        private int[] m_uploadValue = new int[4];
+        private int m_uploadCount;
+        private void UpdateProgress()
         {
+            if (this.IsDisposed)
+                return;
+
+            if (this.InvokeRequired)
+                this.Invoke(new Action(this.UpdateProgress));
+            else
+                lock (this.m_uploadValue)
+                    this.progress.Value =
+                        (
+                            this.m_uploadValue[0] +
+                            this.m_uploadValue[1] +
+                            this.m_uploadValue[2] +
+                            this.m_uploadValue[3]
+                        ) / this.m_uploadCount;
+        }
+
+        private void UploadImage(object rparam)
+        {
+            var param = (ImageSetUpload)rparam;
             try
             {
-                if (imageSet.Status == ImageSet.Statues.None)
-                    imageSet.InnerTask.Wait();
+                param.ImageSet.Wait();
 
-                if (imageSet.Status == ImageSet.Statues.Error)
+                if (param.ImageSet.Status == ImageSet.Statues.Error)
                     return;
 
-                var boundary  = Helper.CreateRandomString();
+                var boundary = new Guid().ToString("N");
 
-                var req = TiXMain.Twitter.CreateWebRequest("POST", "https://upload.twitter.com/1.1/media/upload.json");
+                var req = (HttpWebRequest)TiXMain.Twitter.CreateWebRequest("POST", "https://upload.twitter.com/1.1/media/upload.json");
+                req.AllowWriteStreamBuffering = false;
+                req.SendChunked = false;
                 req.ContentType = "multipart/form-data; charset=utf-8; boundary=" + boundary;
-                boundary = "--" + boundary;
-
-                var stream = req.GetRequestStream();
-                using (var writer = new StreamWriter(stream, Encoding.UTF8) { AutoFlush = true, NewLine = "\r\n" })
+                
+                using (var memory = new MemoryStream((int)param.ImageSet.RawStream.Length + 4096))
+                using (var writer = new StreamWriter(memory, Encoding.UTF8) { AutoFlush = true, NewLine = "\r\n" })
                 {
+                    boundary = "--" + boundary;
                     writer.WriteLine(boundary);
                     writer.WriteLine("Content-Type: application/octet-stream");
-                    writer.WriteLine("Content-Disposition: form-data; name=\"media\"; filename=\"img{0}\"", imageSet.Extension);
+                    writer.WriteLine("Content-Disposition: form-data; name=\"media\"; filename=\"img{0}\"", param.ImageSet.Extension);
                     writer.WriteLine();
-                    imageSet.RawStream.Position = 0;
-                    imageSet.RawStream.CopyTo(stream);
+                    param.ImageSet.RawStream.Position = 0;
+                    param.ImageSet.RawStream.CopyTo(memory);
                     writer.WriteLine();
                     writer.WriteLine(boundary + "--");
+
+                    memory.Position = 0;
+
+                    req.ContentLength = memory.Length;
+                    var upload = req.GetRequestStream();
+                    int read;
+                    var buff = new byte[40960];
+
+                    while (memory.Position < memory.Length)
+                    {
+                        read = memory.Read(buff, 0, 40960);
+                        if (read == 0)
+                            break;
+                        
+                        upload.Write(buff, 0, read);
+                        
+                        lock (param.ProgressValue)
+                            param.ProgressValue[param.Index] = (int)((double)memory.Position / memory.Length * 100);
+
+                        this.UpdateProgress();
+                    }
                 }
 
+                var json = new JsonSerializer();
                 using (var res = req.GetResponse())
-                using (var reader = new StreamReader(res.GetResponseStream()))
-                    imageSet.TwitterMediaId = regMedia.Match(reader.ReadToEnd()).Groups[1].Value;
+                using (var rStream = res.GetResponseStream())
+                using (var sReader = new StreamReader(rStream))
+                using (var jReader = new JsonTextReader(sReader))
+                {
+                    param.TwitterMediaId = json.Deserialize<MediaObject>(jReader).MediaId;
+                }
             }
             catch (WebException)
             {
             }
-#if !TiXd
             catch (Exception ex)
             {
                 CrashReport.Error(ex, null);
-#else
-            catch
-            {
-#endif
             }
         }
 
         //////////////////////////////////////////////////////////////////////////
 
-        private void picImage_MouseDown(object sender, MouseEventArgs e)
+        private bool  m_picImage_MouseDown         = false;
+        private Point m_picImage_MouseDownLocation = Point.Empty;
+
+        private void picImage_MouseMove(object sender, MouseEventArgs e)
         {
-            if (e.Button == MouseButtons.Left)
+            if (this.m_picImage_MouseDown && this.m_picImage_MouseDownLocation != e.Location)
             {
+                this.m_picImage_MouseDown = false;
+
                 var cur = this.m_ic[this.m_viewIndex];
 
                 if (cur.Status != ImageSet.Statues.Success)
@@ -538,9 +660,47 @@ namespace TiX.Windows
 
                 this.picImage.DoDragDrop(dataObject, DragDropEffects.Copy | DragDropEffects.Move);
             }
+            else
+            {
+                var rx = (float)e.X / this.picImage.Width;
+
+                     if (rx < 0.2) this.picImage.Cursor = Cursors.PanWest;
+                else if (0.8 < rx) this.picImage.Cursor = Cursors.PanEast;
+                else               this.picImage.Cursor = Cursors.Default;
+            }
+
+            this.m_picImage_MouseDownLocation = new Point(-1, -1);
+        }
+
+        private void picImage_MouseDown(object sender, MouseEventArgs e)
+        {
+            this.m_picImage_MouseDownLocation = e.Location;
+
+            if (e.Button == MouseButtons.Left)
+            {
+                this.m_picImage_MouseDown = true;
+            }
             else if (e.Button == MouseButtons.Right)
             {
                 this.ShowPreview();
+            }
+        }
+
+        private void picImage_MouseUp(object sender, MouseEventArgs e)
+        {
+            this.m_picImage_MouseDown = false;
+
+            if (e.Location != this.m_picImage_MouseDownLocation)
+                return;
+
+            if (e.Button == MouseButtons.Right)
+                this.ShowPreview();
+            else if (e.Button == MouseButtons.Left)
+            {                
+                var rx = (float)e.X / this.picImage.Width;
+
+                     if (rx < 0.2) this.MoveImagePrevious();
+                else if (0.8 < rx) this.MoveImageNext();
             }
         }
 
@@ -550,6 +710,30 @@ namespace TiX.Windows
             if (cur.Status == ImageSet.Statues.Success)
                 using (frmPreview frm = new frmPreview(cur))
                     frm.ShowDialog(this);
+        }
+
+        private void MoveImagePrevious()
+        {
+            if (this.m_uploadIndex < this.m_viewIndex)
+                this.m_viewIndex--;
+            else
+                this.m_viewIndex = this.m_uploadIndex + this.m_uploadRange - 1;
+            this.SetThumbnail();
+        }
+
+        private void MoveImageNext()
+        {
+            if (this.m_viewIndex < this.m_uploadIndex + this.m_uploadRange - 1)
+                this.m_viewIndex++;
+            else
+                this.m_viewIndex = this.m_uploadIndex;
+            this.SetThumbnail();
+        }
+
+        private void frmUpload_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            this.m_closeEvent?.Invoke();
+            this.m_ic.Dispose();
         }
     }
 }

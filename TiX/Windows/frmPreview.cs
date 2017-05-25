@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Threading;
 using System.Windows.Forms;
 using TiX.Core;
@@ -9,6 +10,20 @@ namespace TiX.Windows
 {
     internal partial class frmPreview : Form
     {
+        private static string ToCapString(long size)
+        {
+            if (size < 1000)
+                return string.Format("{0:##0} B", size);
+
+            if (size < 1000 * 1024)
+                return string.Format("{0:##0.0} KiB", size / 1024d);
+
+            if (size < 1000 * 1024 * 1024)
+                return string.Format("{0:##0.0} MiB", size / 1024d / 1024d);
+
+            return string.Format("{0:##0.0} GiB", size / 1024d / 1024d / 1024d);
+        }
+
         public frmPreview(ImageSet imageSet)
         {
             this.m_imageSet = imageSet;
@@ -16,7 +31,7 @@ namespace TiX.Windows
 
             InitializeComponent();
             this.Icon = TiX.Properties.Resources.TiX;
-            this.Text = String.Format("{0} x {1} ({2:##0.0} %) : {3}", this.m_imgSize.Width, this.m_imgSize.Height, imageSet.Ratio, Helper.ToCapString(imageSet.RawStream.Length));
+            this.Text = String.Format("{0} x {1} ({2:##0.0} %) : {3}", this.m_imgSize.Width, this.m_imgSize.Height, imageSet.Ratio, ToCapString(imageSet.RawStream.Length));
             
             this.m_client = this.ClientRectangle;
             this.CalcMaxLocation();
@@ -28,7 +43,7 @@ namespace TiX.Windows
             if (this.m_imageSet.GifFrames != null)
             {
                 this.m_gifIndex = 0;
-                this.m_gifTimer = new Timer(GifTimer_Callback, null, this.m_imageSet.GifFrames[0].Dalay, Timeout.Infinite);
+                this.m_gifTimer = new Timer(this.GifTimer_Callback, null, this.m_imageSet.GifFrames[0].Dalay, Timeout.Infinite);
             }
         }
 
@@ -66,6 +81,18 @@ namespace TiX.Windows
             var img = this.m_gifIndex == -1 ? this.m_imageSet.Image : this.m_imageSet.GifFrames[this.m_gifIndex].Image;
 
             RawTrans(e.Graphics, e.ClipRectangle);
+            
+            e.Graphics.CompositingMode = CompositingMode.SourceCopy;
+            if (Settings.Instance.PreviewHighQuality)
+            {
+                e.Graphics.SmoothingMode     = SmoothingMode.HighQuality;
+                e.Graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
+            }
+            else
+            {
+                e.Graphics.SmoothingMode     = SmoothingMode.HighSpeed;
+                e.Graphics.InterpolationMode = InterpolationMode.Low;
+            }
 
             if (this.m_client.Width >= img.Width && this.m_client.Height >= img.Height)
             {
@@ -268,6 +295,26 @@ namespace TiX.Windows
             { }
 
             this.m_gifTimer.Change(this.m_imageSet.GifFrames[this.m_gifIndex].Dalay, Timeout.Infinite);
+        }
+
+        private void tsmQualityLow_CheckedChanged(object sender, EventArgs e)
+        {
+            this.tsmQualityHigh.Checked = false;
+
+            Settings.Instance.PreviewHighQuality = false;
+            Settings.Instance.Save();
+
+            this.Invalidate();
+        }
+
+        private void tsmQualityHigh_CheckedChanged(object sender, EventArgs e)
+        {
+            this.tsmQualityLow.Checked = false;
+
+            Settings.Instance.PreviewHighQuality = true;
+            Settings.Instance.Save();
+
+            this.Invalidate();
         }
     }
 }

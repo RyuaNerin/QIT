@@ -1,4 +1,4 @@
-#ifndef __CONTEXTMENU__H__
+﻿#ifndef __CONTEXTMENU__H__
 #define __CONTEXTMENU__H__
 
 #include <shlobj.h> // IShellExtInit IContextMenu
@@ -29,6 +29,9 @@ private:
 
     ULONG m_refCnt;
     std::vector<LPCWSTR> m_files;
+
+    DWORD m_id_withText    = -1;
+    DWORD m_id_withoutText = -1;
 };
 
 #endif

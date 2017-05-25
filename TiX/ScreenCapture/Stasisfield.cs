@@ -20,6 +20,7 @@ namespace TiX.ScreenCapture
 
 			// 폼 초기화
 			this.Size = this.m_screenRect.Size;
+            this.Location = this.m_screenRect.Location;
 
 			// 이미지 캡쳐
 			m_capture = new Bitmap( this.m_screenRect.Width, this.m_screenRect.Height, PixelFormat.Format24bppRgb );

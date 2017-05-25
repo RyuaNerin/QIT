@@ -33,11 +33,14 @@
             this.chkUniformity = new System.Windows.Forms.CheckBox();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOK = new System.Windows.Forms.Button();
-            this.lblCopyRight = new System.Windows.Forms.Label();
             this.chkInreply = new System.Windows.Forms.CheckBox();
-            this.chkEnableShell = new System.Windows.Forms.CheckBox();
-            this.chkEnableShellWithoutText = new System.Windows.Forms.CheckBox();
+            this.chkEnableShellWT = new System.Windows.Forms.CheckBox();
+            this.chkEnableShellWoT = new System.Windows.Forms.CheckBox();
             this.chkErrorReport = new System.Windows.Forms.CheckBox();
+            this.chkStartWithWindows = new System.Windows.Forms.CheckBox();
+            this.chkStartInTray = new System.Windows.Forms.CheckBox();
+            this.chkMinizeToTray = new System.Windows.Forms.CheckBox();
+            this.lblCopyRight = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // chkTopMost
@@ -76,7 +79,7 @@
             // btnCancel
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnCancel.Location = new System.Drawing.Point(221, 213);
+            this.btnCancel.Location = new System.Drawing.Point(221, 301);
             this.btnCancel.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(55, 28);
@@ -89,7 +92,8 @@
             // 
             this.btnOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnOK.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.btnOK.Location = new System.Drawing.Point(114, 213);
+            this.btnOK.FlatStyle = System.Windows.Forms.FlatStyle.System;
+            this.btnOK.Location = new System.Drawing.Point(114, 301);
             this.btnOK.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.btnOK.Name = "btnOK";
             this.btnOK.Size = new System.Drawing.Size(101, 28);
@@ -97,17 +101,6 @@
             this.btnOK.Text = "확인";
             this.btnOK.UseVisualStyleBackColor = true;
             this.btnOK.Click += new System.EventHandler(this.btnOK_Click);
-            // 
-            // lblCopyRight
-            // 
-            this.lblCopyRight.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.lblCopyRight.Location = new System.Drawing.Point(12, 9);
-            this.lblCopyRight.Name = "lblCopyRight";
-            this.lblCopyRight.Size = new System.Drawing.Size(265, 19);
-            this.lblCopyRight.TabIndex = 3;
-            this.lblCopyRight.Text = "By RyuaNerin && Sasarino MARi";
-            this.lblCopyRight.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this.lblCopyRight.Click += new System.EventHandler(this.lblCopyRight_Click);
             // 
             // chkInreply
             // 
@@ -122,51 +115,96 @@
             // 
             // chkEnableShell
             // 
-            this.chkEnableShell.AutoSize = true;
-            this.chkEnableShell.Location = new System.Drawing.Point(12, 140);
-            this.chkEnableShell.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
-            this.chkEnableShell.Name = "chkEnableShell";
-            this.chkEnableShell.Size = new System.Drawing.Size(228, 19);
-            this.chkEnableShell.TabIndex = 3;
-            this.chkEnableShell.Text = "우클릭 메뉴에 \"TiX 로 트윗하기\" 추가";
-            this.chkEnableShell.UseVisualStyleBackColor = true;
-            this.chkEnableShell.CheckedChanged += new System.EventHandler(this.chkEnableShell_CheckedChanged);
+            this.chkEnableShellWT.AutoSize = true;
+            this.chkEnableShellWT.Location = new System.Drawing.Point(12, 140);
+            this.chkEnableShellWT.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.chkEnableShellWT.Name = "chkEnableShell";
+            this.chkEnableShellWT.Size = new System.Drawing.Size(228, 19);
+            this.chkEnableShellWT.TabIndex = 3;
+            this.chkEnableShellWT.Text = "우클릭 메뉴에 \"TiX 로 트윗하기\" 추가";
+            this.chkEnableShellWT.UseVisualStyleBackColor = true;
             // 
             // chkEnableShellWithoutText
             // 
-            this.chkEnableShellWithoutText.AutoSize = true;
-            this.chkEnableShellWithoutText.Location = new System.Drawing.Point(12, 167);
-            this.chkEnableShellWithoutText.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
-            this.chkEnableShellWithoutText.Name = "chkEnableShellWithoutText";
-            this.chkEnableShellWithoutText.Size = new System.Drawing.Size(256, 19);
-            this.chkEnableShellWithoutText.TabIndex = 6;
-            this.chkEnableShellWithoutText.Text = "우클릭 메뉴에 \"TiX 로 바로 트윗하기\" 추가";
-            this.chkEnableShellWithoutText.UseVisualStyleBackColor = true;
-            this.chkEnableShellWithoutText.CheckedChanged += new System.EventHandler(this.chkEnableShell_CheckedChanged);
+            this.chkEnableShellWoT.AutoSize = true;
+            this.chkEnableShellWoT.Location = new System.Drawing.Point(12, 167);
+            this.chkEnableShellWoT.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.chkEnableShellWoT.Name = "chkEnableShellWithoutText";
+            this.chkEnableShellWoT.Size = new System.Drawing.Size(256, 19);
+            this.chkEnableShellWoT.TabIndex = 6;
+            this.chkEnableShellWoT.Text = "우클릭 메뉴에 \"TiX 로 바로 트윗하기\" 추가";
+            this.chkEnableShellWoT.UseVisualStyleBackColor = true;
             // 
             // chkErrorReport
             // 
             this.chkErrorReport.AutoSize = true;
-            this.chkErrorReport.Location = new System.Drawing.Point(12, 194);
+            this.chkErrorReport.Location = new System.Drawing.Point(12, 275);
             this.chkErrorReport.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.chkErrorReport.Name = "chkErrorReport";
-            this.chkErrorReport.Size = new System.Drawing.Size(78, 19);
+            this.chkErrorReport.Size = new System.Drawing.Size(202, 19);
             this.chkErrorReport.TabIndex = 8;
-            this.chkErrorReport.Text = "오류 보고";
+            this.chkErrorReport.Text = "TiX 오류를 개발자에게 보내기 ♥";
             this.chkErrorReport.UseVisualStyleBackColor = true;
+            // 
+            // chkStartWithWindows
+            // 
+            this.chkStartWithWindows.AutoSize = true;
+            this.chkStartWithWindows.Location = new System.Drawing.Point(12, 194);
+            this.chkStartWithWindows.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.chkStartWithWindows.Name = "chkStartWithWindows";
+            this.chkStartWithWindows.Size = new System.Drawing.Size(178, 19);
+            this.chkStartWithWindows.TabIndex = 10;
+            this.chkStartWithWindows.Text = "윈도우 시작과 함께 TiX 실행";
+            this.chkStartWithWindows.UseVisualStyleBackColor = true;
+            // 
+            // chkStartInTray
+            // 
+            this.chkStartInTray.AutoSize = true;
+            this.chkStartInTray.Location = new System.Drawing.Point(12, 221);
+            this.chkStartInTray.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.chkStartInTray.Name = "chkStartInTray";
+            this.chkStartInTray.Size = new System.Drawing.Size(182, 19);
+            this.chkStartInTray.TabIndex = 9;
+            this.chkStartInTray.Text = "시작시 바로 트레이로 보내기";
+            this.chkStartInTray.UseVisualStyleBackColor = true;
+            // 
+            // chkMinizeToTray
+            // 
+            this.chkMinizeToTray.AutoSize = true;
+            this.chkMinizeToTray.Location = new System.Drawing.Point(12, 248);
+            this.chkMinizeToTray.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.chkMinizeToTray.Name = "chkMinizeToTray";
+            this.chkMinizeToTray.Size = new System.Drawing.Size(158, 19);
+            this.chkMinizeToTray.TabIndex = 11;
+            this.chkMinizeToTray.Text = "최소화 시 트레이로 이동";
+            this.chkMinizeToTray.UseVisualStyleBackColor = true;
+            // 
+            // lblCopyRight
+            // 
+            this.lblCopyRight.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.lblCopyRight.Location = new System.Drawing.Point(12, 9);
+            this.lblCopyRight.Name = "lblCopyRight";
+            this.lblCopyRight.Size = new System.Drawing.Size(265, 19);
+            this.lblCopyRight.TabIndex = 3;
+            this.lblCopyRight.Text = "By RyuaNerin && Sasarino MARi";
+            this.lblCopyRight.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.lblCopyRight.Click += new System.EventHandler(this.lblCopyRight_Click);
             // 
             // frmSettings
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(288, 254);
+            this.ClientSize = new System.Drawing.Size(288, 342);
+            this.Controls.Add(this.chkMinizeToTray);
+            this.Controls.Add(this.chkStartWithWindows);
+            this.Controls.Add(this.chkStartInTray);
             this.Controls.Add(this.chkErrorReport);
             this.Controls.Add(this.chkInreply);
-            this.Controls.Add(this.chkEnableShellWithoutText);
+            this.Controls.Add(this.chkEnableShellWoT);
             this.Controls.Add(this.lblCopyRight);
             this.Controls.Add(this.btnOK);
             this.Controls.Add(this.btnCancel);
-            this.Controls.Add(this.chkEnableShell);
+            this.Controls.Add(this.chkEnableShellWT);
             this.Controls.Add(this.chkUniformity);
             this.Controls.Add(this.chkReversedCtrl);
             this.Controls.Add(this.chkTopMost);
@@ -179,7 +217,6 @@
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "설정";
-            this.Load += new System.EventHandler(this.frmSettings_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -192,10 +229,13 @@
         private System.Windows.Forms.CheckBox chkUniformity;
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Button btnOK;
-        private System.Windows.Forms.Label lblCopyRight;
         private System.Windows.Forms.CheckBox chkInreply;
-        private System.Windows.Forms.CheckBox chkEnableShell;
-        private System.Windows.Forms.CheckBox chkEnableShellWithoutText;
+        private System.Windows.Forms.CheckBox chkEnableShellWT;
+        private System.Windows.Forms.CheckBox chkEnableShellWoT;
         private System.Windows.Forms.CheckBox chkErrorReport;
+        private System.Windows.Forms.CheckBox chkStartWithWindows;
+        private System.Windows.Forms.CheckBox chkStartInTray;
+        private System.Windows.Forms.CheckBox chkMinizeToTray;
+        private System.Windows.Forms.Label lblCopyRight;
     }
 }

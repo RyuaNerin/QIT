@@ -10,9 +10,10 @@
 HINSTANCE g_hInst;
 UINT g_ref;
 
-HANDLE m_menuImage = NULL;
-WCHAR m_exePath[MAX_PATH] = { 0 };
-DWORD m_option = FALSE;
+HBITMAP m_menuImage = NULL;
+WCHAR   m_exePath[MAX_PATH] = { 0 };
+bool    m_option_with_text;
+bool    m_option_without_text;
 
 // {9CE5906A-DFBB-4A5A-9EBF-9D262E5D29B9}
 #define SHELLEXT_GUID   { 0x9ce5906a, 0xdfbb, 0x4a5a, { 0x9e, 0xbf, 0x9d, 0x26, 0x2e, 0x5d, 0x29, 0xb9 } }
@@ -25,22 +26,24 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD dwReason, LPVOID lpReserved)
         g_hInst = hModule;
 
         if (m_menuImage == NULL)
-            m_menuImage = LoadImageW(g_hInst, MAKEINTRESOURCEW(IDB_ICON), IMAGE_BITMAP, 0, 0, LR_DEFAULTSIZE | LR_LOADTRANSPARENT | LR_LOADMAP3DCOLORS);
+            m_menuImage = static_cast<HBITMAP>(LoadImageW(g_hInst, MAKEINTRESOURCEW(IDB_ICON), IMAGE_BITMAP, 0, 0, LR_DEFAULTSIZE | LR_LOADTRANSPARENT | LR_LOADMAP3DCOLORS));
 
         if (m_exePath[0] == 0)
         {
             HKEY hKey;
-            if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"Software\\RyuaNerin", NULL, KEY_READ, &hKey) == NO_ERROR)
+            if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\RyuaNerin", NULL, KEY_READ, &hKey) == NO_ERROR)
             {
-                DWORD len = sizeof(m_exePath);
-                RegGetValueW(hKey, NULL, L"TiX", REG_SZ, NULL, reinterpret_cast<LPBYTE>(&m_exePath), &len);
+                DWORD len, dword;
 
-                DWORD type = REG_DWORD;
-                len = sizeof(m_option);                
-                RegQueryValueExW(hKey, L"TiX-Option", NULL, &type, (LPBYTE)&m_option, &len);
-
+                len = sizeof(m_exePath);
+                RegGetValueW(hKey, NULL, L"TiX",     REG_SZ,    NULL, (LPBYTE)&m_exePath, &len);
+                len = sizeof(dword);
+                RegGetValueW(hKey, NULL, L"TiX-wt",  REG_DWORD, NULL, (LPBYTE)&dword,     &len); m_option_with_text    = dword;
+                RegGetValueW(hKey, NULL, L"TiX-wot", REG_DWORD, NULL, (LPBYTE)&dword,     &len); m_option_without_text = dword;
+                
                 DebugLog(L"Get ExePath [%d] %s", len, m_exePath);
-                DebugLog(L"Get Option [%d]", m_option);
+                DebugLog(L"WithText    [%d]",    m_option_with_text);
+                DebugLog(L"WithoutText [%d]",    m_option_without_text);
 
                 RegCloseKey(hKey);
             }
@@ -58,12 +61,12 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD dwReason, LPVOID lpReserved)
 
 STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, void **ppReturn)
 {    
-    *ppReturn = 0;
+    *ppReturn = nullptr;
     if (!IsEqualCLSID(SHELLEXT_GUID, rclsid))
         return CLASS_E_CLASSNOTAVAILABLE;
 
     ClassFactory *fac = new ClassFactory();
-    if (fac == 0)
+    if (fac == nullptr)
         return E_OUTOFMEMORY;
 
     HRESULT result = fac->QueryInterface(riid, ppReturn);
@@ -76,56 +79,57 @@ STDAPI DllCanUnloadNow(void)
     return g_ref > 0 ? S_FALSE : S_OK;
 }
 
-BOOL Regist_Key(HKEY rootKey, LPWSTR subKey, LPWSTR keyName, LPWSTR keyData)
+bool Regist_Key(HKEY rootKey, LPWSTR subKey, LPWSTR keyName, LPWSTR keyData)
 {
     HKEY hKey;
     DWORD dwDisp;
 
-    if (RegCreateKeyExW(HKEY_CLASSES_ROOT, subKey, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, &dwDisp) != NOERROR)
-        return FALSE;
+    if (RegCreateKeyExW(rootKey, subKey, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, &dwDisp) != NOERROR)
+        return false;
 
-    RegSetValueExW(hKey, keyName, 0, REG_SZ, (LPBYTE)keyData, (lstrlen(keyData) + 1) * sizeof(TCHAR));
+    LSTATUS lstatus = RegSetValueExW(hKey, keyName, 0, REG_SZ, (LPBYTE)keyData, (int)(wcslen(keyData) + 1) * sizeof(TCHAR));
     RegCloseKey(hKey);
-    return TRUE;
+
+    return lstatus == ERROR_SUCCESS;
 }
-BOOL Regist_CLSID(LPWSTR clsid)
+bool Regist_CLSID(LPWSTR clsid)
 {
     TCHAR dllPath[MAX_PATH];
-    GetModuleFileNameW(g_hInst, dllPath, ARRAYSIZE(dllPath));
+    GetModuleFileNameW(g_hInst, dllPath, sizeof(dllPath));
 
     TCHAR subKey[MAX_PATH];
-    wsprintf(subKey, L"CLSID\\%s", clsid);
-    if (!Regist_Key(HKEY_CLASSES_ROOT, subKey, NULL, L"Shell Extension for TiX"))
-        return FALSE;
+    wsprintf(subKey, L"Software\\Classes\\CLSID\\%s", clsid);
+    DebugLog(subKey);
+    if (!Regist_Key(HKEY_CURRENT_USER, subKey, NULL, L"Shell Extension for TiX"))
+        return false;
     
-    wsprintf(subKey, L"CLSID\\%s\\InprocServer32", clsid);
-    if (!Regist_Key(HKEY_CLASSES_ROOT, subKey, NULL, dllPath))
-        return FALSE;
+    wsprintf(subKey, L"Software\\Classes\\CLSID\\%s\\InprocServer32", clsid);
+    DebugLog(subKey);
+    if (!Regist_Key(HKEY_CURRENT_USER, subKey, NULL, dllPath))
+        return false;
 
-    if (!Regist_Key(HKEY_CLASSES_ROOT, subKey, L"ThreadingModel", L"Apartment"))
-        return FALSE;
+    if (!Regist_Key(HKEY_CURRENT_USER, subKey, L"ThreadingModel", L"Apartment"))
+        return false;
 
-    return TRUE;
+    return true;
 }
 
 STDAPI DllRegisterServer(void)
 {
     DebugLog(L"Registering Server");
     
-    TCHAR clsid[MAX_PATH];
+    WCHAR clsid[MAX_PATH];
     if (StringFromGUID2(SHELLEXT_GUID, clsid, ARRAYSIZE(clsid)) == 0)
         return SELFREG_E_CLASS;
+    DebugLog(clsid);
 
     if (!Regist_CLSID(clsid))
         return SELFREG_E_CLASS;
 
-    if (!Regist_Key(HKEY_CLASSES_ROOT, L"*\\ShellEx\\ContextMenuHandlers\\00TiXExt", NULL, clsid))
+    if (!Regist_Key(HKEY_CURRENT_USER, L"Software\\Classes\\*\\ShellEx\\ContextMenuHandlers\\TiXExt", NULL, clsid))
         return SELFREG_E_CLASS;
 
-    if (!Regist_Key(HKEY_CLASSES_ROOT, L"Directory\\ShellEx\\ContextMenuHandlers\\00TiXExt", NULL, clsid))
-        return SELFREG_E_CLASS;
-
-    if (!Regist_Key(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\Shell Extensions\\Approved", NULL, L"00TiXExt"))
+    if (!Regist_Key(HKEY_CURRENT_USER, L"Software\\Classes\\Directory\\ShellEx\\ContextMenuHandlers\\TiXExt", NULL, clsid))
         return SELFREG_E_CLASS;
 
     return S_OK;
@@ -134,11 +138,11 @@ STDAPI DllRegisterServer(void)
 void Unregist_CLSID(LPWSTR clsid)
 {
     TCHAR subKey[MAX_PATH];
-    wsprintf(subKey, L"CLSID\\%s\\InprocServer32", clsid);
-    RegDeleteKeyW(HKEY_CLASSES_ROOT, subKey);
+    wsprintf(subKey, L"Software\\Classes\\CLSID\\%s\\InprocServer32", clsid);
+    RegDeleteKeyW(HKEY_CURRENT_USER, subKey);
 
-    wsprintf(subKey, L"CLSID\\%s", clsid);
-    RegDeleteKeyW(HKEY_CLASSES_ROOT, subKey);
+    wsprintf(subKey, L"Software\\Classes\\CLSID\\%s", clsid);
+    RegDeleteKeyW(HKEY_CURRENT_USER, subKey);
 }
 
 STDAPI DllUnregisterServer(void)
@@ -150,24 +154,9 @@ STDAPI DllUnregisterServer(void)
     
     Unregist_CLSID(clsid);
     
-    RegDeleteKeyW(HKEY_CLASSES_ROOT, L"*\\ShellEx\\ContextMenuHandlers\\00TiXExt");
+    RegDeleteKeyW(HKEY_CLASSES_ROOT, L"Software\\Classes\\*\\ShellEx\\ContextMenuHandlers\\TiXExt");
 
-    RegDeleteKeyW(HKEY_CLASSES_ROOT, L"Directory\\ShellEx\\ContextMenuHandlers\\00TiXExt");
-
-    HKEY hTmpKey;
-    if (RegOpenKeyW(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\Shell Extensions\\Approved", &hTmpKey) == ERROR_SUCCESS)
-    {
-        RegDeleteValueW(hTmpKey, clsid);
-        RegCloseKey(hTmpKey);
-    }
-
-    if (RegOpenKeyW(HKEY_LOCAL_MACHINE, L"Software\\RyuaNerin", &hTmpKey) == ERROR_SUCCESS)
-    {
-        RegDeleteValueW(hTmpKey, L"TiX");
-        RegDeleteValueW(hTmpKey, L"TiX-Option");
-        RegCloseKey(hTmpKey);
-    }
-
+    RegDeleteKeyW(HKEY_CLASSES_ROOT, L"Software\\Classes\\Directory\\ShellEx\\ContextMenuHandlers\\TiXExt");
 
     return S_OK;
 }

@@ -1,117 +1,66 @@
 ﻿using System;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using TiX.Core;
+using TiX.Utilities;
 
 namespace TiX.Windows
 {
     internal partial class frmSettings : Form
     {
-        private static class NativeMethods
-        {
-            [DllImport("user32")]
-            public static extern IntPtr SendMessage(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
+        private readonly SettingBinder m_binder = new SettingBinder();
 
-            internal const int BCM_FIRST = 0x1600; //Normal button
-            internal const int BCM_SETSHIELD = (BCM_FIRST + 0x000C);
-        }
-
-        private bool m_loaded = false;
-
-        public frmSettings(bool @public)
+        public frmSettings()
         {
             InitializeComponent();
             this.Icon = TiX.Properties.Resources.TiX;
 
-            if (@public)
-            {
-                this.chkEnableShell.Enabled = false;
-                this.chkEnableShellWithoutText.Enabled = false;
-            }
-        }
-        private void frmSettings_Load(object sender, EventArgs e)
-        {
-            this.TopMost = Settings.Topmost;
+            var si = Settings.Instance;
 
-            this.chkTopMost.Checked         = Settings.Topmost;
-            this.chkReversedCtrl.Checked    = Settings.ReversedCtrl;
-            this.chkUniformity.Checked      = Settings.UniformityText;
-            this.chkInreply.Checked         = Settings.EnabledInReply;
-            this.chkErrorReport.Checked     = Settings.EnabledErrorReport;
-            this.chkEnableShell.Checked     = Settings.EnabledShell;
-            this.chkEnableShellWithoutText.Checked = Settings.EnabledShell2;
+            this.TopMost = si.Topmost;
 
-            this.m_loaded = true;
+            this.m_binder.Add(si, e => e.EnabledErrorReport, this.chkErrorReport);
+            this.m_binder.Add(si, e => e.EnabledInReply,     this.chkInreply);
+            this.m_binder.Add(si, e => e.ReversedCtrl,       this.chkReversedCtrl);
+            this.m_binder.Add(si, e => e.Topmost,            this.chkTopMost);
+            this.m_binder.Add(si, e => e.UniformityText,     this.chkUniformity);
+
+            this.m_binder.Add(si, e => e.MinizeToTray,       this.chkMinizeToTray);
+            this.m_binder.Add(si, e => e.StartInTray,        this.chkStartInTray);
+            this.m_binder.Add(si, e => e.StartWithWindows,   this.chkStartWithWindows);
+
+            this.m_binder.Add(si, e => e.SEWithText,         this.chkEnableShellWT);
+            this.m_binder.Add(si, e => e.SEWithoutText,      this.chkEnableShellWoT);
+
+            this.m_binder.FromSetting();
         }
 
         private void btnOK_Click(object sender, EventArgs e)
         {
-            Settings.Topmost        = this.chkTopMost.Checked;
-            Settings.ReversedCtrl   = this.chkReversedCtrl.Checked;
-            Settings.UniformityText = this.chkUniformity.Checked;
-            Settings.EnabledInReply = this.chkInreply.Checked;
-            Settings.EnabledErrorReport = this.chkErrorReport.Checked;
-                        
-            if (Settings.EnabledShell  != this.chkEnableShell.Checked ||
-                Settings.EnabledShell2 != this.chkEnableShellWithoutText.Checked)
+            if (Settings.Instance.SEWithText       != this.chkEnableShellWT.Checked  ||
+                Settings.Instance.SEWithoutText    != this.chkEnableShellWoT.Checked ||
+                Settings.Instance.StartWithWindows != this.chkStartWithWindows.Checked)
             {
-                if (this.chkEnableShell.Checked || this.chkEnableShellWithoutText.Checked)
+                var option = OptionTixSettings.None;
+                if (this.chkEnableShellWT.Checked)    option |= OptionTixSettings.ShellExtension_WithText;
+                if (this.chkEnableShellWoT.Checked)   option |= OptionTixSettings.ShellExtension_WithoutText;
+                if (this.chkStartWithWindows.Checked) option |= OptionTixSettings.StartWithWindows;
+
+                switch (Installer.TiXSetting(false, option))
                 {
-                    switch (ShellExtension.Install(this.chkEnableShell.Checked, this.chkEnableShellWithoutText.Checked, Settings.Shells))
-                    {
-                    case ShellExtension.Result.NO_ERROR:
-                        Settings.EnabledShell = this.chkEnableShell.Checked;
-                        Settings.EnabledShell2 = this.chkEnableShellWithoutText.Checked;
+                    case InstallerResult.NOT_AUTHORIZED:
+                        this.Error("관리자 권한으로 실행해주세요!");
                         break;
 
-                    case ShellExtension.Result.FAIL_REG:
-                        MessageBox.Show(this, "DLL 을 등록하지 못했어요", TiXMain.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    case InstallerResult.UNKNOWN:
+                        this.Error("알 수 없는 문제가 발생했어요!");
                         break;
-                        
-                    case ShellExtension.Result.DLL_CREATAION_FAIL:
-                    case ShellExtension.Result.FILE_USED:
-                        MessageBox.Show(this, "DLL 파일을 만들지 못했어요", TiXMain.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        break;
-
-                    case ShellExtension.Result.NOT_AUTHORIZED:
-                        MessageBox.Show(this, "관리자 권한으로 실행해주세요!", TiXMain.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        break;
-
-                    case ShellExtension.Result.UNKNOWN:
-                        MessageBox.Show(this, "알 수 없는 문제가 발생했어요!", TiXMain.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        break;
-                    }
-                    Settings.Shells = null;
                 }
-                else
-                {
-                    switch (ShellExtension.Uninstall())
-                    {
-                    case ShellExtension.Result.FAIL_REG:
-                        MessageBox.Show(this, "DLL 을 등록 해제하지 못했어요", TiXMain.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        break;
-
-                    case ShellExtension.Result.DLL_NOT_EXITED:
-                        MessageBox.Show(this, "DLL 파일이 없어요", TiXMain.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        break;
-
-                    case ShellExtension.Result.NOT_AUTHORIZED:
-                        MessageBox.Show(this, "관리자 권한으로 실행해주세요!", TiXMain.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        break;
-
-                    case ShellExtension.Result.UNKNOWN:
-                        MessageBox.Show(this, "알 수 없는 문제가 발생했어요!", TiXMain.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        break;
-                    }
-                    Settings.EnabledShell = false;
-                    Settings.EnabledShell2 = false;
-                }
-
-                this.RestartExplorer();
             }
 
-            Settings.Save();
+
+            this.m_binder.ToSetting();
+
+            Settings.Instance.Save();
             this.Close();
         }
 
@@ -123,38 +72,6 @@ namespace TiX.Windows
         private void lblCopyRight_Click(object sender, EventArgs e)
         {
             System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo { UseShellExecute = true, FileName = "\"https://github.com/RyuaNerin/QIT\"" }).Dispose();
-        }
-
-        private static bool m_showShellMessage = true;
-        private void chkEnableShell_CheckedChanged(object sender, EventArgs e)
-        {
-            if (!this.m_loaded) return;
-
-            if (m_showShellMessage && this.chkEnableShell.Checked)
-            {
-                MessageBox.Show(this, "TiX를 삭제하기 전에 이 옵션을 체크 해제해주세요!", TiXMain.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Information);
-                m_showShellMessage = false;
-            }
-
-            if (!TiXMain.IsAdministratorMode)
-            {
-                if (Settings.EnabledShell != this.chkEnableShell.Checked)
-                    NativeMethods.SendMessage(this.btnOK.Handle, NativeMethods.BCM_SETSHIELD, IntPtr.Zero, new IntPtr(1));
-                else
-                    NativeMethods.SendMessage(this.btnOK.Handle, NativeMethods.BCM_SETSHIELD, IntPtr.Zero, new IntPtr(0));
-            }
-        }
-
-        private void RestartExplorer()
-        {
-            if (MessageBox.Show(this, "적용을 위해 탐색기를 재시작 할까요?", TiXMain.ProductName, MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
-            {
-                //taskkill /IM explorer.exe /F & explorer.exe
-                using (var proc = Process.Start(new ProcessStartInfo { Arguments = "/IM explorer.exe /F", FileName = "taskkill", WindowStyle = ProcessWindowStyle.Hidden, UseShellExecute = true }))
-                    proc.WaitForExit();
-
-                Process.Start("explorer.exe").Dispose();
-            }
         }
     }
 }

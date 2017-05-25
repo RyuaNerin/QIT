@@ -1,5 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq.Expressions;
+using System.Text;
+using System.Threading.Tasks;
 using System.Windows.Forms;
+using Newtonsoft.Json;
 using SharpRaven;
 using SharpRaven.Data;
 using TiX.Core;
@@ -12,52 +18,94 @@ namespace TiX
 
         static CrashReport()
         {
-            ravenClient = new RavenClient("https://b2d115a75b1f485a8a0b49cd51aabfc6:b55540eaf7274e549c3f1864694a171b@sentry.io/133868");
-            ravenClient.Environment = Application.ProductName;
-            ravenClient.Logger = Application.ProductName;
-            ravenClient.Release = Application.ProductVersion;
+            ravenClient = new RavenClient("https://b2d115a75b1f485a8a0b49cd51aabfc6:b55540eaf7274e549c3f1864694a171b@sentry.io/133868")
+            {
+                Environment = Application.ProductName,
+                Logger      = Application.ProductName,
+                Release     = Application.ProductVersion
+            };
         }
 
         public static void Init()
         {
-            AppDomain.CurrentDomain.UnhandledException += (s, e) => ShowCrashReport(e.ExceptionObject as Exception);
-            System.Threading.Tasks.TaskScheduler.UnobservedTaskException += (s, e) => ShowCrashReport(e.Exception);
-            Application.ThreadException += (s, e) => ShowCrashReport(e.Exception);
+            Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
+
+            AppDomain.CurrentDomain.UnhandledException += (s, e) => Error(e.ExceptionObject as Exception, e);
+            TaskScheduler.UnobservedTaskException      += (s, e) => Error(e.Exception, null);
+            Application.ThreadException                += (s, e) => Error(e.Exception, null);
         }
 
-        public static void ShowCrashReport(Exception ex)
+        public static void Error(Exception ex, object data = null)
         {
-            if (ex == null)
+            if (ex == null || Settings.Instance.EnabledErrorReport)
                 return;
 
-            if (Settings.EnabledErrorReport)
-                return;
+            var ev = new SentryEvent(ex)
+            {
+                Level = ErrorLevel.Error
+            };
 
-            Error(ex, null);
-        }
+            if (data != null)
+            {
+                var dic = new Dictionary<string, string>();
+                foreach (var prop in data.GetType().GetProperties())
+                {
+                    var value = prop.GetValue(data);
+                    string svalue;
+                    if (value.GetType().IsGenericType)
+                    {
+                        var sb = new StringBuilder(1024);
+                        using (var writer = new StringWriter(sb))
+                        {
+                            var serializer = new JsonSerializer();
+                            serializer.Serialize(writer, value);
+                        }
 
-        public static void Info(object data, string format, params object[] args)
-        {
-            if (Settings.EnabledErrorReport)
-                return;
+                        svalue = sb.ToString();
+                    }
+                    else
+                    {
+                        svalue = Convert.ToString(value);
+                    }
 
-            SentryEvent ev = new SentryEvent(new SentryMessage(format, args));
-            ev.Level = ErrorLevel.Info;
-            ev.Extra = data;
+                    dic.Add($"{GetFriendlyName(prop.PropertyType)} {prop.Name}", svalue);
+                }
+
+                ev.Extra = dic;
+            }
 
             Report(ev);
         }
 
-        public static void Error(Exception ex, object data)
+        private static string GetFriendlyName(Type type)
         {
-            if (Settings.EnabledErrorReport)
-                return;
+            var name = type.FullName;
+            if (!type.IsGenericType)
+                return name;
 
-            var ev = new SentryEvent(ex);
-            ev.Level = ErrorLevel.Error;
-            ev.Extra = data;
+            int i;
 
-            Report(ev);
+            var sb = new StringBuilder();
+            i = name.IndexOf('`');
+            if (i != -1)
+                sb.Append(name, 0, i);
+            else
+                sb.Append(name);
+
+            sb.Append('<');
+
+            var args = type.GetGenericArguments();
+            for (i = 0; i < args.Length; ++i)
+            {
+                if (i > 0)
+                    sb.Append(", ");
+
+                sb.Append(GetFriendlyName(args[i]));
+            }
+
+            sb.Append('>');
+
+            return sb.ToString();
         }
 
         private static void Report(SentryEvent @event)

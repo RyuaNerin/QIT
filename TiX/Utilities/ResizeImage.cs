@@ -10,6 +10,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Linq;
+using System.Threading.Tasks;
 using TiX.Core;
 
 namespace TiX.Utilities
@@ -83,14 +84,9 @@ namespace TiX.Utilities
             {
                 ResizeImagePrivate(imageSet);
             }
-#if !TiXd
             catch (Exception ex)
             {
                 CrashReport.Error(ex, null);
-#else
-            catch
-            {
-#endif
                 return false;
             }
             var szAfter = imageSet.Image.Size;
@@ -116,15 +112,12 @@ namespace TiX.Utilities
                 {
                     imageSet.GifFrames = new GifFrames(imageSet.Image);
                 }
-#if !TiXd
+                catch (NotSupportedException)
+                {
+                }
                 catch (Exception ex)
                 {
-                    if (ex.Message != "_")
-                        CrashReport.Error(ex, null);
-#else
-                catch
-                {
-#endif
+                    CrashReport.Error(ex, null);
                 }
 
                 // 프레임이 포함된 애니메이션일 경우
@@ -142,7 +135,7 @@ namespace TiX.Utilities
                     }
                 }
             }
-
+            
             // 크기가 일정 기준 이하면 리사이징을 하지 않고 넘어간다
             if (0 < imageSet.RawStream.Length && imageSet.RawStream.Length < ImgMaxSize)
                 return;
@@ -193,7 +186,7 @@ namespace TiX.Utilities
                 requireResize = true;
 
                 var ratio = Math.Min(1280d / imageSet.Image.Width, 1080d / imageSet.Image.Height);
-                w  = (int)(imageSet.Image.Width  * ratio);
+                w = (int)(imageSet.Image.Width  * ratio);
                 h = (int)(imageSet.Image.Height * ratio);
             }
 
@@ -227,19 +220,19 @@ namespace TiX.Utilities
                 }
             }
             
-
             Bitmap[] image = new Bitmap[imageSet.GifFrames.Count];
             while (requireResize && imageSet.RawStream.Length >= GifMaxSize)
             {
                 w = (int)(w * 0.9d);
                 h = (int)(h * 0.9d);
 
-                for (i = 0; i < imageSet.GifFrames.Count; ++i)
-                {
-                    if (image[i] != null)
-                        image[i].Dispose();
-                    image[i] = ResizeBySize(imageSet.GifFrames[i].Image, w, h);
-                }
+                Parallel.For(0, imageSet.GifFrames.Count,
+                    index =>
+                    {
+                        if (image[index] != null)
+                            image[index].Dispose();
+                        image[index] = ResizeBySize(imageSet.GifFrames[index].Image, w, h);
+                    });
 
                 imageSet.RawStream.SetLength(0);
 
@@ -286,14 +279,15 @@ namespace TiX.Utilities
             {
                 if (FormatIndexed.Contains(image.PixelFormat))
                 {
-                    var newBitmap = bitmap.Clone(new Rectangle(Point.Empty, image.Size), PixelFormat.Format32bppRgb);
+                    var newBitmap = bitmap.Clone(new Rectangle(Point.Empty, image.Size), PixelFormat.Format32bppArgb);
                     CopyProperties(bitmap, newBitmap);
 
                     bitmap.Dispose();
                     bitmap = newBitmap;
                 }
-                
-                if (Image.IsAlphaPixelFormat(image.PixelFormat))
+
+                containsAlpha = Image.IsAlphaPixelFormat(image.PixelFormat);
+                if (containsAlpha)
                 {
                     containsAlpha = IsImageTransparent(bitmap);
                     if (!containsAlpha)
@@ -305,37 +299,10 @@ namespace TiX.Utilities
                         bitmap = newBitmap;
                     }
                 }
-                else
-                    containsAlpha = false;
                 
                 return bitmap;
             }
 
-            var meta = image as Metafile;
-            if (meta != null)
-            {
-                using (meta)
-                {
-                    var header = meta.GetMetafileHeader();
-                    float scaleX = header.DpiX / 96f;
-                    float scaleY = header.DpiY / 96f;
-
-                    bitmap = new Bitmap((int)(scaleX * meta.Width / header.DpiX * 100), (int)(scaleY * meta.Height / header.DpiY * 100), PixelFormat.Format32bppArgb);
-                    CopyProperties(meta, bitmap);
-                    using (Graphics g = Graphics.FromImage(bitmap))
-                    {
-                        g.InterpolationMode = InterpolationMode.HighQualityBicubic;
-                        g.PixelOffsetMode = PixelOffsetMode.HighQuality;
-                        g.SmoothingMode = SmoothingMode.AntiAlias;
-
-                        g.ScaleTransform(scaleX, scaleY);
-                        g.DrawImageUnscaledAndClipped(meta, new Rectangle(0, 0, image.Width, image.Height));
-                    }
-
-                    return ConvertToBitmap(bitmap, out containsAlpha);
-                }
-            }
-                        
             using (image)
             {
                 bitmap = new Bitmap(image.Width, image.Height, image.PixelFormat);
@@ -367,8 +334,8 @@ namespace TiX.Utilities
 
                 newImage = ResizeAndSave(imageSet, codec, param, w, h);
 
-                w = (int)(w * 0.9f);
-                h = (int)(h * 0.9f);
+                w = (int)(w * 0.95f);
+                h = (int)(h * 0.95f);
             } while (imageSet.RawStream.Length >= ImgMaxSize);
 
             imageSet.Image.Dispose();
@@ -402,7 +369,15 @@ namespace TiX.Utilities
             var newImage = new Bitmap(w, h, pixelFormat);
             using (var g = Graphics.FromImage(newImage))
             {
-                g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                // 하쒸 프리징
+                var ratio = (float)oldImage.Width / w * oldImage.Height / h;
+                if (ratio < 0.25)
+                    g.InterpolationMode = InterpolationMode.High;
+                else if (ratio < 0.5)
+                    g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                else
+                    g.InterpolationMode = InterpolationMode.HighQualityBilinear;
+
                 g.PixelOffsetMode = PixelOffsetMode.HighQuality;
                 g.SmoothingMode = SmoothingMode.AntiAlias;
 
@@ -412,15 +387,76 @@ namespace TiX.Utilities
             return newImage;
         }
 
-        private static bool IsImageTransparent(Bitmap image)
+        private unsafe static bool IsImageTransparent(Bitmap image)
         {
-            int x, y;
-            for (y = 0; y < image.Height; ++y)
-                for (x = 0; x < image.Width; ++x)
-                    if (image.GetPixel(x, y).A != 255)
-                        return true;
+            switch (image.PixelFormat)
+            {
+                case PixelFormat.Format32bppArgb:
+                case PixelFormat.Format32bppPArgb:
+                case PixelFormat.Format64bppArgb:
+                case PixelFormat.Format64bppPArgb:
+                    {
+                        BitmapData bits = null;
 
-            return false;
+                        try
+                        {
+                            bits = image.LockBits(
+                                new Rectangle(Point.Empty, image.Size),
+                                ImageLockMode.ReadOnly,
+                                image.PixelFormat);
+
+                            var ptr = (byte*)bits.Scan0;
+
+                            var bpp = Bitmap.GetPixelFormatSize(bits.PixelFormat);
+                            var v   = (1 << (bpp * 2)) - 1;
+
+                            var pr = Parallel.For(0, bits.Height,
+                                (y, state) =>
+                                {
+                                    var bptr = ptr + bits.Stride * y;
+
+                                    var buff = new byte[4];
+                                    for (int x = 0; x < bits.Width; x += bpp)
+                                    {
+                                        buff[0] = bptr[x + 0];
+                                        buff[1] = bptr[x + 1];
+                                        buff[2] = bptr[x + 2];
+                                        buff[3] = bptr[x + 3];
+
+                                        if ((BitConverter.ToInt32(buff, 0) >> (bpp * 6)) != v)
+                                            state.Break();
+                                    }
+                                });
+
+                            return pr.IsCompleted;
+                        }
+                        catch
+                        {
+                            return true;
+                        }
+                        finally
+                        {
+                            if (bits != null)
+                                image.UnlockBits(bits);
+                        }
+                    }
+
+                    // ㅜㅜ
+                default:
+                    {
+                        var result = Parallel.For(
+                            0,
+                            image.Height,
+                            (y, state) =>
+                            {
+                                for (int x = 0; x < image.Width; ++x)
+                                    if (image.GetPixel(x, y).A != 255)
+                                        state.Break();
+                            });
+
+                        return !result.IsCompleted;
+                    }
+            }
         }
     }
 }

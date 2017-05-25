@@ -1,4 +1,4 @@
-![TiX](Icon/256.png)
+﻿![TiX](Icon/256.png)
 
 # TiX
 
@@ -66,17 +66,52 @@
 
 ## 지원하는 포멧
 
-- bmp
-- jpeg
-- png
-- gif (**support animation**)
-- psd
-- emf
-- exif
-- ico
-- tiff
-- wmf
+- [`.bmp` `.dib`](https://en.wikipedia.org/wiki/BMP_file_format)
+
+- [`.jpg` `.jpeg`](https://en.wikipedia.org/wiki/JPEG)
+
+- [`.png`](https://en.wikipedia.org/wiki/Portable_Network_Graphics)
+
+- [`.gif`](https://en.wikipedia.org/wiki/GIF)
+
+- [`.psd`](http://www.adobe.com/devnet-apps/photoshop/fileformatashtml/)
+
+- [`.wmf` `.emf` `.wmz` `.emz`](https://en.wikipedia.org/wiki/Windows_Metafile)
+
+- [`.ico` `.cur`](https://en.wikipedia.org/wiki/ICO_(file_format))
+
+- [`.tif` `.tiff`](https://en.wikipedia.org/wiki/TIFF)
+
+- [`.webp`](https://en.wikipedia.org/wiki/WebP)
+
+- [`.svg`](https://en.wikipedia.org/wiki/Scalable_Vector_Graphics)
+
+## 추가 기능
+
+- Scheme
+ - `tix://uri/{data}`
+ - `tix://base64/{data}`
+ - `data` 는 `|` 으로 구분됩니다.r
+ - `data` 는 UrlEncoding 되어야 합니다.
 
 ## LICENSE
 
 - [LGPL v3](LICENSE.txt)
+
+- TiX 는 아래 오픈소스 라이브러리를 사용합니다.
+
+  - [CloudFlareUtilities](https://github.com/elcattivo/CloudFlareUtilities)
+
+  - [CommandLine](https://github.com/gsscoder/commandline)
+
+  - [Fody](https://github.com/Fody/Fody/)
+
+  - [Fody.Costura](https://github.com/Fody/Costura)
+
+  - [Json .NET](http://www.newtonsoft.com/json)
+
+  - [libwebp](https://github.com/webmproject/libwebp)
+
+  - [libwebp-net](https://github.com/imazen/libwebp-net)
+
+  - [SharpRaven](https://github.com/getsentry/raven-csharp)

@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
+using System.Runtime.InteropServices;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using CloudFlareUtilities;
 using TiX.Utilities;
@@ -13,41 +16,119 @@ namespace TiX.Core
 {
     internal class ImageSet : IDisposable
     {
-        public ImageSet(Image bitmap)
+        public static bool IsAvailable(DragEventArgs e)
         {
-            this.Index = -1;
-            this.RawStream = new MemoryStream(3 * 1024 * 1024);
-            this.Image = bitmap.Clone() as Image;
-            this.DataType = DataTypes.Image;
-            this.m_collection = new ImageCollection();
+            if (e == null)
+                return false;
+
+#if DEBUG
+            var dic = new System.Collections.Generic.Dictionary<string, object>();
+            foreach (var format in e.Data.GetFormats())
+            {
+                var data = e.Data.GetData(format);
+
+                if (data is MemoryStream mem)
+                {
+                    var bdata = mem.ToArray();
+                    mem.Dispose();
+                    data = Encoding.Unicode.GetString(bdata);
+                }
+                dic.Add(format, data);
+            }
+            System.Diagnostics.Debug.Assert(true);
+#endif
+
+            return 
+                   e.Data.GetDataPresent(DataFormats.FileDrop) ||
+                   e.Data.GetDataPresent(DataFormats.Bitmap) ||
+                   e.Data.GetDataPresent(DataFormats.Dib) ||
+                   e.Data.GetDataPresent(DataFormats.Tiff) ||
+                   (
+                       e.Data.GetDataPresent(DataFormats.EnhancedMetafile) &&
+                       e.Data.GetDataPresent(DataFormats.MetafilePict)
+                   ) ||
+                   e.Data.GetDataPresent(DataFormats.Html) ||
+                   e.Data.GetDataPresent("text/x-moz-url") ||
+                   e.Data.GetDataPresent("UnicodeText");
         }
 
         private ImageSet(ImageCollection collection, int index)
         {
-            this.Index = index;
-            this.RawStream = new MemoryStream(3 * 1024 * 1024);
             this.m_collection = collection;
-        }
-        
-        public ImageSet(ImageCollection collection, int index, DataTypes type, object dataObject) : this(collection, index)
-        {
-            this.DataType   = type;
-            this.DataObject = dataObject;
-        }
-        public ImageSet(ImageCollection collection, int index, Image image) : this(collection, index)
-        {
-            this.DataType = DataTypes.Image;
-            this.Image = image;
+            this.m_index      = index;
+
+            int tries = 3;
+
+            do
+            {
+                try
+                {
+                    this.m_tempPath = Path.GetTempFileName();
+                    this.m_rawStream = new FileStream(
+                        this.m_tempPath,
+                        FileMode.OpenOrCreate,
+                        FileAccess.ReadWrite,
+                        FileShare.None,
+                        4096,
+                        FileOptions.DeleteOnClose);
+                }
+                catch
+                {
+                }
+            } while (--tries > 0);
+
+            if (this.m_rawStream == null)
+                this.m_rawStream = new MemoryStream(3 * 1024 * 1024);
         }
 
+        public ImageSet(ImageCollection collection, int index, IDataObject dataObject)
+            : this(collection, index)
+        {
+            this.m_dataType   = DataTypes.IDataObject;
+            this.m_DataObject = dataObject;
+        }
+        public ImageSet(ImageCollection collection, int index, Uri uri)
+            : this(collection, index)
+        {
+            this.m_dataType   = DataTypes.Uri;
+            this.m_DataObject = uri;
+        }
+        public ImageSet(ImageCollection collection, int index, Image image)
+            : this(collection, index)
+        {
+            this.m_dataType = DataTypes.Image;
+            this.Image      = image;
+        }
+        public ImageSet(ImageCollection collection, int index, byte[] data)
+            : this(collection, index)
+        {
+            this.m_dataType   = DataTypes.Bytes;
+            this.m_DataObject = data;
+
+            this.m_rawStream.Write(data, 0, data.Length);
+        }
+        ~ImageSet()
+        {
+            this.Dispose(false);
+        }
         public void Dispose()
         {
-            if (this.InnerTask  != null) this.InnerTask.Dispose();
-            if (this.Image      != null) this.Image.Dispose();
-            if (this.Thumbnail  != null) this.Thumbnail.Dispose();
-            if (this.RawStream  != null) this.RawStream.Dispose();
-
+            this.Dispose(true);
             GC.SuppressFinalize(this);
+        }
+        private bool m_disposed;
+        private void Dispose(bool disposing)
+        {
+            if (this.m_disposed)
+                return;
+            this.m_disposed = true;
+
+            if (this.Image     != null) this.Image    .Dispose();
+            if (this.Thumbnail != null) this.Thumbnail.Dispose();
+            if (this.m_rawStream != null) this.m_rawStream.Dispose();
+
+            if (this.m_thread != null && this.m_thread.ThreadState == ThreadState.Running)
+                this.m_thread.Abort();
         }
         
         public enum Statues
@@ -57,49 +138,80 @@ namespace TiX.Core
             Error
         }
 
-        private object m_statusSync = new object();
-        private Statues m_status;
+        private readonly ImageCollection m_collection;
+
+        private readonly string m_tempPath;
+
+        private readonly int m_index;
+        public int Index => this.m_index;
+
+        private readonly Stream m_rawStream;
+        public Stream RawStream => this.m_rawStream;
+
+        private readonly DataTypes m_dataType;
+        public DataTypes DataType => this.m_dataType;
+
+        private readonly object m_DataObject;
+        public object DataObject => this.m_DataObject;
+
+        private volatile Statues m_status;
         public Statues Status
         {
-            get { lock (this.m_statusSync) return this.m_status; }
-            set { lock (this.m_statusSync) this.m_status = value; }
+            get => this.m_status;
+            set => this.m_status = value;
         }
 
-        private ImageCollection m_collection;
-        public int Index { get; private set; }
-
-        public DataTypes DataType { get; private set; }
-        public object DataObject { get; private set; }
-        public Task<Image> InnerTask { get; private set; }
-
-        public Image Image { get; set; }
+        public Image     Image     { get; set; }
         public GifFrames GifFrames { get; set; }
-        public Image Thumbnail { get; set; }
-        public MemoryStream RawStream { get; set; }
-        public string Extension { get; set; }
-        public double Ratio { get; set; }
+        public Image     Thumbnail { get; set; }
+        public string    Extension { get; set; }
+        public double    Ratio     { get; set; }
 
-        public string TwitterMediaId { get; set; }
-        
-        public Task StartLoad()
+        private Thread m_thread;
+
+        public void Wait()
         {
-            return this.InnerTask = Task.Factory.StartNew<Image>(new Func<object, Image>(this.StartLoadPriv), this.m_collection.Token);
+            if (this.m_thread != null)
+                this.m_thread.Join();
+        }
+        public void StartLoad()
+        {
+            this.m_thread = new Thread(this.StartLoadPriv);
+            this.m_thread.Start(this.m_collection.Token);
         }
 
-        private Image StartLoadPriv(object ocancel)
+        private void StartLoadPriv(object ocancel)
         {
             var cancel = (CancellationToken)ocancel;
 
-            if (this.Status == Statues.None || this.RawStream.Length == 0)
+            if (this.Status == Statues.None || this.m_rawStream.Length == 0)
             {
                 try
                 {
-                    if (this.DataType != DataTypes.Image)
+                    switch (this.DataType)
                     {
-                        if (this.DataType == DataTypes.File)
-                            GetImageFromFile();
-                        else if (this.DataType == DataTypes.IDataObject)
+                        case DataTypes.Uri:
+                            {
+                                var uri = (Uri)this.DataObject;
+                                if (uri.Scheme == "file")
+                                    GetImageFromFile(uri.LocalPath);
+                                else
+                                    GetImageFromHttp(uri, cancel);
+                            }
+                            break;
+
+                        case DataTypes.IDataObject:
                             GetImageFromIData(cancel);
+                            break;
+
+                        case DataTypes.Bytes:
+                            {
+                                using (var mem = new MemoryStream((byte[])this.DataObject))
+                                    mem.CopyTo(this.m_rawStream);
+
+                                GetImageFromStream();
+                            }
+                            break;
                     }
 
                     if (cancel.IsCancellationRequested)
@@ -109,15 +221,10 @@ namespace TiX.Core
 
                     this.Status = Statues.Success;
                 }
-#if !TiXd
                 catch (Exception ex)
                 {
                     if (ex.Message != "_")
                         CrashReport.Error(ex, null);
-#else
-                catch
-                {
-#endif
 
                     if (this.Image != null)
                     {
@@ -139,28 +246,14 @@ namespace TiX.Core
                 {
                 }
             }
-
-            return this.Image;
         }
 
-        private void GetImageFromFile()
+        private void GetImageFromFile(string path)
         {
-            var path = this.DataObject as string;
+            using (var file = File.OpenRead(path))
+                file.CopyTo(this.m_rawStream);
 
-            switch (Path.GetExtension(path).ToLower())
-            {
-            case ".psd":
-                this.Image = RyuaNerin.Drawing.LoadPSD.Load(path);
-                break;
-
-            default:
-                using (var file = File.OpenRead(path))
-                    file.CopyTo(this.RawStream);
-
-                this.RawStream.Position = 0;
-                this.Image = Image.FromStream(this.RawStream);
-                break;
-            }
+            this.GetImageFromStream();
         }
         
         private static Regex regSrc             = new Regex(@"<img.*?src=[""'](.*?)[""'].*>", RegexOptions.Singleline | RegexOptions.IgnoreCase);
@@ -173,17 +266,26 @@ namespace TiX.Core
 
             // Images
             if (idata.GetDataPresent(DataFormats.Bitmap))
+            {
                 this.Image = (Image)idata.GetData(DataFormats.Bitmap);
+                return;
+            }
 
             // Specifies the Windows device-independent bitmap
-            else if (idata.GetDataPresent(DataFormats.Dib))
+            if (idata.GetDataPresent(DataFormats.Dib))
+            {
                 this.Image = (Image)idata.GetData(DataFormats.Dib, true);
+                return;
+            }
 
-            else if (idata.GetDataPresent(DataFormats.Tiff))
+            if (idata.GetDataPresent(DataFormats.Tiff))
+            {
                 this.Image = (Image)idata.GetData(DataFormats.Tiff, true);
+                return;
+            }
 
             // In Program like MS Word
-            else if (idata.GetDataPresent(DataFormats.EnhancedMetafile) &&
+            if (idata.GetDataPresent(DataFormats.EnhancedMetafile) &&
                      idata.GetDataPresent(DataFormats.MetafilePict))
             {
                 using (var stream = (Stream)idata.GetData(DataFormats.MetafilePict))
@@ -191,10 +293,11 @@ namespace TiX.Core
                     stream.Seek(0, SeekOrigin.Begin);
                     this.Image = Image.FromStream(stream);
                 }
+                return;
             }
 
             // HTML
-            else if (idata.GetDataPresent(DataFormats.Html))
+            if (idata.GetDataPresent(DataFormats.Html))
             {
                 Uri uri;
                 string html;
@@ -214,36 +317,126 @@ namespace TiX.Core
                     uri = new Uri(new Uri(baseUrl), src);
                 }
 
-                var handler = new ClearanceHandler();
-                using (var client = new HttpClient(handler))
+                if (GetImageFromHttp(uri, cancel))
+                    return;
+            }
+
+            // text/x-moz-url
+            if (idata.GetDataPresent("text/x-moz-url"))
+            {
+                var mem = idata.GetData("text/x-moz-url", false) as MemoryStream;
+                if (mem != null)
+                    using (mem)
+                        if (this.GetImageFromUri(Encoding.Unicode.GetString(mem.ToArray()), cancel))
+                            return;
+            }
+
+            // TEXT
+            if (idata.GetDataPresent("UnicodeText"))
+            {
+                var data = idata.GetData("UnicodeText") as string;
+                if (this.GetImageFromUri(data, cancel))
+                    return;
+            }
+        }
+
+        private bool GetImageFromUri(string uriStr, CancellationToken cancel)
+        {
+            if (string.IsNullOrWhiteSpace(uriStr) ||
+                !Uri.TryCreate(uriStr, UriKind.Absolute, out Uri uri))
+                return false;
+
+            return GetImageFromHttp(uri, cancel);
+        }
+
+        private bool GetImageFromHttp(Uri uri, CancellationToken cancel)
+        {
+            using (var handler = new ClearanceHandler())
+            using (var client = new HttpClient(handler))
+            {
+                try
                 {
-                    try
-                    {
-                        var getStream = client.GetStreamAsync(uri);
+                    var getStream = client.GetStreamAsync(uri);
 
-                        do
+                    do
+                    {
+                        if (cancel.IsCancellationRequested)
                         {
-                            if (cancel.IsCancellationRequested)
-                            {
-                                break;
-                            }
-                        } while (!getStream.Wait(0));
-                    
-                        if (getStream.IsCompleted)
-                        {
-                            this.RawStream.SetLength(0);
-                            this.RawStream.Capacity = 0;
+                            client.CancelPendingRequests();
+                            break;
                         }
+                    } while (!getStream.Wait(100));
 
-                        getStream.Result.CopyTo(this.RawStream);
+                    getStream.Wait();
 
-                        this.RawStream.Position = 0;
-                        this.Image = Image.FromStream(this.RawStream);
-                    }
-                    catch
+                    if (getStream.IsCanceled)
+                        return false;
+
+                    if (getStream.IsCompleted)
                     {
-                        this.RawStream.SetLength(0);
-                        this.RawStream.Capacity = 0;
+                        this.m_rawStream.SetLength(0);
+                    }
+
+                    getStream.Result.CopyTo(this.m_rawStream);
+
+                    this.m_rawStream.Position = 0;
+
+                    GetImageFromStream();
+
+                    return true;
+                }
+                catch
+                {
+                    this.m_rawStream.SetLength(0);
+                }
+            }
+
+            return false;
+        }
+
+        private void GetImageFromStream()
+        {
+            if (Signatures.CheckSignature(this.m_rawStream, Signatures.WebP))
+            {
+                var libwebpPath = Path.Combine(Path.GetDirectoryName(Application.ExecutablePath), "libwebp.dll");
+                var libwebpData = IntPtr.Size == 8 ? Properties.Resources.libwebp_x64 : Properties.Resources.libwebp_x86;
+
+                var info = new FileInfo(libwebpPath);
+                if (!info.Exists || info.Length != libwebpData.Length)
+                    File.WriteAllBytes(libwebpPath, libwebpData);
+
+                this.m_rawStream.Position = 0;
+                var buff = new byte[this.m_rawStream.Length];
+                this.m_rawStream.Read(buff, 0, buff.Length);
+
+                var decoder = new Imazen.WebP.SimpleDecoder();
+                this.Image = decoder.DecodeFromBytes(buff, buff.Length);
+
+                return;
+            }
+
+            this.m_rawStream.Position = 0;
+            if (Signatures.CheckSignature(this.m_rawStream, Signatures.Psd))
+            {
+                this.m_rawStream.Position = 0;
+                this.Image = RyuaNerin.Drawing.LoadPSD.Load(this.m_rawStream);
+
+                return;
+            }
+
+            this.m_rawStream.Position = 0;
+            {
+                this.Image = Image.FromStream(this.m_rawStream);
+
+                if (this.Image.RawFormat.Guid == ImageFormat.Icon.Guid)
+                {
+                    this.Image.Dispose();
+
+                    this.m_rawStream.Position = 0;
+                    using (var ie = new IconExtractor(this.m_rawStream, true))
+                    {
+                        var img = ie.OrderByDescending(e => (double)e.Width * e.Height * e.BitsPerPixel).First().Image;
+                        this.Image = img.Clone(new Rectangle(Point.Empty, img.Size), PixelFormat.Format32bppArgb);
                     }
                 }
             }

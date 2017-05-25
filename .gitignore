@@ -290,3 +290,5 @@ __pycache__/
 # Visual Studio 2017
 *.iobj
 *.ipdb
+
+libwebp/
