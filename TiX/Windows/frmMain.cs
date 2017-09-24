@@ -178,7 +178,7 @@ namespace TiX.Windows
         private readonly ManualResetEvent m_captureing = new ManualResetEvent(true);
         private void GlobalKeyboardHook_KeyDown(object sender, KeyHookEventArgs e)
         {
-            if (!this.m_captureing.Reset())
+            if (!this.m_captureing.WaitOne(TimeSpan.Zero))
                 return;
 
             this.Invoke(new Action<Keys>(this.GlobalKeyboardHook_KeyDown), e.Keys);
@@ -187,6 +187,8 @@ namespace TiX.Windows
         }
         private void GlobalKeyboardHook_KeyDown(Keys key)
         {
+            this.m_captureing.Reset();
+
             try
             {
                 if ((key & Keys.Alt) == Keys.Alt)
