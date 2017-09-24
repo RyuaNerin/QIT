@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -37,7 +36,11 @@ namespace TiX
 
         public static void Error(Exception ex, object data = null)
         {
-            if (ex == null || Settings.Instance.EnabledErrorReport)
+            if (ex == null
+#if !TiXInstaller
+                || Settings.Instance.EnabledErrorReport
+#endif
+                )
                 return;
 
             var ev = new SentryEvent(ex)
@@ -74,7 +77,11 @@ namespace TiX
                 ev.Extra = dic;
             }
 
-            Report(ev);
+            ev.Tags.Add("ARCH", Environment.Is64BitOperatingSystem ? "x64" : "x86");
+            ev.Tags.Add("OS",   Environment.OSVersion.VersionString);
+            ev.Tags.Add("NET",  Environment.Version.ToString());
+
+            ravenClient.CaptureAsync(ev);
         }
 
         private static string GetFriendlyName(Type type)
@@ -106,15 +113,6 @@ namespace TiX
             sb.Append('>');
 
             return sb.ToString();
-        }
-
-        private static void Report(SentryEvent @event)
-        {
-            @event.Tags.Add("ARCH", Environment.Is64BitOperatingSystem ? "x64" : "x86");
-            @event.Tags.Add("OS", Environment.OSVersion.VersionString);
-            @event.Tags.Add("NET", Environment.Version.ToString());
-
-            ravenClient.CaptureAsync(@event);
         }
     }
 }

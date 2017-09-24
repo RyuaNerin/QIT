@@ -16,7 +16,7 @@ namespace TiX.Windows
     {
         public static Form Instance { get; private set; }
         
-        private GlobalKeyboardHook m_manager;
+        private readonly GlobalKeyboardHook m_manager = new GlobalKeyboardHook();
         public frmMain(int wmMessage)
         {
             this.m_wmMessage = wmMessage;
@@ -25,15 +25,14 @@ namespace TiX.Windows
 
             InitializeComponent();
             this.Text = TiXMain.ProductName;
-            this.Icon = TiX.Properties.Resources.TiX;
+            this.Icon = TiX.Resources.TiX;
             
             this.TopMost = Settings.Instance.Topmost;
             if (Settings.Instance.ReversedCtrl)
                 this.lblCtrl.Text = "Ctrl을 눌러 [내용] 작성";
             else
                 this.lblCtrl.Text = "Ctrl을 눌러 [바로] 작성";
-
-            this.m_manager = new GlobalKeyboardHook();
+            
             this.m_manager.Down.Add(Keys.PrintScreen);
             this.m_manager.Down.Add(Keys.PrintScreen | Keys.Shift);
             this.m_manager.Down.Add(Keys.PrintScreen | Keys.Control);
@@ -155,7 +154,12 @@ namespace TiX.Windows
 
         private void frmMain_DragDrop(object sender, DragEventArgs e)
         {
-            var autoStart = (Settings.Instance.ReversedCtrl && ((e.KeyState & 8) != 8)) || (!Settings.Instance.ReversedCtrl && ((e.KeyState & 8) == 8));
+            //                 A                              *  !B                       +   !A                              *  B
+            //                 ==============================    =======================      ===============================    =======================
+            //var autoStart = (Settings.Instance.ReversedCtrl && ((e.KeyState & 8) != 8)) || (!Settings.Instance.ReversedCtrl && ((e.KeyState & 8) == 8));
+
+            // (A * !B) + (!A * B) = A ^ B
+            var autoStart = Settings.Instance.ReversedCtrl ^ ((e.KeyState & 8) == 8);
 
             TweetModerator.Tweet(e.Data, new TweetOption { AutoStart = autoStart });
         }
@@ -171,10 +175,10 @@ namespace TiX.Windows
                     });
         }
         
-        private int m_captureing = 0;
+        private readonly ManualResetEvent m_captureing = new ManualResetEvent(true);
         private void GlobalKeyboardHook_KeyDown(object sender, KeyHookEventArgs e)
         {
-            if (Interlocked.Exchange(ref this.m_captureing, 1) == 1)
+            if (!this.m_captureing.Reset())
                 return;
 
             this.Invoke(new Action<Keys>(this.GlobalKeyboardHook_KeyDown), e.Keys);
@@ -196,7 +200,7 @@ namespace TiX.Windows
             }
             catch
             {
-                Interlocked.Exchange(ref this.m_captureing, 0);
+                this.m_captureing.Set();
             }
         }
         private void CaptureScreen()
@@ -210,7 +214,7 @@ namespace TiX.Windows
             var fg = NativeMethods.GetForegroundWindow();
             if (fg == IntPtr.Zero)
             {
-                Interlocked.Exchange(ref this.m_captureing, 0);
+                this.m_captureing.Set();
                 return;
             }
             
@@ -242,13 +246,13 @@ namespace TiX.Windows
             var hwnd = NativeMethods.GetForegroundWindow();
             if (hwnd == IntPtr.Zero)
             {
-                Interlocked.Exchange(ref this.m_captureing, 0);
+                this.m_captureing.Set();
                 return;
             }
             
             if (!NativeMethods.GetWindowRect(hwnd, out NativeMethods.RECT wRect))
             {
-                Interlocked.Exchange(ref this.m_captureing, 0);
+                this.m_captureing.Set();
                 return;
             }
 
@@ -261,18 +265,27 @@ namespace TiX.Windows
                 var hdc = g.GetHdc();
                 NativeMethods.PrintWindow(hwnd, hdc, NativeMethods.PW_RENDERFULLCONTENT);
                 g.ReleaseHdc(hdc);
-                    
-                var hRgn = NativeMethods.CreateRectRgn(0, 0, 0, 0);
-                if (hRgn != IntPtr.Zero)
+
+                var hRgn = IntPtr.Zero;
+                try
                 {
-                    NativeMethods.GetWindowRgn(hwnd, hRgn);
-                    var region = Region.FromHrgn(hRgn);
-                    if (!region.IsEmpty(g))
+                    hRgn = NativeMethods.CreateRectRgn(0, 0, 0, 0);
+
+                    if (hRgn != IntPtr.Zero)
                     {
-                        g.ExcludeClip(region);
-                        g.Clear(Color.Transparent);
+                        NativeMethods.GetWindowRgn(hwnd, hRgn);
+                        var region = Region.FromHrgn(hRgn);
+                        if (!region.IsEmpty(g))
+                        {
+                            g.ExcludeClip(region);
+                            g.Clear(Color.Transparent);
+                        }
                     }
-                    NativeMethods.DeleteObject(hRgn);
+                }
+                finally
+                {
+                    if (hRgn != IntPtr.Zero)
+                        NativeMethods.DeleteObject(hRgn);
                 }
             }
 
@@ -295,7 +308,7 @@ namespace TiX.Windows
 
             if (cropedImage == null)
             {
-                Interlocked.Exchange(ref this.m_captureing, 0);
+                this.m_captureing.Set();
                 return;
             }
 
@@ -316,7 +329,7 @@ namespace TiX.Windows
         }
         private void CaptureCompleted()
         {
-            Interlocked.Exchange(ref this.m_captureing, 0);
+            this.m_captureing.Set();
         }
 
         private void frmMain_Shown(object sender, EventArgs e)

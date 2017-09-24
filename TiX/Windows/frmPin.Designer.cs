@@ -1,6 +1,6 @@
 ﻿namespace TiX.Windows
 {
-	partial class frmPin
+    partial class frmPin
 	{
 		/// <summary>
 		/// Required designer variable.
@@ -29,7 +29,7 @@
 		private void InitializeComponent()
 		{
             this.txtPin = new System.Windows.Forms.TextBox();
-            this.ajax = new TiX.Windows.ProgressCircle();
+            this.ajax = new ProgressCircle();
             this.SuspendLayout();
             // 
             // txtPin

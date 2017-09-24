@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{32B8745E-EBB6-4D7C-918C-A0D863C9F939}</ProjectGuid>
+    <ProjectGuid>{A0618A98-C048-48AC-A1C4-91BD9E7DFB82}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>TiX</RootNamespace>
-    <AssemblyName>TiX</AssemblyName>
+    <AssemblyName>TiX-Portable</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <IsWebBootstrapper>false</IsWebBootstrapper>
@@ -35,7 +35,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\TiXInstaller\TiXFiles\</OutputPath>
+    <OutputPath>..\bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -46,9 +46,9 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugType>embedded</DebugType>
+    <DebugType>full</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>..\TiXInstaller\TiXFiles\</OutputPath>
+    <OutputPath>..\bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -82,93 +82,93 @@
   </PropertyGroup>
   <PropertyGroup />
   <ItemGroup>
-    <Compile Include="Core\ImageCollection.cs" />
-    <Compile Include="Core\ImageSet.cs" />
-    <Compile Include="Core\TweetModerator.cs" />
-    <Compile Include="CrashReport.cs" />
-    <Compile Include="LastRelease.cs" />
-    <Compile Include="Resources.Designer.cs">
+    <Compile Include="..\TiX\Core\ImageCollection.cs" />
+    <Compile Include="..\TiX\Core\ImageSet.cs" />
+    <Compile Include="..\TiX\Core\TweetModerator.cs" />
+    <Compile Include="..\TiX\CrashReport.cs" />
+    <Compile Include="..\TiX\LastRelease.cs" />
+    <Compile Include="..\TiX\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="Utilities\GifFrames.cs">
+    <Compile Include="..\TiX\Utilities\GifFrames.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Utilities\globalKeyboardHook.cs" />
-    <Compile Include="Utilities\IconExtractor.cs" />
-    <Compile Include="Utilities\InstanceHelper.cs" />
-    <Compile Include="LoadPSD\LoadPSD.cs" />
-    <Compile Include="Utilities\MessageBoxes.cs" />
-    <Compile Include="Utilities\StreamLineEnumerator.cs" />
-    <Compile Include="Utilities\ResizeImage.cs" />
-    <Compile Include="Utilities\ExtendStringComparer.cs" />
-    <Compile Include="Utilities\SettingBinder.cs" />
-    <Compile Include="Utilities\Signatures.cs" />
-    <Compile Include="Windows\frmPin.cs">
+    <Compile Include="..\TiX\Utilities\globalKeyboardHook.cs" />
+    <Compile Include="..\TiX\Utilities\IconExtractor.cs" />
+    <Compile Include="..\TiX\Utilities\InstanceHelper.cs" />
+    <Compile Include="..\TiX\LoadPSD\LoadPSD.cs" />
+    <Compile Include="..\TiX\Utilities\MessageBoxes.cs" />
+    <Compile Include="..\TiX\Utilities\StreamLineEnumerator.cs" />
+    <Compile Include="..\TiX\Utilities\ResizeImage.cs" />
+    <Compile Include="..\TiX\Utilities\ExtendStringComparer.cs" />
+    <Compile Include="..\TiX\Utilities\SettingBinder.cs" />
+    <Compile Include="..\TiX\Utilities\Signatures.cs" />
+    <Compile Include="..\TiX\Windows\frmPin.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Windows\frmPin.Designer.cs">
+    <Compile Include="..\TiX\Windows\frmPin.Designer.cs">
       <DependentUpon>frmPin.cs</DependentUpon>
     </Compile>
-    <Compile Include="Windows\ProgressCircle.cs" />
-    <Compile Include="Windows\frmMain.cs">
+    <Compile Include="..\TiX\Windows\ProgressCircle.cs" />
+    <Compile Include="..\TiX\Windows\frmMain.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Windows\frmMain.Designer.cs">
+    <Compile Include="..\TiX\Windows\frmMain.Designer.cs">
       <DependentUpon>frmMain.cs</DependentUpon>
     </Compile>
-    <Compile Include="Windows\frmPreview.cs">
+    <Compile Include="..\TiX\Windows\frmPreview.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Windows\frmPreview.Designer.cs">
+    <Compile Include="..\TiX\Windows\frmPreview.Designer.cs">
       <DependentUpon>frmPreview.cs</DependentUpon>
     </Compile>
-    <Compile Include="Windows\frmSettings.cs">
+    <Compile Include="..\TiX\Windows\frmSettings.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Windows\frmSettings.Designer.cs">
+    <Compile Include="..\TiX\Windows\frmSettings.Designer.cs">
       <DependentUpon>frmSettings.cs</DependentUpon>
     </Compile>
-    <Compile Include="Windows\frmUpload.cs">
+    <Compile Include="..\TiX\Windows\frmUpload.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Windows\frmUpload.Designer.cs">
+    <Compile Include="..\TiX\Windows\frmUpload.Designer.cs">
       <DependentUpon>frmUpload.cs</DependentUpon>
     </Compile>
-    <Compile Include="AssemblyInfo.cs" />
-    <Compile Include="TiXMain.cs">
+    <Compile Include="..\TiX\AssemblyInfo.cs" />
+    <Compile Include="..\TiX\TiXMain.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ScreenCapture\Stasisfield.cs">
+    <Compile Include="..\TiX\ScreenCapture\Stasisfield.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="ScreenCapture\Stasisfield.Designer.cs">
+    <Compile Include="..\TiX\ScreenCapture\Stasisfield.Designer.cs">
       <DependentUpon>Stasisfield.cs</DependentUpon>
     </Compile>
-    <Compile Include="Core\Settings.cs" />
-    <Compile Include="Limitation\OAuth.cs" />
-    <EmbeddedResource Include="Windows\frmMain.resx">
+    <Compile Include="..\TiX\Core\Settings.cs" />
+    <Compile Include="..\TiX\Limitation\OAuth.cs" />
+    <EmbeddedResource Include="..\TiX\Windows\frmMain.resx">
       <DependentUpon>frmMain.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Windows\frmPin.resx">
+    <EmbeddedResource Include="..\TiX\Windows\frmPin.resx">
       <DependentUpon>frmPin.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Windows\frmPreview.resx">
+    <EmbeddedResource Include="..\TiX\Windows\frmPreview.resx">
       <DependentUpon>frmPreview.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Windows\frmSettings.resx">
+    <EmbeddedResource Include="..\TiX\Windows\frmSettings.resx">
       <DependentUpon>frmSettings.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Windows\frmUpload.resx">
+    <EmbeddedResource Include="..\TiX\Windows\frmUpload.resx">
       <DependentUpon>frmUpload.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resources.resx">
+    <EmbeddedResource Include="..\TiX\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <EmbeddedResource Include="ScreenCapture\Stasisfield.resx">
+    <EmbeddedResource Include="..\TiX\ScreenCapture\Stasisfield.resx">
       <DependentUpon>Stasisfield.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
@@ -186,14 +186,18 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
-    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Args.cs" />
+    <Compile Include="..\TiX\Args.cs" />
+    <None Include="FodyWeavers.xml" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="CommandLine, Version=1.9.71.2, Culture=neutral, PublicKeyToken=de6f01bd326f8c32, processorArchitecture=MSIL">
       <HintPath>..\packages\CommandLineParser.1.9.71\lib\net45\CommandLine.dll</HintPath>
+    </Reference>
+    <Reference Include="Costura, Version=1.6.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Costura.Fody.1.6.0\lib\dotnet\Costura.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="Imazen.WebP, Version=10.0.1.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Imazen.WebP.10.0.1\lib\net45\Imazen.WebP.dll</HintPath>
@@ -221,13 +225,23 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="packages.config" />
     <None Include="TiX.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>이 프로젝트는 이 컴퓨터에 없는 NuGet 패키지를 참조합니다. 해당 패키지를 다운로드하려면 NuGet 패키지 복원을 사용하십시오. 자세한 내용은 http://go.microsoft.com/fwlink/?LinkID=322105를 참조하십시오. 누락된 파일은 {0}입니다.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\Costura.Fody.1.6.0\build\dotnet\Costura.Fody.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Costura.Fody.1.6.0\build\dotnet\Costura.Fody.targets'))" />
+    <Error Condition="!Exists('..\packages\Fody.2.0.10\build\dotnet\Fody.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Fody.2.0.10\build\dotnet\Fody.targets'))" />
+  </Target>
   <PropertyGroup>
     <PreBuildEvent>
     </PreBuildEvent>
   </PropertyGroup>
+  <Import Project="..\packages\Costura.Fody.1.6.0\build\dotnet\Costura.Fody.targets" Condition="Exists('..\packages\Costura.Fody.1.6.0\build\dotnet\Costura.Fody.targets')" />
+  <Import Project="..\packages\Fody.2.0.10\build\dotnet\Fody.targets" Condition="Exists('..\packages\Fody.2.0.10\build\dotnet\Fody.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

@@ -7,16 +7,16 @@ using CommandLine;
 
 namespace TiX
 {
-    internal class TiXOption
+    internal class Args
     {
-        public TiXOption()
+        public Args()
         {
-
         }
-        public static TiXOption CreateOption<T>(T option)
+
+        public static Args CreateOption<T>(T option)
         {
-            var tixOption = Activator.CreateInstance<TiXOption>();
-            
+            var tixOption = Activator.CreateInstance<Args>();
+
             foreach (var prop in option.GetType().GetProperties())
             {
                 if (!prop.CustomAttributes.Any(e => e.AttributeType == typeof(OptionAttribute)))
@@ -32,29 +32,26 @@ namespace TiX
             return tixOption;
         }
 
-        [Option("ai"    )] public OptionInstallation OptionInstallation { get; set; }
-        [Option("se"    )] public OptionTixSettings  OptionTixSettings  { get; set; }
+        [Option("install")] public int    OptionInstallation    { get; set; }
 
-        [Option("s"     )] public bool   StandAlone            { get; set; }
+        [Option("statis")]  public bool   CaptureScreenPart     { get; set; }
 
-        [Option("statis")] public bool   CaptureScreenPart     { get; set; }
+        [Option("pipe"  )]  public bool   UsePipe               { get; set; }
+        [Option("notext")]  public bool   TweetWithoutText      { get; set; }
 
-        [Option("pipe"  )] public bool   UsePipe               { get; set; }
-        [Option("notext")] public bool   TweetWithoutText      { get; set; }
+        [Option("text"  )]  public string Text                  { get; set; }
+        [Option("reply" )]  public string In_Reply_To_Status_Id { get; set; }
 
-        [Option("text"  )] public string Text                  { get; set; }
-        [Option("reply" )] public string In_Reply_To_Status_Id { get; set; }
-
-        [Option("sd"    )] public string SchemeData            { get; set; }
+        [Option("sd"    )]  public string SchemeData            { get; set; }
 
         [ValueList(typeof(List<string>))]
         public List<string> Files { get; set; }
 
-        public static readonly TiXOption Default = new TiXOption();
+        public static readonly Args Default = new Args();
 
-        public static TiXOption Parse(string[] args)
+        public static Args Parse(string[] args)
         {
-            var option = new TiXOption();
+            var option = new Args();
             try
             {
                 return Parser.Default.ParseArguments(args, option) ? option : Default;
@@ -64,18 +61,17 @@ namespace TiX
                 return Default;
             }
         }
-
-		public override string ToString()
+        public override string ToString()
         {
             var sb = new StringBuilder(256);
-            
+
             return AppendOption(sb, this).ToString();
         }
 
         private static StringBuilder AppendOption(StringBuilder sb, object obj)
         {
             var type = obj.GetType();
-            
+
             foreach (PropertyInfo oProp in type.GetProperties())
             {
                 var option = oProp.GetCustomAttribute<OptionAttribute>();

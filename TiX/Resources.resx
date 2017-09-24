@@ -118,6 +118,37 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="error" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29m
+        dHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAGFSURBVDhPY/j//z9FGKsgKRirICkYqyAI398fF3pv
+        b8yJu7ujxbDJwzBWQaAmvru7Iq+9vb36/+1tYT3Y1MAwVkGgprrX15f8//3lzv/r6wPfX1vrb4pNHQhj
+        CNzcGKwF1PT2x+st/3886/v/7u7W/5eXeW66tNidFV0tCKNwgDYxXV3lu/jNzTX/fzxu+n+ow/j/r7dr
+        /p+f5/zv3GzHYGS1MIzCAdrkcX9v9f+frxb9/3Yn8f+hdsP/3x+W//9wb9v/U1Osrp2caMGLrB6E4YwL
+        C1zZgDadeQ8MuO8PSv5/vRUBwbdjgV6Z8P/hwUn/j3YZ1SFrBmE44+xM++yHh/r+/3wxHWz719vRQC8Y
+        gelv97L+f3u+8f+hZt2XBxu1tbAaAHTek29v7v7/+W7v/x+vgGHwajUSXvv/9+cr/5+cWPJ/X7XaaqwG
+        AJ335ki7wbfDrfrfgDZ9A9r07UC95rf9tRrfgJq+7a1U/ba3XPnbnjKlw1gNIBdjFSQFYxUkHv9nAAC/
+        hu6vewywPwAAAABJRU5ErkJggg==
+</value>
+  </data>
+  <data name="refresh" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29m
+        dHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAGwSURBVDhPpZHrK4NhGMbFJ3+EmphjCNEiDJljcijn
+        DZsxhhlTDiWnUjKiaU0kchwSU6yht3dylloR8sFXf8XleT88b++rN5EPv7rv676vp6778QPwLyRFIR3n
+        WmerWxMgNeOQFIUYTtS+JlcNIzXjEDWWK4Oy+6KZMTE6GE8b0HKsxijbj6HzXlRvlLiFuxS+6Lk0KM1e
+        /f2iz4bDtx3sv25h72UdzudVbD4tw3LUjmK76l1o5uCLLlbvsD9O4+DViTHvABr3K1G3XYa+YxMsLiOK
+        5nM8QiOFL9rPGj9IXpC8qN+rYKlespDnK7Rlsyprhn/mREog1SmihkLy8lcvmMvazZlK+/svkLy7Uvp3
+        RE3lanFg2WK+P8nL5s4ofVRXDCawib0xiDVFIqpN/iH08AWF5PW0bWuhX1MjdTgJyQPxqLKXwno9Ct1K
+        LeRNwQ7hvshM8n4aNhtgf7DCdjeJ2dsJTN+MY+p6BJweqpPdB9cHKYUe0QMc6WMKt2apAjWOcsSZoxBt
+        DEN4cwhCtDJGphGbOUQNheRlSF7+Bj8hKcZ0RgREtsqdUrPvSIq/B35fNau2t2lUBQAAAAAASUVORK5C
+        YII=
+</value>
+  </data>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="TiX" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\TiX.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="loading" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABAAAAGACAYAAACk4uKWAAAABGdBTUEAALGOfPtRkwAAACBjSFJNAACH
@@ -616,47 +647,10 @@
         TkSuQmCC
 </value>
   </data>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="TiX" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\TiX.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="error" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-    <value>
-        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29m
-        dHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAGFSURBVDhPY/j//z9FGKsgKRirICkYqyAI398fF3pv
-        b8yJu7ujxbDJwzBWQaAmvru7Iq+9vb36/+1tYT3Y1MAwVkGgprrX15f8//3lzv/r6wPfX1vrb4pNHQhj
-        CNzcGKwF1PT2x+st/3886/v/7u7W/5eXeW66tNidFV0tCKNwgDYxXV3lu/jNzTX/fzxu+n+ow/j/r7dr
-        /p+f5/zv3GzHYGS1MIzCAdrkcX9v9f+frxb9/3Yn8f+hdsP/3x+W//9wb9v/U1Osrp2caMGLrB6E4YwL
-        C1zZgDadeQ8MuO8PSv5/vRUBwbdjgV6Z8P/hwUn/j3YZ1SFrBmE44+xM++yHh/r+/3wxHWz719vRQC8Y
-        gelv97L+f3u+8f+hZt2XBxu1tbAaAHTek29v7v7/+W7v/x+vgGHwajUSXvv/9+cr/5+cWPJ/X7XaaqwG
-        AJ335ki7wbfDrfrfgDZ9A9r07UC95rf9tRrfgJq+7a1U/ba3XPnbnjKlw1gNIBdjFSQFYxUkHv9nAAC/
-        hu6vewywPwAAAABJRU5ErkJggg==
-</value>
-  </data>
-  <data name="refresh" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-    <value>
-        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29m
-        dHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAGwSURBVDhPpZHrK4NhGMbFJ3+EmphjCNEiDJljcijn
-        DZsxhhlTDiWnUjKiaU0kchwSU6yht3dylloR8sFXf8XleT88b++rN5EPv7rv676vp6778QPwLyRFIR3n
-        WmerWxMgNeOQFIUYTtS+JlcNIzXjEDWWK4Oy+6KZMTE6GE8b0HKsxijbj6HzXlRvlLiFuxS+6Lk0KM1e
-        /f2iz4bDtx3sv25h72UdzudVbD4tw3LUjmK76l1o5uCLLlbvsD9O4+DViTHvABr3K1G3XYa+YxMsLiOK
-        5nM8QiOFL9rPGj9IXpC8qN+rYKlespDnK7Rlsyprhn/mREog1SmihkLy8lcvmMvazZlK+/svkLy7Uvp3
-        RE3lanFg2WK+P8nL5s4ofVRXDCawib0xiDVFIqpN/iH08AWF5PW0bWuhX1MjdTgJyQPxqLKXwno9Ct1K
-        LeRNwQ7hvshM8n4aNhtgf7DCdjeJ2dsJTN+MY+p6BJweqpPdB9cHKYUe0QMc6WMKt2apAjWOcsSZoxBt
-        DEN4cwhCtDJGphGbOUQNheRlSF7+Bj8hKcZ0RgREtsqdUrPvSIq/B35fNau2t2lUBQAAAAAASUVORK5C
-        YII=
-</value>
-  </data>
-  <data name="libwebp_x64" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\libwebp\release-dynamic\x64\bin\libwebp.dll;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="libwebp_x86" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\libwebp\release-dynamic\x86\bin\libwebp.dll;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="TiXExt32" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\TiXExt\TiXExt32.dll;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>..\tixinstaller\tixext\tixext32.dll;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="TiXExt64" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\TiXExt\TiXExt64.dll;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>..\tixinstaller\tixext\tixext64.dll;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
 </root>

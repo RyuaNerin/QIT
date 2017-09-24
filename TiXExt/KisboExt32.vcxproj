@@ -73,14 +73,14 @@
     </LinkKeyFile>
     <IntDir>$(ProjectDir)Obj\$(Configuration)\$(Platform)\</IntDir>
     <TargetName>$(ProjectName)</TargetName>
-    <OutDir>$(SolutionDir)\TiX\TiXExt\</OutDir>
+    <OutDir>$(SolutionDir)\TiXInstaller\TiXExt\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkKeyFile>
     </LinkKeyFile>
     <IntDir>$(ProjectDir)Obj\$(Configuration)\$(Platform)\</IntDir>
     <TargetName>$(ProjectName)</TargetName>
-    <OutDir>$(SolutionDir)\TiX\TiXExt\</OutDir>
+    <OutDir>$(SolutionDir)\TiXInstaller\TiXExt\</OutDir>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">

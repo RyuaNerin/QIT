@@ -6,13 +6,35 @@ namespace TiX.Windows
 {
     public partial class frmUninstall : Form
     {
-        public frmUninstall()
+        public frmUninstall(int wmMessage)
         {
+            this.m_wmMessage = wmMessage;
+
             InitializeComponent();
 
             this.Text = TiXMain.ProductName;
+            this.Icon = TiX.Resources.TiX;
 
             UacIcon.SetUacIcon(TiXMain.IsAdministratorMode, this.btn, true);
+        }
+
+        private readonly int m_wmMessage;
+        protected override void WndProc(ref Message m)
+        {
+            if (m.Msg == this.m_wmMessage)
+            {
+                if (this.WindowState == FormWindowState.Minimized)
+                    this.WindowState = FormWindowState.Normal;
+
+                var topMost = this.TopMost;
+                this.TopMost = true;
+                this.TopMost = topMost;
+
+                this.Activate();
+                this.Focus();
+            }
+
+            base.WndProc(ref m);
         }
 
         private void btn_Click(object sender, EventArgs e)

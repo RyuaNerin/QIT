@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
-using System.Runtime.InteropServices;
-using System.Security.Principal;
 using System.Text;
 using System.Windows.Forms;
 using Limitation;
@@ -17,15 +15,29 @@ namespace TiX
     internal static class TiXMain
     {
         public static readonly string ProductName        = $"TiX rev.{new Version(Application.ProductVersion).Revision}";
-        public static readonly string GUIDApplication;
+        public const           string GUIDApplication    = "{9CE5906A-DFBB-4A5A-9EBF-9D262E5D29B8}";
         public const           string GUIDShellExtension = "{9CE5906A-DFBB-4A5A-9EBF-9D262E5D29B9}";
 
-        public static readonly string[] AllowExtension = { ".bmp", ".emf", ".exif", ".gif", ".ico", ".cur", ".jpg", ".jpeg", ".png", ".tif", ".tiff", ".wmf", ".psd", ".webp", ".svg" };
+        public static readonly string CurrentDirMutex    = GUIDApplication + Path.GetDirectoryName(Application.ExecutablePath).GetHashCode().ToString("X");
 
-        public static readonly bool IsAdministratorMode;
+        public static readonly string[] AllowExtension = {
+            ".bmp",
+            ".emf", ".exif",
+            ".gif",
+            ".ico", ".cur",
+            ".jpg", ".jpeg",
+            ".png",
+            ".tif", ".tiff",
+            ".wmf",
+            ".psd",
+            ".webp",
+            ".svg"
+        };
 
         public static readonly OAuth Twitter = new OAuth("lQJwJWJoFlbvr2UQnDbg", "DsuIRA1Ak9mmSCGl9wnNvjhmWJTmb9vZlRdQ7sMqXww");
-        
+
+        public static readonly bool IsInstalled;
+
         public static bool CheckFile(Uri uri)
         {
             if (!uri.IsFile)
@@ -45,56 +57,15 @@ namespace TiX
 
             return false;
         }
-
-        public static bool IsRunningAsAdministrator()
-        {
-            using (var cur = WindowsIdentity.GetCurrent())
-            {
-                foreach (var role in cur.Groups)
-                {
-                    if (role.IsValidTargetType(typeof(SecurityIdentifier)))
-                    {
-                        var sid = (SecurityIdentifier)role.Translate(typeof(SecurityIdentifier));
-
-                        if (sid.IsWellKnown(WellKnownSidType.AccountAdministratorSid) ||
-                            sid.IsWellKnown(WellKnownSidType.BuiltinAdministratorsSid))
-                            return true;
-                    }
-                }
-            }
-
-            return false;
-        }
-
         static TiXMain()
         {
-            GUIDApplication = ((GuidAttribute)System.Reflection.Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(GuidAttribute), true)[0]).Value;
-
-            IsAdministratorMode = IsRunningAsAdministrator();
+            IsInstalled = File.Exists(Path.Combine(Path.GetDirectoryName(Application.ExecutablePath), "TiX.dat"));
         }
         
         [STAThread]
         static int Main(string[] args)
         {
-            var option = TiXOption.Parse(args);
-
-            var isScheme = !string.IsNullOrWhiteSpace(option.SchemeData);
-
-            // 보안 이슈
-            if (!isScheme)
-            {
-                if (option.OptionInstallation == OptionInstallation.UninstallRunas)
-                    return (int)Installer.Ap_Uninstall_Runas(option.Files[0]);
-
-                if (option.OptionInstallation == OptionInstallation.InstallRunas)
-                    return (int)Installer.Ap_Install_Runas(true, option.Files[0], option.Files[1]);
-
-                if (option.OptionInstallation.HasFlag(OptionInstallation.Install))
-                    return (int)Installer.Ap_Install(true, option.OptionInstallation);
-
-                if (option.OptionTixSettings != 0)
-                    return (int)Installer.TiXSetting(true, option.OptionTixSettings);
-            }
+            var option = Args.Parse(args);
             
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
@@ -108,22 +79,35 @@ namespace TiX
             System.Net.ServicePointManager.MaxServicePoints = 20;
 
             Settings.Instance.Load();
-            TiXMain.Twitter.UserToken  = Settings.Instance.UToken;
+
+            // Check Pin Mutex
+            while (string.IsNullOrWhiteSpace(Settings.Instance.UToken ) ||
+                   string.IsNullOrWhiteSpace(Settings.Instance.USecret))
+            {
+                using (var helper = new InstanceHelper(CurrentDirMutex))
+                {
+                    if (helper.LockOrActivate())
+                    {
+                        using (var frm = new frmPin(helper.WMMessage))
+                        {
+                            Application.Run(frm);
+
+                            if (frm.DialogResult != DialogResult.OK)
+                                return 0;
+                        }
+                    }
+                    else
+                    {
+                        helper.WaitOne();
+                        Settings.Instance.Load();
+                    }
+                }
+            }
+
+            TiXMain.Twitter.UserToken = Settings.Instance.UToken;
             TiXMain.Twitter.UserSecret = Settings.Instance.USecret;
 
-            if (!isScheme && option.OptionInstallation == OptionInstallation.Uninstall)
-            {
-                Application.Run(new frmUninstall());
-                return 0;
-            }
-            
-            if (!option.StandAlone && !File.Exists(Path.Combine(Path.GetDirectoryName(Application.ExecutablePath), "TiX.dat")))
-            {
-                Application.Run(new frmInstall());
-                return 0;
-            }
-
-            if (isScheme)
+            if (!string.IsNullOrWhiteSpace(option.SchemeData))
                 return MainPartOfScheme(option);
 
             if (option.CaptureScreenPart)
@@ -135,14 +119,14 @@ namespace TiX
             if (option.Files != null && option.Files.Count >= 1)
                 return MainPartOfFiles(option, option.Files);
 
-            using (var helper = new InstanceHelper(GUIDApplication))
+            using (var helper = new InstanceHelper(CurrentDirMutex))
                 if (helper.LockOrActivate())
                     Application.Run(new frmMain(helper.WMMessage));
 
             return 0;
         }
         
-        private static int MainPartOfScheme(TiXOption option)
+        private static int MainPartOfScheme(Args option)
         {
             Uri uri = new Uri(option.SchemeData);
             if (!Uri.TryCreate(option.SchemeData, UriKind.RelativeOrAbsolute, out uri))
@@ -185,7 +169,7 @@ namespace TiX
             return 0;
         }
 
-        private static int MainPartOfCaptureScreen(TiXOption option)
+        private static int MainPartOfCaptureScreen(Args option)
         {
             Image cropedImage;
             using (var stasisForm = new Stasisfield())
@@ -214,7 +198,7 @@ namespace TiX
                 while (!string.IsNullOrWhiteSpace(line = reader.ReadLine()))
                     yield return line;
         }
-        private static int MainPartOfFiles(TiXOption option, IEnumerable<string> items)
+        private static int MainPartOfFiles(Args option, IEnumerable<string> items)
         {
             var lst = new List<Uri>(8);
             Uri uri;

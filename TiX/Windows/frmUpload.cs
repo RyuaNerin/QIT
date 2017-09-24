@@ -43,14 +43,15 @@ namespace TiX.Windows
 
         //////////////////////////////////////////////////////////////////////////
 
-        public frmUpload(ImageCollection ic, Action closeEvent, bool mainWnd = false)
+        public frmUpload(ImageCollection ic, Action closeEvent, bool isInstance)
         {
             InitializeComponent();
-            this.Icon = TiX.Properties.Resources.TiX;
+            this.Icon = TiX.Resources.TiX;
 
             this.m_closeEvent = closeEvent;
 
-            this.ShowInTaskbar = mainWnd;
+            this.ShowInTaskbar   = isInstance;
+            this.FormBorderStyle = isInstance ? FormBorderStyle.SizableToolWindow : FormBorderStyle.Sizable;
 
             this.m_ic = ic;
             
@@ -201,11 +202,11 @@ namespace TiX.Windows
             switch (sender.Status)
             {
             case ImageSet.Statues.None:
-                this.picImage.Image = Properties.Resources.refresh;
+                this.picImage.Image = TiX.Resources.refresh;
                 break;
 
             case ImageSet.Statues.Error:
-                this.picImage.Image = Properties.Resources.error;
+                this.picImage.Image = TiX.Resources.error;
                 break;
 
             case ImageSet.Statues.Success:

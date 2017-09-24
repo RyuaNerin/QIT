@@ -1,8 +1,6 @@
 ﻿using System;
-using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
-using System.Windows.Forms;
 
 namespace TiX.Utilities
 {
@@ -64,6 +62,12 @@ namespace TiX.Utilities
             }
 
             return true;
+        }
+
+        public void WaitOne()
+        {
+            if (this.m_mutex != null)
+                this.m_mutex.WaitOne();
         }
 
         public int WMMessage => this.m_wmMessage;

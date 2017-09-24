@@ -1,5 +1,4 @@
-LIBRARY	"TiXExt32"
-EXPORTS
+﻿EXPORTS
     DllCanUnloadNow     PRIVATE
     DllGetClassObject   PRIVATE
     DllRegisterServer   PRIVATE

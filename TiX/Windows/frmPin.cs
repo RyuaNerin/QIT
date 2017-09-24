@@ -3,12 +3,13 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+
 using TiX.Core;
 using TiX.Utilities;
 
 namespace TiX.Windows
 {
-	internal partial class frmPin : Form
+    internal partial class frmPin : Form
 	{
         private static class NativeMethods
         {
@@ -21,23 +22,44 @@ namespace TiX.Windows
             public static extern bool RemoveClipboardFormatListener(IntPtr hwnd);
         }
 
-		string m_token, m_secret;
+		private string m_token, m_secret;
 
-		public frmPin()
+		public frmPin(int wmMessage = 0)
 		{
-            InitializeComponent();
-            this.Icon = TiX.Properties.Resources.TiX;
-		}
+            this.m_wmMessage = wmMessage;
 
+            InitializeComponent();
+        
+            this.Icon = TiX.Resources.TiX;
+        }
+
+        private new void Activate()
+        {
+            if (this.WindowState == FormWindowState.Minimized)
+                this.WindowState = FormWindowState.Normal;
+
+            var  topMost = this.TopMost;
+            this.TopMost = true;
+            this.TopMost = topMost;
+
+            base.Activate();
+            this.Focus();
+        }
+
+        private readonly int m_wmMessage;
         protected override void WndProc(ref Message m)
         {
-            if (m.Msg == 0x031D) // WM_CLIPBOARDUPDATE
+            if (this.m_wmMessage != 0 && m.Msg == this.m_wmMessage)
+            {
+                this.Activate();
+            }
+            else if (m.Msg == 0x031D) // WM_CLIPBOARDUPDATE
             {
                 var str = Clipboard.GetText();
-                int i;
-                if (str.Length == 7 && int.TryParse(str, out i))
+                if (!string.IsNullOrWhiteSpace(str) && str.Length == 7 && int.TryParse(str, out int i))
                 {
                     this.txtPin.Text = str;
+                    
                     this.Activate();
                 }
             }
@@ -45,7 +67,7 @@ namespace TiX.Windows
             base.WndProc(ref m);
         }
 
-		private void frmPin_Load(object sender, EventArgs e)
+        private void frmPin_Load(object sender, EventArgs e)
         {
             this.ajax.Left = this.ClientRectangle.Width  / 2 - 8;
             this.ajax.Top  = this.ClientRectangle.Height / 2 - 8;

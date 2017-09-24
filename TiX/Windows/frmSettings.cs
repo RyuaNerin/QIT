@@ -12,7 +12,7 @@ namespace TiX.Windows
         public frmSettings()
         {
             InitializeComponent();
-            this.Icon = TiX.Properties.Resources.TiX;
+            this.Icon = TiX.Resources.TiX;
 
             var si = Settings.Instance;
 
@@ -28,38 +28,25 @@ namespace TiX.Windows
             this.m_binder.Add(si, e => e.StartInTray,        this.chkStartInTray);
             this.m_binder.Add(si, e => e.StartWithWindows,   this.chkStartWithWindows);
 
-            this.m_binder.Add(si, e => e.SEWithText,         this.chkEnableShellWT);
-            this.m_binder.Add(si, e => e.SEWithoutText,      this.chkEnableShellWoT);
+            if (TiXMain.IsInstalled)
+            {
+                this.m_binder.Add(si, e => e.SEWithText,    this.chkEnableShellWT);
+                this.m_binder.Add(si, e => e.SEWithoutText, this.chkEnableShellWoT);
+            }
+            else
+            {
+                this.chkEnableShellWT.Enabled  = false;
+                this.chkEnableShellWoT.Enabled = false;
+            }
 
             this.m_binder.FromSetting();
         }
 
         private void btnOK_Click(object sender, EventArgs e)
         {
-            if (Settings.Instance.SEWithText       != this.chkEnableShellWT.Checked  ||
-                Settings.Instance.SEWithoutText    != this.chkEnableShellWoT.Checked ||
-                Settings.Instance.StartWithWindows != this.chkStartWithWindows.Checked)
-            {
-                var option = OptionTixSettings.None;
-                if (this.chkEnableShellWT.Checked)    option |= OptionTixSettings.ShellExtension_WithText;
-                if (this.chkEnableShellWoT.Checked)   option |= OptionTixSettings.ShellExtension_WithoutText;
-                if (this.chkStartWithWindows.Checked) option |= OptionTixSettings.StartWithWindows;
-
-                switch (Installer.TiXSetting(false, option))
-                {
-                    case InstallerResult.NOT_AUTHORIZED:
-                        this.Error("관리자 권한으로 실행해주세요!");
-                        break;
-
-                    case InstallerResult.UNKNOWN:
-                        this.Error("알 수 없는 문제가 발생했어요!");
-                        break;
-                }
-            }
-
-
             this.m_binder.ToSetting();
 
+            Settings.Instance.ApplyToRegistry();
             Settings.Instance.Save();
             this.Close();
         }

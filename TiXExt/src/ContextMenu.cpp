@@ -135,7 +135,7 @@ bool InsertTiXMenu(HMENU hMenu, UINT uMenuIndex, UINT uidFirstCmd, LPWSTR dwType
     mii.fState = MFS_ENABLED;
     mii.hbmpItem = m_menuImage;
 
-    return InsertMenuItemW(hMenu, uMenuIndex + *tixMenuIndex, TRUE, &mii) == TRUE;
+    return (InsertMenuItemW(hMenu, uMenuIndex + *tixMenuIndex, TRUE, &mii) == TRUE);
 }
 STDMETHODIMP ContextMenu::QueryContextMenu(HMENU hMenu, UINT uMenuIndex, UINT uidFirstCmd, UINT uidLastCmd, UINT uFlags)
 {

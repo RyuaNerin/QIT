@@ -13,7 +13,7 @@ namespace TiX.Core
         public string WindowTitle   { get; set; }
         public string DefaultString { get; set; }
         public string InReply       { get; set; }
-}
+    }
     internal static class TweetModerator
     {
         public static void Tweet(IEnumerable<string> paths, TweetOption option)
@@ -79,7 +79,7 @@ namespace TiX.Core
             if (data.Callback)
                 frmMain.Instance.EndInvoke(data.IAsyncResult);
 
-            var frm = new frmUpload(data.Collection, data.Option.CloseEvent)
+            var frm = new frmUpload(data.Collection, data.Option.CloseEvent, frmMain.Instance != null)
             {
                 AutoStart         = data.Option.AutoStart,
                 TweetString       = data.Option.DefaultString,
@@ -90,10 +90,7 @@ namespace TiX.Core
             if (frmMain.Instance != null)
                 frm.Show(frmMain.Instance);
             else
-            {
-                frm.ShowInTaskbar = true;
                 Application.Run(frm);
-            }
         }
     }
 }

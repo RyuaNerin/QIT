@@ -4,7 +4,6 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -35,7 +34,6 @@ namespace TiX.Core
                 }
                 dic.Add(format, data);
             }
-            System.Diagnostics.Debug.Assert(true);
 #endif
 
             return 
@@ -52,8 +50,9 @@ namespace TiX.Core
                    e.Data.GetDataPresent("UnicodeText");
         }
 
-        private ImageSet(ImageCollection collection, int index)
+        private ImageSet(ImageCollection collection, int index, DataTypes dataType)
         {
+            this.m_dataType   = dataType;
             this.m_collection = collection;
             this.m_index      = index;
 
@@ -82,31 +81,30 @@ namespace TiX.Core
         }
 
         public ImageSet(ImageCollection collection, int index, IDataObject dataObject)
-            : this(collection, index)
+            : this(collection, index, DataTypes.IDataObject)
         {
-            this.m_dataType   = DataTypes.IDataObject;
             this.m_DataObject = dataObject;
         }
+
         public ImageSet(ImageCollection collection, int index, Uri uri)
-            : this(collection, index)
+            : this(collection, index, DataTypes.Uri)
         {
-            this.m_dataType   = DataTypes.Uri;
             this.m_DataObject = uri;
         }
-        public ImageSet(ImageCollection collection, int index, Image image)
-            : this(collection, index)
-        {
-            this.m_dataType = DataTypes.Image;
-            this.Image      = image;
-        }
-        public ImageSet(ImageCollection collection, int index, byte[] data)
-            : this(collection, index)
-        {
-            this.m_dataType   = DataTypes.Bytes;
-            this.m_DataObject = data;
 
+        public ImageSet(ImageCollection collection, int index, Image image)
+            : this(collection, index, DataTypes.Image)
+        {
+            this.Image = image;
+        }
+
+        public ImageSet(ImageCollection collection, int index, byte[] data)
+            : this(collection, index, DataTypes.Bytes)
+        {
+            this.m_DataObject = data;
             this.m_rawStream.Write(data, 0, data.Length);
         }
+
         ~ImageSet()
         {
             this.Dispose(false);
@@ -125,7 +123,7 @@ namespace TiX.Core
 
             if (this.Image     != null) this.Image    .Dispose();
             if (this.Thumbnail != null) this.Thumbnail.Dispose();
-            if (this.m_rawStream != null) this.m_rawStream.Dispose();
+            if (this.RawStream != null) this.RawStream.Dispose();
 
             if (this.m_thread != null && this.m_thread.ThreadState == ThreadState.Running)
                 this.m_thread.Abort();
@@ -398,13 +396,6 @@ namespace TiX.Core
         {
             if (Signatures.CheckSignature(this.m_rawStream, Signatures.WebP))
             {
-                var libwebpPath = Path.Combine(Path.GetDirectoryName(Application.ExecutablePath), "libwebp.dll");
-                var libwebpData = IntPtr.Size == 8 ? Properties.Resources.libwebp_x64 : Properties.Resources.libwebp_x86;
-
-                var info = new FileInfo(libwebpPath);
-                if (!info.Exists || info.Length != libwebpData.Length)
-                    File.WriteAllBytes(libwebpPath, libwebpData);
-
                 this.m_rawStream.Position = 0;
                 var buff = new byte[this.m_rawStream.Length];
                 this.m_rawStream.Read(buff, 0, buff.Length);

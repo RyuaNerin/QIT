@@ -62,8 +62,7 @@ namespace TiX.Windows
             set
             {
                 this.m_size = (value ? 16 : 32);
-                
-                this.m_image = value ? Properties.Resources.loading : Properties.Resources.loading32;
+                this.m_image = value ? Resources.loading : Resources.loading32;
 
                 this.CalcRect();
             }

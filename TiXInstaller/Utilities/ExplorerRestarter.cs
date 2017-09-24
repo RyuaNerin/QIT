@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Runtime.InteropServices;
 using Microsoft.Win32;
@@ -11,7 +12,14 @@ namespace TiX.Utilities
 {
     internal class ExplorerRestarter : IDisposable
     {
-        private readonly List<List<string>> m_opened = new List<List<string>>();
+        private struct ExplorerStatus
+        {
+            public string       dirPath;
+            public int          ShowCmd;
+            public List<string> SelectedFiles;
+        }
+        
+        private readonly List<ExplorerStatus> m_opened = new List<ExplorerStatus>();
         private readonly object m_orignalValue;
         private readonly RegistryValueKind m_orignalKind;
 
@@ -30,21 +38,27 @@ namespace TiX.Utilities
 
             var exp = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "explorer.exe");
 
+            var wndpl = NativeMethods.WINDOWPLACEMENT.Default;
+
             ShellWindows shellWindows = new ShellWindows();
             foreach (InternetExplorer window in shellWindows)
             {
                 if (window.FullName == exp)
                 {
-                    var list = new List<string>()
-                    {
-                        window.LocationURL
-                    };
+                    var st = new ExplorerStatus();
+                    st.dirPath = window.LocationURL;
 
+                    var lst = new List<string>();
                     FolderItems items = ((IShellFolderViewDual2)window.Document).SelectedItems();
                     foreach (FolderItem item in items)
-                        list.Add(item.Path);
+                        lst.Add(item.Path);
 
-                    this.m_opened.Add(list);
+                    if (lst.Count > 0)
+                        st.SelectedFiles = lst;
+
+                    st.ShowCmd = NativeMethods.GetWindowPlacement(new IntPtr(window.HWND), ref wndpl) ? wndpl.ShowCmd : -1;
+                    
+                    this.m_opened.Add(st);
                 }
             }
 
@@ -82,40 +96,38 @@ namespace TiX.Utilities
             Process.Start(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "explorer.exe"));
             
             var lst = new List<IntPtr>();
-
-            int r;
+            
+            int result;
 
             foreach (var path in this.m_opened)
             {
-                if (path.Count == 1)
-                {
-                    Process.Start(new ProcessStartInfo { FileName = path[0], UseShellExecute = true });
-                }
-                else if (path.Count > 1)
-                {
-                    lst.Clear();
+                lst.Clear();
 
-                    r = NativeMethods.SHParseDisplayName(path[0], IntPtr.Zero, out IntPtr pidlFolder, 0, out uint psfgaoOut);
-                    if (r == NativeMethods.S_OK && pidlFolder != IntPtr.Zero)
+                result = NativeMethods.SHParseDisplayName(path.dirPath, IntPtr.Zero, out IntPtr pidlFolder, 0, out uint psfgaoOut);
+                if (result == NativeMethods.S_OK && pidlFolder != IntPtr.Zero)
+                {
+                    try
                     {
-                        try
+                        if (path.SelectedFiles == null)
+                            NativeMethods.SHOpenFolderAndSelectItems(pidlFolder, 0U, null, 0);
+                        else
                         {
-                            for (int i = 1; i < path.Count; ++i)
+                            foreach (var filePath in path.SelectedFiles)
                             {
-                                r = NativeMethods.SHParseDisplayName(path[i], IntPtr.Zero, out IntPtr pidlFile, 0, out psfgaoOut);
+                                result = NativeMethods.SHParseDisplayName(filePath, IntPtr.Zero, out IntPtr pidlFile, 0, out psfgaoOut);
 
-                                if (r == NativeMethods.S_OK && pidlFile != IntPtr.Zero)
+                                if (result == NativeMethods.S_OK && pidlFile != IntPtr.Zero)
                                     lst.Add(pidlFile);
                             }
 
-                            var arr = lst.ToArray();
-                            NativeMethods.SHOpenFolderAndSelectItems(pidlFolder, (uint)arr.Length, arr, 0);
+                            var apidl = lst.ToArray();
+                            NativeMethods.SHOpenFolderAndSelectItems(pidlFolder, (uint)apidl.Length, apidl, 0);
                         }
-                        finally
-                        {
-                            Marshal.FreeCoTaskMem(pidlFolder);
-                            lst.ForEach(e => Marshal.FreeCoTaskMem(e));
-                        }
+                    }
+                    finally
+                    {
+                        NativeMethods.ILFree(pidlFolder);
+                        lst.ForEach(e => NativeMethods.ILFree(e));
                     }
                 }
             }
@@ -154,7 +166,40 @@ namespace TiX.Utilities
                 [In, MarshalAs(UnmanagedType.LPArray)] IntPtr[] apidl,
                 uint dwFlags);
 
+            [DllImport("shell32.dll")]
+            public static extern void ILFree(
+                IntPtr pidl);
+
+            [DllImport("user32.dll", SetLastError = true)]
+            [return: MarshalAs(UnmanagedType.Bool)]
+            public static extern bool GetWindowPlacement(
+                IntPtr hWnd,
+                ref WINDOWPLACEMENT lpwndpl);
+
+            [Serializable]
+            [StructLayout(LayoutKind.Sequential)]
+            public struct WINDOWPLACEMENT
+            {
+                public int       Length;
+                public int       Flags;                
+                public int       ShowCmd;
+                public Point     MinPosition;
+                public Point     MaxPosition;
+                public Rectangle NormalPosition;
+
+                public static WINDOWPLACEMENT Default
+                {
+                    get
+                    {
+                        WINDOWPLACEMENT result = new WINDOWPLACEMENT();
+                        result.Length = Marshal.SizeOf(result);
+                        return result;
+                    }
+                }
+            }
+
             public const int S_OK = 0;
+
         }
     }
 }

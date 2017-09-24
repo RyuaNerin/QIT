@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -25,38 +27,33 @@ namespace TiX
     }
 
     [Flags]
-    internal enum OptionInstallation : long
+    internal enum OptionInstallation : int
     {
-        Install             = 0x01,
-        InstallRunas        = 0x02,
-        Uninstall           = 0x04,
-        UninstallRunas      = 0x08,
+        InstallOrNone       = 0x00,
+        InstallRunas        = 0x01,
+        Uninstall           = 0x02,
+        UninstallRunas      = 0x04,
+        Cmd                 = InstallOrNone | InstallRunas | Uninstall | UninstallRunas,
+
         ShoftcutInDesktop   = 0x10,
         ShoftcutInStartMenu = 0x20,
-    }
-
-    [Flags]
-    internal enum OptionTixSettings : int
-    {
-        None                       = 0x00,
-        ShellExtension_WithText    = 0x01,
-        ShellExtension_WithoutText = 0x02,
-        StartWithWindows           = 0x04,
+        ReportError         = 0x4000,
+        CreateLogFile       = 0x8000
     }
 
     internal static class Installer
     {
-        private static InstallerResult Runas(bool isRunas, TiXOption option, Func<InstallerResult> action)
+        private static InstallerResult Runas(bool isRunas, Args args, Func<InstallerResult> action)
         {
             if (!isRunas)
             {
                 var startup = new ProcessStartInfo()
                 {
-                    WindowStyle      = ProcessWindowStyle.Hidden,
+                    //WindowStyle      = ProcessWindowStyle.Hidden,
                     UseShellExecute  = true,
                     FileName         = Application.ExecutablePath,
                     Verb             = "runas",
-                    Arguments        = option.ToString()
+                    Arguments        = args.ToString()
                 };
 
                 try
@@ -82,56 +79,20 @@ namespace TiX
             }
         }
 
-        public static InstallerResult TiXSetting(bool isRunas, OptionTixSettings option)
+        public static InstallerResult Ap_Install(OptionInstallation option)
         {
-            var wt  = option.HasFlag(OptionTixSettings.ShellExtension_WithText);
-            var wot = option.HasFlag(OptionTixSettings.ShellExtension_WithoutText);
+            var reportError   = option.HasFlag(OptionInstallation.ReportError);
 
-            var exe = Application.ExecutablePath;
-
-            try
-            {
-                using (var key = Registry.CurrentUser.CreateSubKey(@"Software\RyuaNerin"))
-                {
-                    key.SetValue("TiX",     exe,         RegistryValueKind.ExpandString);
-                    key.SetValue("TiX-wt",  wt  ? 1 : 0, RegistryValueKind.DWord);
-                    key.SetValue("TiX-wot", wot ? 1 : 0, RegistryValueKind.DWord);
-                }
-            }
-            catch
-            {
-                return InstallerResult.UNKNOWN;
-            }
-
-            try
-            {
-                using (var run = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\\Run", true))
-                {
-                    if (option.HasFlag(OptionTixSettings.StartWithWindows))
-                        run.SetValue("TiX", exe, RegistryValueKind.String);
-                    else
-                        run.DeleteValue("TiX", false);
-                }
-                
-            }
-            catch
-            {
-                return InstallerResult.UNKNOWN;
-            }
-
-            return InstallerResult.SUCCESS;
-        }
-
-        public static InstallerResult Ap_Install(bool isRunas, OptionInstallation option)
-        {
             try
             {
                 var dir = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
                     dir = Path.Combine(dir, "TiX");
                 var exe = Path.Combine(dir, "TiX.exe");
 
+                var newOption = (option & ~OptionInstallation.InstallOrNone) | OptionInstallation.InstallRunas;
+
                 var sid = new NTAccount(WindowsIdentity.GetCurrent().Name).Translate(typeof(SecurityIdentifier)).ToString();
-                var runas = Installer.Ap_Install_Runas(isRunas, dir, sid);
+                var runas = Installer.Ap_Install_Runas(false, newOption, dir, sid);
                 if (runas != InstallerResult.SUCCESS)
                     return runas;
 
@@ -146,133 +107,243 @@ namespace TiX
             }
             catch (Exception ex) when (ex is SecurityException || ex is UnauthorizedAccessException)
             {
+                if (reportError)
+                    CrashReport.Error(ex);
+
                 return InstallerResult.NOT_AUTHORIZED;
             }
-            catch
+            catch (Exception ex)
             {
+                if (reportError)
+                    CrashReport.Error(ex);
+
                 return InstallerResult.UNKNOWN;
             }
 
             return InstallerResult.SUCCESS;
         }
-        public static InstallerResult Ap_Install_Runas(bool isRunas, string dir, string sid)
+        public static InstallerResult Ap_Install_Runas(bool isRunas, OptionInstallation option, string dir, string sid)
         {
             return Runas(
                 isRunas,
-                new TiXOption
+                new Args
                 {
-                    OptionInstallation = OptionInstallation.InstallRunas,
+                    OptionInstallation = (int)option,
                     Files = new List<string>
                     {
                         dir,
-                        sid
+                        sid,
                     }
                 },
                 () =>
                 {
+                    var createLogFile = option.HasFlag(OptionInstallation.CreateLogFile);
+                    var reportError   = option.HasFlag(OptionInstallation.ReportError);
+
+                    Stream stream;
                     try
                     {
-                        var exe = Path.Combine(dir, "TiX.exe");
+                        stream = !createLogFile ? Stream.Null : File.Open(Path.ChangeExtension(Application.ExecutablePath, ".log"), FileMode.OpenOrCreate, FileAccess.Write, FileShare.ReadWrite);
+                        if (stream.CanSeek)
+                            stream.Seek(0, SeekOrigin.End);
+                    }
+                    catch (Exception ex)
+                    {
+                        if (reportError)
+                            CrashReport.Error(ex);
 
-                        if (!Directory.CreateDirectory(dir).Exists)
-                            return InstallerResult.NOT_AUTHORIZED;
+                        stream = Stream.Null;
+                    }
 
-                        // 파일이 있으면 삭제 시도 후 강제 종료
-                        if (!ShutdownTiX(exe))
-                            return InstallerResult.FILE_USED;
-
-                        // 복사
-                        File.Copy(Application.ExecutablePath, exe);
-
-                        if (!File.Exists(exe))
-                            return InstallerResult.UNKNOWN;
-
-                        var asm = Assembly.GetExecutingAssembly();
-                        var copyright = ((AssemblyCopyrightAttribute)asm.GetCustomAttributes(typeof(AssemblyCopyrightAttribute), true)[0]).Copyright;
-                        
-                        using (var currentUser = Registry.Users.CreateSubKey(sid))
+                    using (stream)
+                    using (var writer = new StreamWriter(stream, Encoding.UTF8))
+                    {
+                        try
                         {
-                            // 스키마 등록
-                            using (var stix = currentUser.CreateSubKey(@"Software\Classes\tix"))
+                            writer.WriteLine("");
+                            writer.WriteLine("");
+                            writer.WriteLine("==============================");
+
+                            var exe = Path.Combine(dir, "TiX.exe");
+                            var inst = Path.Combine(dir, "TiX-Installer.exe");
+
+                            writer.WriteLine($"exe  : {exe}");
+                            writer.WriteLine($"isnt : {inst}");
+
+                            writer.WriteLine("CreateDirectory");
+                            if (!Directory.CreateDirectory(dir).Exists)
                             {
-                                stix.SetValue(null, "URL:TiX");
-                                stix.SetValue("URL Protocol", "", RegistryValueKind.String);
-                                using (var cmm = stix.CreateSubKey(@"shell\open\command"))
-                                    cmm.SetValue(null, $"\"{exe}\" {new TiXOption { SchemeData = "\"%1\"" }}");
+                                writer.WriteLine("Failed");
+                                return InstallerResult.NOT_AUTHORIZED;
+                            }
+                            writer.WriteLine("Done.");
+
+                            // 파일이 있으면 삭제 시도 후 강제 종료
+                            writer.WriteLine("Shutdown");
+                            if (!ShutdownTiX(exe))
+                            {
+                                writer.WriteLine("Failed");
+                                return InstallerResult.FILE_USED;
+                            }
+                            writer.WriteLine("Done.");
+
+                            // 복사
+                            writer.WriteLine("Shutdown installer");
+                            if (!ShutdownTiX(inst))
+                            {
+                                writer.WriteLine("Failed");
+                                return InstallerResult.FILE_USED;
                             }
 
-                            using (var key = currentUser.CreateSubKey(@"Software\RyuaNerin"))
+                            writer.WriteLine("Copy Installer");
+                            File.Copy(Application.ExecutablePath, inst);
+                            writer.WriteLine("Done.");
+
+                            writer.WriteLine("Copy Application");
                             {
-                                key.SetValue("TiX",     exe, RegistryValueKind.ExpandString);
-                                key.SetValue("TiX-wt",  1,   RegistryValueKind.DWord);
-                                key.SetValue("TiX-wot", 1,   RegistryValueKind.DWord);
+                                bool is64 = IntPtr.Size == 8;
+                                writer.WriteLine($"Intptr Size : {IntPtr.Size}");
+
+                                using (var resourceSet = TiXFiles.ResourceManager.GetResourceSet(CultureInfo.CurrentUICulture, true, true))
+                                {
+                                    foreach (DictionaryEntry prop in resourceSet)
+                                    {
+                                        var name  = prop.Key.ToString();
+                                        var value = prop.Value;
+
+                                        writer.WriteLine();
+                                        writer.WriteLine($"  PropertyName : {name}");
+                                        writer.WriteLine($"  value Type : {value.GetType()}");
+
+                                        if (!(value is byte[]))
+                                            continue;
+
+                                        var file     = name.Replace('_', '.');
+                                        var fileName = Path.GetFileNameWithoutExtension(file);
+
+                                        writer.WriteLine($"  fullName : {file}");
+                                        writer.WriteLine($"  fileName : {fileName}");
+                                        
+                                        if (fileName.EndsWith(".x86")) { if ( is64) continue; file = file.Replace(".x86", ""); }
+                                        if (fileName.EndsWith(".x64")) { if (!is64) continue; file = file.Replace(".x64", ""); }
+
+                                        writer.WriteLine($"  Copy {file}");
+                                        File.WriteAllBytes(Path.Combine(dir, file), (byte[])prop.Value);
+                                        writer.WriteLine("  Done.");
+                                    }
+                                }
+
+                                writer.WriteLine();
                             }
 
-                            // Shell Extension 등록
-                            var dllPath = Path.Combine(dir, string.Format("TiXExt{0}.dll", IntPtr.Size * 8));
-                            using (var exp = new ExplorerRestarter())
+                            var asm = Assembly.GetExecutingAssembly();
+                            var copyright = ((AssemblyCopyrightAttribute)asm.GetCustomAttributes(typeof(AssemblyCopyrightAttribute), true)[0]).Copyright;
+
+                            using (var currentUser = Registry.Users.CreateSubKey(sid))
                             {
-                                try
+                                // 스키마 등록
+                                writer.WriteLine("Scheme");
+                                using (var stix = currentUser.CreateSubKey(@"Software\Classes\tix"))
+                                {
+                                    stix.SetValue(null, "URL:TiX");
+                                    stix.SetValue("URL Protocol", "", RegistryValueKind.String);
+                                    using (var cmm = stix.CreateSubKey(@"shell\open\command"))
+                                        cmm.SetValue(null, $"\"{exe}\" {new Args { SchemeData = "\"%1\"" }}");
+                                }
+                                writer.WriteLine("Done.");
+
+                                writer.WriteLine("CurrentUser Setting");
+                                using (var key = currentUser.CreateSubKey(@"Software\RyuaNerin"))
+                                {
+                                    key.SetValue("TiX",     exe, RegistryValueKind.ExpandString);
+                                    key.SetValue("TiX-wt",  1,   RegistryValueKind.DWord);
+                                    key.SetValue("TiX-wot", 1,   RegistryValueKind.DWord);
+                                }
+                                writer.WriteLine("Done.");
+
+                                // Shell Extension 등록
+                                writer.WriteLine("Shell Extension");
+
+                                var dllPath = Path.Combine(dir, "TiXExt.dll");
+                                writer.WriteLine($"path : {dllPath}");
+                                using (var exp = new ExplorerRestarter())
                                 {
                                     File.WriteAllBytes(
                                         dllPath,
-                                        IntPtr.Size == 8 ?
-                                            Properties.Resources.TiXExt64 :
-                                            Properties.Resources.TiXExt32
-                                        );
+                                        IntPtr.Size == 8 ? Resources.TiXExt64 : Resources.TiXExt32);
+
+                                    if (!File.Exists(dllPath))
+                                        return InstallerResult.DLL_CREATAION_FAIL;
+
+                                    writer.WriteLine("SetShellExtensionApprove");
+                                    SetShellExtensionApprove(true, sid);
+                                    writer.WriteLine("Done.");
+                                    
+                                    writer.WriteLine("DllRegisterServer");
+                                    DllRegisterServer(currentUser, dllPath);
+                                    writer.WriteLine("Done.");
                                 }
-                                catch
+
+                                writer.WriteLine("Create TiX.dat");
+                                File.WriteAllText(Path.Combine(dir, "TiX.dat"), sid, Encoding.UTF8);
+                                writer.WriteLine("Done.");
+
+                                writer.WriteLine("Calc FileSize");
+                                var filesize = GetDirectorySize(new DirectoryInfo(dir));
+                                filesize /= 1024;
+                                writer.WriteLine("Done.");
+
+                                writer.WriteLine("Regist Uninstall");
+                                using (var uninstall = currentUser.CreateSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall"))
                                 {
-                                    return InstallerResult.DLL_CREATAION_FAIL;
+                                    using (var tix = uninstall.CreateSubKey($"{{{TiXMain.GUIDInstaller}}}"))
+                                    {
+                                        tix.SetValue("DisplayName", TiXMain.ProductName);
+                                        tix.SetValue("DisplayIcon", exe);
+                                        tix.SetValue("DisplayVersion", Application.ProductVersion);
+
+                                        tix.SetValue("ApplicationVersion", Application.ProductVersion);
+
+                                        tix.SetValue("Publisher", copyright);
+                                        tix.SetValue("URLInfoAbout", "https://github.com/RyuaNerin/QIT");
+                                        tix.SetValue("Contact", "https://github.com/RyuaNerin/QIT");
+
+                                        tix.SetValue("InstallDate", DateTime.Now.ToString("yyyyMMdd"));
+                                        tix.SetValue("InstallLocation", dir);
+                                        tix.SetValue("UninstallString", $"\"{inst}\" {new Args { OptionInstallation = (int)OptionInstallation.Uninstall }}");
+
+                                        tix.SetValue("EstimatedSize", filesize, RegistryValueKind.DWord);
+                                        tix.SetValue("NoModify", 1, RegistryValueKind.DWord);
+                                        tix.SetValue("NoRepair", 1, RegistryValueKind.DWord);
+                                    }
                                 }
-
-                                SetShellExtensionApprove(true, sid);
-                                DllRegisterServer(currentUser, dllPath);
-                            }
-
-                            File.WriteAllText(Path.Combine(dir, "TiX.dat"), sid, Encoding.UTF8);
-
-                            var filesize = new FileInfo(exe).Length + new FileInfo(dllPath).Length;
-                            filesize /= 1024;
-
-                            using (var uninstall = currentUser.CreateSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall"))
-                            {
-                                using (var tix = uninstall.CreateSubKey($"{{{TiXMain.GUIDApplication}}}"))
-                                {
-                                    tix.SetValue("DisplayName",         TiXMain.ProductName);
-                                    tix.SetValue("DisplayIcon",         exe);
-                                    tix.SetValue("DisplayVersion",      Application.ProductVersion);
-
-                                    tix.SetValue("ApplicationVersion",  Application.ProductVersion);
-
-                                    tix.SetValue("Publisher",           copyright);
-                                    tix.SetValue("URLInfoAbout",        "https://github.com/RyuaNerin/QIT");
-                                    tix.SetValue("Contact",             "https://github.com/RyuaNerin/QIT");
-
-                                    tix.SetValue("InstallDate",         DateTime.Now.ToString("yyyyMMdd"));
-                                    tix.SetValue("InstallLocation",     dir);
-                                    tix.SetValue("UninstallString",     $"\"{exe}\" {new TiXOption { OptionInstallation = OptionInstallation.Uninstall }}");
-
-                                    tix.SetValue("EstimatedSize", filesize, RegistryValueKind.DWord);
-                                    tix.SetValue("NoModify",      1,        RegistryValueKind.DWord);
-                                    tix.SetValue("NoRepair",      1,        RegistryValueKind.DWord);
-                                }
+                                writer.WriteLine("Done.");
                             }
                         }
-                    }
-                    catch (Exception ex) when (ex is SecurityException || ex is UnauthorizedAccessException)
-                    {
-                        return InstallerResult.NOT_AUTHORIZED;
-                    }
-                    catch
-                    {
-                        return InstallerResult.UNKNOWN;
+                        catch (Exception ex) when (ex is SecurityException || ex is UnauthorizedAccessException)
+                        {
+                            if (reportError)
+                                CrashReport.Error(ex);
+
+                            writer.WriteLine(ex);
+                            return InstallerResult.NOT_AUTHORIZED;
+                        }
+                        catch (Exception ex)
+                        {
+                            if (reportError)
+                                CrashReport.Error(ex);
+
+                            writer.WriteLine(ex);
+                            return InstallerResult.UNKNOWN;
+                        }
                     }
 
                     return InstallerResult.SUCCESS;
                 });
         }
-
+        public static long GetDirectorySize(DirectoryInfo dir)
+            => dir.GetFiles().Sum(fi => fi.Length) + dir.GetDirectories().Sum(di => GetDirectorySize(di));
+        
         public static InstallerResult Ap_Uninstall()
         {
             try
@@ -286,9 +357,9 @@ namespace TiX
                     FileName    = tempPath,
                     WindowStyle = ProcessWindowStyle.Hidden,
                     Verb        = "runas",
-                    Arguments   = new TiXOption
+                    Arguments   = new Args
                     {
-                        OptionInstallation = OptionInstallation.UninstallRunas,
+                        OptionInstallation = (int)OptionInstallation.UninstallRunas,
                         Files = new List<string> { Path.GetDirectoryName(Application.ExecutablePath) },
                     }.ToString(),
                 });
@@ -375,7 +446,7 @@ namespace TiX
 
                 try
                 {
-                    currentUser.DeleteSubKeyTree($"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\{{{TiXMain.GUIDApplication}}}", false);
+                    currentUser.DeleteSubKeyTree($"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\{{{TiXMain.GUIDInstaller}}}", false);
                 }
                 catch
                 {
@@ -401,6 +472,9 @@ namespace TiX
                         {
                             using (proc)
                             {
+                                if (proc.MainModule.FileName != exe)
+                                    continue;
+
                                 proc.Kill();
                                 proc.WaitForExit();
                             }

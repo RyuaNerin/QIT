@@ -30,7 +30,7 @@ namespace TiX.Windows
             this.m_imgSize = imageSet.Image.Size;
 
             InitializeComponent();
-            this.Icon = TiX.Properties.Resources.TiX;
+            this.Icon = TiX.Resources.TiX;
             this.Text = String.Format("{0} x {1} ({2:##0.0} %) : {3}", this.m_imgSize.Width, this.m_imgSize.Height, imageSet.Ratio, ToCapString(imageSet.RawStream.Length));
             
             this.m_client = this.ClientRectangle;

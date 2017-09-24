@@ -9,19 +9,43 @@ namespace TiX.Windows
 {
     public partial class frmInstall : Form
     {
-        public frmInstall()
+        public frmInstall(int wmMessage)
         {
+            this.m_wmMessage = wmMessage;
+
             InitializeComponent();
 
             this.Text = TiXMain.ProductName;
-            this.Icon = TiX.Properties.Resources.TiX;
+            this.Icon = TiX.Resources.TiX;
 
             UacIcon.SetUacIcon(TiXMain.IsAdministratorMode, this.btn, true);
+        }
+
+        private readonly int m_wmMessage;
+        protected override void WndProc(ref Message m)
+        {
+            if (m.Msg == this.m_wmMessage)
+            {
+                if (this.WindowState == FormWindowState.Minimized)
+                    this.WindowState = FormWindowState.Normal;
+
+                var topMost = this.TopMost;
+                this.TopMost = true;
+                this.TopMost = topMost;
+
+                this.Activate();
+                this.Focus();
+            }
+
+            base.WndProc(ref m);
         }
 
         private void btn_Click(object sender, EventArgs e)
         {
             this.btn.Enabled = false;
+            
+            var dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TiX");
+            Settings.Instance.LoadInDirectory(dir);
 
             using (var frm = new frmPin())
             {
@@ -32,11 +56,16 @@ namespace TiX.Windows
                 }
             }
 
-                var option = OptionInstallation.Install;
-            if (this.chkDesktop.Checked  ) option |= OptionInstallation.ShoftcutInDesktop;
-            if (this.chkStartMenu.Checked) option |= OptionInstallation.ShoftcutInStartMenu;
+            var option = OptionInstallation.InstallOrNone;
+            if (this.chkDesktop.Checked    ) option |= OptionInstallation.ShoftcutInDesktop;
+            if (this.chkStartMenu.Checked  ) option |= OptionInstallation.ShoftcutInStartMenu;
+            if (this.chkErrorReport.Checked) option |= OptionInstallation.ReportError;
 
-            switch (Installer.Ap_Install(false, option))
+#if DEBUG
+            option |= OptionInstallation.CreateLogFile;
+#endif
+
+            switch (Installer.Ap_Install(option))
             {
                 case InstallerResult.UNKNOWN:
                 case InstallerResult.FAIL_DLL_REGIST:
@@ -54,8 +83,7 @@ namespace TiX.Windows
 
                 case InstallerResult.SUCCESS:
                     this.Infomation("TiX 를 설치했어요!");
-
-                    var dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TiX");
+                    
                     Settings.Instance.SaveInDirectory(dir);
 
                     if (this.chkStart.Checked)

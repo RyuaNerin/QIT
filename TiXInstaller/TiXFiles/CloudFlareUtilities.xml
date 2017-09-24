@@ -1,0 +1,80 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>CloudFlareUtilities</name>
+    </assembly>
+    <members>
+        <member name="T:CloudFlareUtilities.ChallengeSolution">
+            <summary>
+            Holds the information, which is required to pass the CloudFlare clearance.
+            </summary>
+        </member>
+        <member name="T:CloudFlareUtilities.ClearanceHandler">
+            <summary>
+            A HTTP handler that transparently manages Cloudflare's Anti-DDoS measure.
+            </summary>
+            <remarks>
+            Only the JavaScript challenge can be handled. CAPTCHA and IP address blocking cannot be bypassed.
+            </remarks>
+        </member>
+        <member name="F:CloudFlareUtilities.ClearanceHandler.DefaultMaxRetries">
+            <summary>
+            The default number of retries, if clearance fails.
+            </summary>
+        </member>
+        <member name="M:CloudFlareUtilities.ClearanceHandler.#ctor">
+            <summary>
+            Creates a new instance of the <see cref="T:CloudFlareUtilities.ClearanceHandler"/> class with a <see cref="T:System.Net.Http.HttpClientHandler"/> as inner handler.
+            </summary>
+        </member>
+        <member name="M:CloudFlareUtilities.ClearanceHandler.#ctor(System.Net.Http.HttpMessageHandler)">
+            <summary>
+            Creates a new instance of the <see cref="T:CloudFlareUtilities.ClearanceHandler"/> class with a specific inner handler.
+            </summary>
+            <param name="innerHandler">The inner handler which is responsible for processing the HTTP response messages.</param>
+        </member>
+        <member name="P:CloudFlareUtilities.ClearanceHandler.MaxRetries">
+            <summary>
+            Gets or sets the number of clearance retries, if clearance fails.
+            </summary>
+            <remarks>A negative value causes an infinite amount of retries.</remarks>
+        </member>
+        <member name="M:CloudFlareUtilities.ClearanceHandler.Dispose(System.Boolean)">
+            <summary>
+            Releases the unmanaged resources used by the <see cref="T:CloudFlareUtilities.ClearanceHandler"/>, and optionally disposes of the managed resources.
+            </summary>
+            <param name="disposing"><see langword="true"/> to release both managed and unmanaged resources; <see langword="false"/> to releases only unmanaged resources.</param>
+        </member>
+        <member name="M:CloudFlareUtilities.ClearanceHandler.SendAsync(System.Net.Http.HttpRequestMessage,System.Threading.CancellationToken)">
+            <summary>
+            Sends an HTTP request to the inner handler to send to the server as an asynchronous operation.
+            </summary>
+            <param name="request">The HTTP request message to send to the server.</param>
+            <param name="cancellationToken">A cancellation token to cancel operation.</param>
+            <returns>The task object representing the asynchronous operation.</returns>
+        </member>
+        <member name="T:CloudFlareUtilities.CloudFlareClearanceException">
+            <summary>
+            The exception that is thrown if CloudFlare clearance failed after the declared number of attempts.
+            </summary>
+        </member>
+        <member name="P:CloudFlareUtilities.CloudFlareClearanceException.Attempts">
+            <summary>
+            Returns the number of failed clearance attempts.
+            </summary>
+        </member>
+        <member name="T:CloudFlareUtilities.ChallengeSolver">
+            <summary>
+            Provides methods to solve the JavaScript challenge, which is part of CloudFlares clearance process.
+            </summary>
+        </member>
+        <member name="M:CloudFlareUtilities.ChallengeSolver.Solve(System.String,System.String)">
+            <summary>
+            Solves the given JavaScript challenge.
+            </summary>
+            <param name="challengePageContent">The HTML content of the clearance page, which contains the challenge.</param>
+            <param name="targetHost">The hostname of the protected website.</param>
+            <returns>The solution.</returns>
+        </member>
+    </members>
+</doc>

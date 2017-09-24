@@ -4,6 +4,8 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Windows.Forms;
+using Microsoft.Win32;
 
 namespace TiX.Core
 {
@@ -46,7 +48,15 @@ namespace TiX.Core
 
         public void Load()
         {
-            if (!File.Exists(Settings.DefaultPath))
+            this.Load(Settings.DefaultPath);
+        }
+        public void LoadInDirectory(string dir)
+        {
+            this.Save(Path.Combine(dir, FileName));
+        }
+        private void Load(string path)
+        {
+            if (!File.Exists(path))
             {
                 return;
             }
@@ -54,11 +64,12 @@ namespace TiX.Core
             string str;
             foreach (var prop in m_properties)
             {
-                str = NativeMethods.Get(DefaultPath, "TiX", prop.Name);
+                str = NativeMethods.Get(path, "TiX", prop.Name);
                 if (!string.IsNullOrEmpty(str))
                     prop.SetValue(this, Str2Obj(str, prop.PropertyType), null);
             }
         }
+
         public void Save()
         {
             this.Save(Settings.DefaultPath);
@@ -76,6 +87,36 @@ namespace TiX.Core
 
                 if (val != null)
                     NativeMethods.Set(path, "TiX", prop.Name, val);
+            }
+        }
+
+        public void ApplyToRegistry()
+        {
+            try
+            {
+                using (var key = Registry.CurrentUser.CreateSubKey(@"Software\RyuaNerin"))
+                {
+                    key.SetValue("TiX-wt",  this.SEWithText    ? 1 : 0, RegistryValueKind.DWord);
+                    key.SetValue("TiX-wot", this.SEWithoutText ? 1 : 0, RegistryValueKind.DWord);
+                }
+            }
+            catch
+            {
+            }
+
+            try
+            {
+                using (var run = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\7Run", true))
+                {
+                    if (this.StartWithWindows)
+                        run.SetValue("TiX", Application.ExecutablePath, RegistryValueKind.String);
+                    else
+                        run.DeleteValue("TiX", false);
+                }
+
+            }
+            catch
+            {
             }
         }
 
