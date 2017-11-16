@@ -4,4 +4,5 @@
 [submodule "submodules/libwebp"]
 	path = submodules/libwebp
 	url = git@github.com:webmproject/libwebp.git
-	branch = 0.5.2
+	branch = 0.6.0
+	
