@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("TiX")]
-[assembly: AssemblyCopyright("CopyRight (C) 2014-2017, RyuaNerin & Sasarino MARi")]
+[assembly: AssemblyCopyright("CopyRight (C) 2014-2018, RyuaNerin & Sasarino MARi")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -32,5 +32,5 @@ using System.Runtime.InteropServices;
 // 모든 값을 지정하거나 아래와 같이 '*'를 사용하여 빌드 번호 및 수정 버전이 자동으로
 // 지정되도록 할 수 있습니다.
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("0.0.0.11")]
-[assembly: AssemblyFileVersion("0.0.0.11")]
+[assembly: AssemblyVersion("0.0.0.12")]
+[assembly: AssemblyFileVersion("0.0.0.12")]
