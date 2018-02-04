@@ -1,5 +1,7 @@
-﻿// https://dev.twitter.com/rest/media/uploading-media
+// https://dev.twitter.com/rest/media/uploading-media
 
+// Supported image media types: JPG, PNG, GIF, WEBP
+// Image size <= 5 MB, animated GIF size <= 15 MB
 // GIF
 // Resolution should be <= 1280x1080 (width x height)
 // Number of frames <= 350
@@ -17,8 +19,8 @@ namespace TiX.Utilities
 {
     internal static class ResizeImage
     {
-        private const int ImgMaxSize = 3 * 1024 * 1024;
-        private const int GifMaxSize = 5 * 1024 * 1024;
+        private const int ImgMaxSize =  5 * 1024 * 1024;
+        private const int GifMaxSize = 15 * 1024 * 1024;
         private const double JpgCompressionRatio = 10.0d; // : 1
         private const double PngCompressionRatio =  2.5d; // : 1
 
