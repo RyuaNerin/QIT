@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26430.6
+VisualStudioVersion = 15.0.27130.2026
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{405C1F44-C024-44E4-A823-AA6E8EE7B510}"
 	ProjectSection(SolutionItems) = preProject
@@ -13,8 +13,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TiX", "TiX\TiX.csproj", "{32B8745E-EBB6-4D7C-918C-A0D863C9F939}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TiXExt64", "TiXExt\KisboExt64.vcxproj", "{742FE632-177C-4CC9-A21B-4A04D4806862}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CloudFlareUtilities", "submodules\CloudFlareUtilities\CloudFlareUtilities\CloudFlareUtilities.csproj", "{0E2C040D-3F8D-4D96-94A4-EB752B8503C5}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TiXExt32", "TiXExt\KisboExt32.vcxproj", "{FBD3817A-E704-4FC6-901C-D6E4FAC787EE}"
 EndProject
@@ -41,10 +39,6 @@ Global
 		{742FE632-177C-4CC9-A21B-4A04D4806862}.Debug|Any CPU.Build.0 = Release|x64
 		{742FE632-177C-4CC9-A21B-4A04D4806862}.Release|Any CPU.ActiveCfg = Release|x64
 		{742FE632-177C-4CC9-A21B-4A04D4806862}.Release|Any CPU.Build.0 = Release|x64
-		{0E2C040D-3F8D-4D96-94A4-EB752B8503C5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0E2C040D-3F8D-4D96-94A4-EB752B8503C5}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0E2C040D-3F8D-4D96-94A4-EB752B8503C5}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0E2C040D-3F8D-4D96-94A4-EB752B8503C5}.Release|Any CPU.Build.0 = Release|Any CPU
 		{FBD3817A-E704-4FC6-901C-D6E4FAC787EE}.Debug|Any CPU.ActiveCfg = Release|Win32
 		{FBD3817A-E704-4FC6-901C-D6E4FAC787EE}.Debug|Any CPU.Build.0 = Release|Win32
 		{FBD3817A-E704-4FC6-901C-D6E4FAC787EE}.Release|Any CPU.ActiveCfg = Release|Win32
@@ -60,5 +54,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {9D857C38-1713-4A3E-8866-9FD103A61F64}
 	EndGlobalSection
 EndGlobal
