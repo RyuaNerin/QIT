@@ -41,7 +41,7 @@
     <ProjectGuid>{742FE632-177C-4CC9-A21B-4A04D4806862}</ProjectGuid>
     <RootNamespace>KisboExt</RootNamespace>
     <ProjectName>TiXExt64</ProjectName>
-    <WindowsTargetPlatformVersion>10.0.10240.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">

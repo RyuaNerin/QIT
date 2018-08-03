@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -394,6 +394,7 @@ namespace TiX.Core
 
         private void GetImageFromStream()
         {
+            this.m_rawStream.Position = 0;
             if (Signatures.CheckSignature(this.m_rawStream, Signatures.WebP))
             {
                 this.m_rawStream.Position = 0;
