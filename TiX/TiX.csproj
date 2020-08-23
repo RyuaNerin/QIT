@@ -92,11 +92,8 @@
     <Compile Include="Utilities\ExtendStringComparer.cs" />
     <Compile Include="Utilities\SettingBinder.cs" />
     <Compile Include="Utilities\Signatures.cs" />
-    <Compile Include="Windows\frmPin.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Windows\frmPin.Designer.cs">
-      <DependentUpon>frmPin.cs</DependentUpon>
+    <Compile Include="Windows\ConfigWindow.xaml.cs">
+      <DependentUpon>ConfigWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="Windows\PinWindow.xaml.cs">
       <DependentUpon>PinWindow.xaml</DependentUpon>
@@ -133,13 +130,9 @@
       <DependentUpon>Stasisfield.cs</DependentUpon>
     </Compile>
     <Compile Include="Core\Settings.cs" />
-    <Compile Include="external\Limitation\OAuth.cs" />
     <EmbeddedResource Include="Properties\Resources.resx" />
     <EmbeddedResource Include="Windows\frmMain.resx">
       <DependentUpon>frmMain.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Windows\frmPin.resx">
-      <DependentUpon>frmPin.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Windows\frmPreview.resx">
       <DependentUpon>frmPreview.cs</DependentUpon>
@@ -212,6 +205,10 @@
     <Page Include="TiXMain.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Windows\ConfigWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Windows\PinWindow.xaml">
       <SubType>Designer</SubType>
