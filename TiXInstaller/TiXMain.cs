@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Security.Principal;
 using System.Windows.Forms;
 using Limitation;
@@ -45,6 +45,8 @@ namespace TiX
         [STAThread]
         static int Main(string[] argsArray)
         {
+            System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
+
             var args   = Args.Parse(argsArray);
             var option = (OptionInstallation)args.OptionInstallation;
             var cmd    = option & OptionInstallation.Cmd;

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -73,10 +73,12 @@ namespace TiX
             CrashReport.Init();
 
 #if !DEBUG
-            System.Net.HttpWebRequest.DefaultWebProxy = null;
+            //System.Net.HttpWebRequest.DefaultWebProxy = null;
 #endif
             System.Net.HttpWebRequest.DefaultCachePolicy = new System.Net.Cache.RequestCachePolicy(System.Net.Cache.RequestCacheLevel.NoCacheNoStore);
             System.Net.ServicePointManager.MaxServicePoints = 20;
+
+            System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
 
             Settings.Instance.Load();
 
