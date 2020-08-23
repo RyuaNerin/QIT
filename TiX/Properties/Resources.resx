@@ -145,10 +145,6 @@
         YII=
 </value>
   </data>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="TiX" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\TiX.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
   <data name="loading" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABAAAAGACAYAAACk4uKWAAAABGdBTUEAALGOfPtRkwAAACBjSFJNAACH
@@ -647,10 +643,8 @@
         TkSuQmCC
 </value>
   </data>
-  <data name="TiXExt32" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\tixinstaller\tixext\tixext32.dll;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="TiXExt64" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\tixinstaller\tixext\tixext64.dll;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="TiX" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\tix.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
 </root>

@@ -1,0 +1,35 @@
+<Window x:Class="TiX.Windows.PinWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:ac="clr-namespace:Antraxina.Converter;assembly=Antraxina"
+        xmlns:at="clr-namespace:Antraxina.Templates;assembly=Antraxina"
+        mc:Ignorable="d"
+        ResizeMode="CanMinimize"
+        WindowStyle="SingleBorderWindow"
+        Title="트위터 로그인"
+        SizeToContent="WidthAndHeight"
+        Icon="/TiX;component/Resources/TiX.ico"
+        GotFocus="Window_GotFocus"
+        Loaded="Window_Loaded">
+    <Grid Margin="5">
+        <TextBox x:Name="InputPin"
+                 IsEnabled="False"
+                 FontSize="15"
+                 TextAlignment="Center"
+                 MaxLength="7" 
+                 MaxLines="1"
+                 KeyDown="InputPin_KeyDown" />
+
+        <Viewbox Height="{Binding ElementName=InputPin, Path=ActualHeight}"
+                 StretchDirection="DownOnly">
+            <at:ProgressRing x:Name="ProgressRing"
+                             IsActive="{Binding ElementName=InputPin, Path=IsEnabled, Converter={StaticResource InvertBoolConverter}}">
+                <at:ProgressRing.Resources>
+                    <ac:InvertBoolConverter x:Key="InvertBoolConverter" />
+                </at:ProgressRing.Resources>
+            </at:ProgressRing>
+        </Viewbox>
+    </Grid>
+</Window>

@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Net;
+using System.Reflection;
 using System.Text;
-using System.Windows.Forms;
+using System.Windows;
 using Limitation;
 using TiX.Core;
 using TiX.ScreenCapture;
@@ -12,13 +14,10 @@ using TiX.Windows;
 
 namespace TiX
 {
-    internal static class TiXMain
+    internal partial class TiXMain : Application
     {
-        public static readonly string ProductName        = $"TiX rev.{new Version(Application.ProductVersion).Revision}";
-        public const           string GUIDApplication    = "{9CE5906A-DFBB-4A5A-9EBF-9D262E5D29B8}";
-        public const           string GUIDShellExtension = "{9CE5906A-DFBB-4A5A-9EBF-9D262E5D29B9}";
-
-        public static readonly string CurrentDirMutex    = GUIDApplication + Path.GetDirectoryName(Application.ExecutablePath).GetHashCode().ToString("X");
+        public const string GUIDApplication = "{9CE5906A-DFBB-4A5A-9EBF-9D262E5D29B8}";
+        public const string GUIDShellExtension = "{9CE5906A-DFBB-4A5A-9EBF-9D262E5D29B9}";
 
         public static readonly string[] AllowExtension = {
             ".bmp",
@@ -34,9 +33,23 @@ namespace TiX
             ".svg"
         };
 
-        public static readonly OAuth Twitter = new OAuth("lQJwJWJoFlbvr2UQnDbg", "DsuIRA1Ak9mmSCGl9wnNvjhmWJTmb9vZlRdQ7sMqXww");
+        public static readonly OAuth Twitter = new OAuth(TwitterOAuth.AppKey, TwitterOAuth.AppSecret);
+
+        public static readonly string ProductName;
+        public static readonly string CurrentDirMutex;
 
         public static readonly bool IsInstalled;
+
+        static TiXMain()
+        {
+            var asm = Assembly.GetExecutingAssembly();
+            var asmLocation = asm.Location;
+
+            ProductName = $"TiX rev.{asm.GetName().Version.Revision}";
+            CurrentDirMutex = GUIDApplication + Path.GetDirectoryName(asmLocation).GetHashCode().ToString("X");
+            IsInstalled = File.Exists(Path.Combine(Path.GetDirectoryName(asmLocation), "TiX.dat"));
+        }
+
 
         public static bool CheckFile(Uri uri)
         {
@@ -57,39 +70,33 @@ namespace TiX
 
             return false;
         }
-        static TiXMain()
+
+        void App_Startup(object sender, StartupEventArgs e)
         {
-            IsInstalled = File.Exists(Path.Combine(Path.GetDirectoryName(Application.ExecutablePath), "TiX.dat"));
-        }
-        
-        [STAThread]
-        static int Main(string[] args)
-        {
-            var option = Args.Parse(args);
-            
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
+            var option = Args.Parse(e.Args);
 
             CrashReport.Init();
 
 #if !DEBUG
-            //System.Net.HttpWebRequest.DefaultWebProxy = null;
+            HttpWebRequest.DefaultWebProxy = null;
 #endif
-            System.Net.HttpWebRequest.DefaultCachePolicy = new System.Net.Cache.RequestCachePolicy(System.Net.Cache.RequestCacheLevel.NoCacheNoStore);
-            System.Net.ServicePointManager.MaxServicePoints = 20;
+            HttpWebRequest.DefaultCachePolicy = new System.Net.Cache.RequestCachePolicy(System.Net.Cache.RequestCacheLevel.NoCacheNoStore);
 
-            System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
+            ServicePointManager.MaxServicePoints = 32;
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
 
             Settings.Instance.Load();
 
             // Check Pin Mutex
-            while (string.IsNullOrWhiteSpace(Settings.Instance.UToken ) ||
+            while (string.IsNullOrWhiteSpace(Settings.Instance.UToken) ||
                    string.IsNullOrWhiteSpace(Settings.Instance.USecret))
             {
                 using (var helper = new InstanceHelper(CurrentDirMutex))
                 {
                     if (helper.LockOrActivate())
                     {
+                        var win = new PinWindow(helper.WMMessage);
+                        this.MainWindow = win;
                         using (var frm = new frmPin(helper.WMMessage))
                         {
                             Application.Run(frm);
@@ -127,7 +134,7 @@ namespace TiX
 
             return 0;
         }
-        
+
         private static int MainPartOfScheme(Args option)
         {
             Uri uri = new Uri(option.SchemeData);
@@ -147,9 +154,9 @@ namespace TiX
                 TweetModerator.Tweet(uris,
                     new TweetOption
                     {
-                        AutoStart     = option.TweetWithoutText,
+                        AutoStart = option.TweetWithoutText,
                         DefaultString = option.Text,
-                        InReply       = option.In_Reply_To_Status_Id,
+                        InReply = option.In_Reply_To_Status_Id,
                     });
             }
             else if (uri.Host == "base64")
@@ -162,9 +169,9 @@ namespace TiX
                 TweetModerator.Tweet(datas,
                     new TweetOption
                     {
-                        AutoStart     = option.TweetWithoutText,
+                        AutoStart = option.TweetWithoutText,
                         DefaultString = option.Text,
-                        InReply       = option.In_Reply_To_Status_Id,
+                        InReply = option.In_Reply_To_Status_Id,
                     });
             }
 
@@ -184,14 +191,14 @@ namespace TiX
                 TweetModerator.Tweet(cropedImage,
                     new TweetOption
                     {
-                        AutoStart     = false,
+                        AutoStart = false,
                         DefaultString = option.Text,
-                        InReply       = option.In_Reply_To_Status_Id,
+                        InReply = option.In_Reply_To_Status_Id,
                     });
 
             return 0;
         }
-        
+
         private static IEnumerable<string> GetLinesFromStream(Stream stream, Encoding encoding)
         {
             string line;
@@ -214,9 +221,9 @@ namespace TiX
             TweetModerator.Tweet(lst,
                 new TweetOption
                 {
-                    AutoStart     = option.TweetWithoutText,
+                    AutoStart = option.TweetWithoutText,
                     DefaultString = option.Text,
-                    InReply       = option.In_Reply_To_Status_Id,
+                    InReply = option.In_Reply_To_Status_Id,
                 });
             return 0;
         }

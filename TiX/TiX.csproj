@@ -9,24 +9,11 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>TiX</RootNamespace>
     <AssemblyName>TiX</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <TargetFrameworkProfile />
-    <PublishUrl>게시\</PublishUrl>
-    <Install>true</Install>
-    <InstallFrom>Disk</InstallFrom>
-    <UpdateEnabled>false</UpdateEnabled>
-    <UpdateMode>Foreground</UpdateMode>
-    <UpdateInterval>7</UpdateInterval>
-    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
-    <UpdatePeriodically>false</UpdatePeriodically>
-    <UpdateRequired>false</UpdateRequired>
-    <MapFileExtensions>true</MapFileExtensions>
-    <ApplicationRevision>0</ApplicationRevision>
-    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
-    <UseApplicationTrust>false</UseApplicationTrust>
-    <BootstrapperEnabled>true</BootstrapperEnabled>
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
   </PropertyGroup>
@@ -35,7 +22,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\TiXInstaller\TiXFiles\</OutputPath>
+    <OutputPath>..\bin\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -48,7 +35,7 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>embedded</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>..\TiXInstaller\TiXFiles\</OutputPath>
+    <OutputPath>..\bin\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -64,10 +51,11 @@
     </AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>TiX.TiXMain</StartupObject>
+    <StartupObject>
+    </StartupObject>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>TiX.ico</ApplicationIcon>
+    <ApplicationIcon>Resources\TiX.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup>
     <TargetZone>LocalIntranet</TargetZone>
@@ -82,25 +70,24 @@
   </PropertyGroup>
   <PropertyGroup />
   <ItemGroup>
+    <Compile Include="TiXMain.xaml.cs">
+      <DependentUpon>TiXMain.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Core\ImageCollection.cs" />
     <Compile Include="Core\ImageSet.cs" />
     <Compile Include="Core\TweetModerator.cs" />
+    <Compile Include="external\WebPWrapper\WebPWrapper.cs" />
     <Compile Include="CrashReport.cs" />
-    <Compile Include="LastRelease.cs" />
-    <Compile Include="Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TwitterOAuth.cs" />
     <Compile Include="Utilities\GifFrames.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Utilities\globalKeyboardHook.cs" />
     <Compile Include="Utilities\IconExtractor.cs" />
     <Compile Include="Utilities\InstanceHelper.cs" />
-    <Compile Include="LoadPSD\LoadPSD.cs" />
+    <Compile Include="external\LoadPSD\LoadPSD.cs" />
     <Compile Include="Utilities\MessageBoxes.cs" />
-    <Compile Include="Utilities\StreamLineEnumerator.cs" />
     <Compile Include="Utilities\ResizeImage.cs" />
     <Compile Include="Utilities\ExtendStringComparer.cs" />
     <Compile Include="Utilities\SettingBinder.cs" />
@@ -110,6 +97,9 @@
     </Compile>
     <Compile Include="Windows\frmPin.Designer.cs">
       <DependentUpon>frmPin.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Windows\PinWindow.xaml.cs">
+      <DependentUpon>PinWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="Windows\ProgressCircle.cs" />
     <Compile Include="Windows\frmMain.cs">
@@ -136,10 +126,6 @@
     <Compile Include="Windows\frmUpload.Designer.cs">
       <DependentUpon>frmUpload.cs</DependentUpon>
     </Compile>
-    <Compile Include="AssemblyInfo.cs" />
-    <Compile Include="TiXMain.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="ScreenCapture\Stasisfield.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -147,7 +133,8 @@
       <DependentUpon>Stasisfield.cs</DependentUpon>
     </Compile>
     <Compile Include="Core\Settings.cs" />
-    <Compile Include="Limitation\OAuth.cs" />
+    <Compile Include="external\Limitation\OAuth.cs" />
+    <EmbeddedResource Include="Properties\Resources.resx" />
     <EmbeddedResource Include="Windows\frmMain.resx">
       <DependentUpon>frmMain.cs</DependentUpon>
     </EmbeddedResource>
@@ -162,11 +149,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Windows\frmUpload.resx">
       <DependentUpon>frmUpload.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <SubType>Designer</SubType>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Include="ScreenCapture\Stasisfield.resx">
       <DependentUpon>Stasisfield.cs</DependentUpon>
@@ -192,22 +174,21 @@
     <Compile Include="Args.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="CloudFlareUtilities, Version=0.3.3.1, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\CloudFlareUtilities.NETStandard.0.3.3.1\lib\netstandard1.1\CloudFlareUtilities.dll</HintPath>
+    <Reference Include="Antraxina, Version=1.0.0.3, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Antraxina.dll.1.1.3\lib\Antraxina.dll</HintPath>
     </Reference>
-    <Reference Include="CommandLine, Version=1.9.71.2, Culture=neutral, PublicKeyToken=de6f01bd326f8c32, processorArchitecture=MSIL">
-      <HintPath>..\packages\CommandLineParser.1.9.71\lib\net45\CommandLine.dll</HintPath>
+    <Reference Include="CommandLine, Version=2.8.0.0, Culture=neutral, PublicKeyToken=5a870481e358d379, processorArchitecture=MSIL">
+      <HintPath>..\packages\CommandLineParser.2.8.0\lib\net461\CommandLine.dll</HintPath>
     </Reference>
-    <Reference Include="Imazen.WebP, Version=10.0.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Imazen.WebP.10.0.1\lib\net45\Imazen.WebP.dll</HintPath>
+    <Reference Include="CoreTweet, Version=1.0.0.483, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\CoreTweet.1.0.0.483\lib\net45\CoreTweet.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.12.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
-    <Reference Include="SharpRaven, Version=2.2.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\SharpRaven.2.2.0\lib\net45\SharpRaven.dll</HintPath>
-    </Reference>
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Data" />
@@ -216,16 +197,37 @@
     <Reference Include="System.IO.Compression" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Numerics" />
-    <Reference Include="System.Runtime.InteropServices.RuntimeInformation, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Runtime.InteropServices.RuntimeInformation.4.0.0\lib\net45\System.Runtime.InteropServices.RuntimeInformation.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xaml" />
     <Reference Include="System.XML" />
     <Reference Include="System.Xml.Linq" />
+    <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="TiX.ico" />
+    <Resource Include="Resources\TiX.ico">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="TiXMain.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Windows\PinWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\icon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="libwebp\libwebp_x64.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="libwebp\libwebp_x86.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27130.2026
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30406.217
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{405C1F44-C024-44E4-A823-AA6E8EE7B510}"
 	ProjectSection(SolutionItems) = preProject
@@ -19,20 +19,6 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TiXExt64", "TiXExt\KisboExt64.vcxproj", "{742FE632-177C-4CC9-A21B-4A04D4806862}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TiXExt32", "TiXExt\KisboExt32.vcxproj", "{FBD3817A-E704-4FC6-901C-D6E4FAC787EE}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TiXInstaller", "TiXInstaller\TiXInstaller.csproj", "{52DD6D1C-3420-4430-8E52-6F9532A9DEE6}"
-	ProjectSection(ProjectDependencies) = postProject
-		{742FE632-177C-4CC9-A21B-4A04D4806862} = {742FE632-177C-4CC9-A21B-4A04D4806862}
-		{32B8745E-EBB6-4D7C-918C-A0D863C9F939} = {32B8745E-EBB6-4D7C-918C-A0D863C9F939}
-		{FBD3817A-E704-4FC6-901C-D6E4FAC787EE} = {FBD3817A-E704-4FC6-901C-D6E4FAC787EE}
-	EndProjectSection
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TiXPortable", "TiXPortable\TiXPortable.csproj", "{A0618A98-C048-48AC-A1C4-91BD9E7DFB82}"
-	ProjectSection(ProjectDependencies) = postProject
-		{742FE632-177C-4CC9-A21B-4A04D4806862} = {742FE632-177C-4CC9-A21B-4A04D4806862}
-		{32B8745E-EBB6-4D7C-918C-A0D863C9F939} = {32B8745E-EBB6-4D7C-918C-A0D863C9F939}
-		{FBD3817A-E704-4FC6-901C-D6E4FAC787EE} = {FBD3817A-E704-4FC6-901C-D6E4FAC787EE}
-	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -52,14 +38,6 @@ Global
 		{FBD3817A-E704-4FC6-901C-D6E4FAC787EE}.Debug|Any CPU.Build.0 = Release|Win32
 		{FBD3817A-E704-4FC6-901C-D6E4FAC787EE}.Release|Any CPU.ActiveCfg = Release|Win32
 		{FBD3817A-E704-4FC6-901C-D6E4FAC787EE}.Release|Any CPU.Build.0 = Release|Win32
-		{52DD6D1C-3420-4430-8E52-6F9532A9DEE6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{52DD6D1C-3420-4430-8E52-6F9532A9DEE6}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{52DD6D1C-3420-4430-8E52-6F9532A9DEE6}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{52DD6D1C-3420-4430-8E52-6F9532A9DEE6}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A0618A98-C048-48AC-A1C4-91BD9E7DFB82}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A0618A98-C048-48AC-A1C4-91BD9E7DFB82}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A0618A98-C048-48AC-A1C4-91BD9E7DFB82}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A0618A98-C048-48AC-A1C4-91BD9E7DFB82}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
