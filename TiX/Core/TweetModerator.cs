@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Windows.Forms;
+using System.Windows;
+using System.Windows.Threading;
 using TiX.Windows;
 
 namespace TiX.Core
@@ -55,10 +56,9 @@ namespace TiX.Core
                 Option     = option
             };
 
-            if (frmMain.Instance != null)
+            if (MainWindow.Instance != null)
             {
-                cbData.Callback = true;
-                cbData.IAsyncResult = frmMain.Instance.BeginInvoke(new Action<CallbackData>(Callback), cbData);
+                cbData.DispatcherOperation = TiXMain.Current.Dispatcher.BeginInvoke(new Action<CallbackData>(Callback), cbData);
             }
             else
 			{
@@ -68,18 +68,14 @@ namespace TiX.Core
         
         private class CallbackData
         {
-            public ImageCollection Collection;
-            public bool            Callback;
-            public IAsyncResult    IAsyncResult;
+            public ImageCollection      Collection;
+            public DispatcherOperation  DispatcherOperation;
 
             public TweetOption     Option;
         }
         private static void Callback(CallbackData data)
         {
-            if (data.Callback)
-                frmMain.Instance.EndInvoke(data.IAsyncResult);
-
-            var frm = new frmUpload(data.Collection, data.Option.CloseEvent, frmMain.Instance != null)
+            var frm = new frmUpload(data.Collection, data.Option.CloseEvent, MainWindow.Instance != null)
             {
                 AutoStart         = data.Option.AutoStart,
                 TweetString       = data.Option.DefaultString,
@@ -87,10 +83,12 @@ namespace TiX.Core
             };
             frm.FormClosed += (s, e) => frm.Dispose();
 
-            if (frmMain.Instance != null)
-                frm.Show(frmMain.Instance);
+            if (MainWindow.Instance != null)
+                frm.Owner = MainWindow.Instance;
             else
-                Application.Run(frm);
+                Application.Current.MainWindow = frm;
+
+            frm.Show();
         }
     }
 }

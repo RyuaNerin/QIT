@@ -13,9 +13,11 @@ namespace TiX.Windows
     public partial class PinWindow : Window
     {
         private readonly int m_wmMessage;
-        public PinWindow()
+        public PinWindow(int wmMessage)
         {
             this.InitializeComponent();
+
+            this.m_wmMessage = wmMessage;
         }
 
         public string UserToken { get; private set; }

@@ -6,7 +6,6 @@ using System.Net;
 using System.Reflection;
 using System.Text;
 using System.Windows;
-using Limitation;
 using TiX.Core;
 using TiX.ScreenCapture;
 using TiX.Utilities;
@@ -97,12 +96,10 @@ namespace TiX
                     {
                         var win = new PinWindow(helper.WMMessage);
                         this.MainWindow = win;
-                        using (var frm = new frmPin(helper.WMMessage))
+                        if (!(win.ShowDialog() ?? false))
                         {
-                            Application.Run(frm);
-
-                            if (frm.DialogResult != DialogResult.OK)
-                                return 0;
+                            this.Shutdown();
+                            return;
                         }
                     }
                     else
@@ -117,22 +114,22 @@ namespace TiX
             TiXMain.Twitter.UserSecret = Settings.Instance.USecret;
 
             if (!string.IsNullOrWhiteSpace(option.SchemeData))
-                return MainPartOfScheme(option);
+            {
+                MainPartOfScheme(option);
+            }
 
             if (option.CaptureScreenPart)
-                return MainPartOfCaptureScreen(option);
+                MainPartOfCaptureScreen(option);
 
             if (option.UsePipe)
-                return MainPartOfFiles(option, GetLinesFromStream(Console.OpenStandardInput(), Encoding.UTF8));
+                MainPartOfFiles(option, GetLinesFromStream(Console.OpenStandardInput(), Encoding.UTF8));
 
             if (option.Files != null && option.Files.Count >= 1)
-                return MainPartOfFiles(option, option.Files);
+                MainPartOfFiles(option, option.Files);
 
             using (var helper = new InstanceHelper(CurrentDirMutex))
                 if (helper.LockOrActivate())
-                    Application.Run(new frmMain(helper.WMMessage));
-
-            return 0;
+                    (this.MainWindow = new MainWindow(helper.WMMessage)).Show();
         }
 
         private static int MainPartOfScheme(Args option)

@@ -1,41 +1,80 @@
-﻿using System;
+using System;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Windows.Forms;
 using Microsoft.Win32;
 
 namespace TiX.Core
 {
-    internal class Settings
+    internal class Settings : INotifyPropertyChanged
     {
-        private static readonly Settings m_settings = new Settings();
-        public static Settings Instance => m_settings;
+        public static Settings Instance { get; } = new Settings();
 
         private sealed class Attr : Attribute
         {
+            public Attr(string name) => this.Name = name;
+            public string Name { get; }
         }
 
         public  const           string FileName = "TiX.ini";
         public  readonly static string DefaultPath;
 
         private readonly static PropertyInfo[] m_properties;
-        
-        [Attr] public string UToken             { get; set; } = null;
-        [Attr] public string USecret            { get; set; } = null;
-        [Attr] public bool   Topmost            { get; set; } = true;
-        [Attr] public bool   ReversedCtrl       { get; set; } = false;
-        [Attr] public bool   UniformityText     { get; set; } = false;
-        [Attr] public bool   EnabledInReply     { get; set; } = true;
-        [Attr] public bool   EnabledErrorReport { get; set; } = true;
-        [Attr] public bool   StartWithWindows   { get; set; } = false;
-        [Attr] public bool   StartInTray        { get; set; } = false;
-        [Attr] public bool   MinizeToTray       { get; set; } = false;
-        [Attr] public bool   SEWithText         { get; set; } = true;
-        [Attr] public bool   SEWithoutText      { get; set; } = true;
-        [Attr] public bool   PreviewHighQuality { get; set; } = true;
+
+        public event PropertyChangedEventHandler PropertyChanged;
+        private void InvokePropertyChanged([CallerMemberName] string name = null)
+            => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+
+        [Attr("UToken" )] public string UToken  { get; set; } = null;
+        [Attr("USecret")] public string USecret { get; set; } = null;
+
+        private bool m_topmost = true;
+        [Attr("Topmost")]
+        public bool Topmost
+        {
+            get => this.m_topmost;
+            set
+            {
+                this.m_topmost = value;
+                this.InvokePropertyChanged();
+            }
+        }
+
+        private bool m_reversedCtrl = false;
+        [Attr("ReversedCtrl")]
+        public bool ReversedCtrl
+        {
+            get => this.m_reversedCtrl;
+            set
+            {
+                this.m_reversedCtrl = value;
+                this.InvokePropertyChanged();
+            }
+        }
+
+        [Attr("StartInTray"   )] public bool StartInTray    { get; set; } = false;
+        [Attr("MinizeToTray"  )] public bool MinizeToTray   { get; set; } = false;
+
+        [Attr("UniformityText")] public bool UniformityText { get; set; } = false;
+        [Attr("EnabledInReply")] public bool EnabledInReply { get; set; } = true;
+        [Attr("SEWithText"    )] public bool SEWithText     { get; set; } = true;
+        [Attr("SEWithoutText" )] public bool SEWithoutText  { get; set; } = true;
+
+        private bool m_previewHighQuality = true;
+        [Attr("PreviewHighQuality")]
+        public bool PreviewHighQuality
+        {
+            get => this.m_previewHighQuality;
+            set
+            {
+                this.m_previewHighQuality = value;
+                this.InvokePropertyChanged();
+            }
+        }
 
         static Settings()
         {
@@ -48,15 +87,7 @@ namespace TiX.Core
 
         public void Load()
         {
-            this.Load(Settings.DefaultPath);
-        }
-        public void LoadInDirectory(string dir)
-        {
-            this.Save(Path.Combine(dir, FileName));
-        }
-        private void Load(string path)
-        {
-            if (!File.Exists(path))
+            if (!File.Exists(Settings.DefaultPath))
             {
                 return;
             }
@@ -64,7 +95,7 @@ namespace TiX.Core
             string str;
             foreach (var prop in m_properties)
             {
-                str = NativeMethods.Get(path, "TiX", prop.Name);
+                str = NativeMethods.Get(Settings.DefaultPath, "TiX", prop.Name);
                 if (!string.IsNullOrEmpty(str))
                     prop.SetValue(this, Str2Obj(str, prop.PropertyType), null);
             }
@@ -72,21 +103,13 @@ namespace TiX.Core
 
         public void Save()
         {
-            this.Save(Settings.DefaultPath);
-        }
-        public void SaveInDirectory(string dir)
-        {
-            this.Save(Path.Combine(dir, FileName));
-        }
-        private void Save(string path)
-        {
             string val;
             foreach (var prop in m_properties)
             {
                 val = Obj2Str(prop.GetValue(this, null));
 
                 if (val != null)
-                    NativeMethods.Set(path, "TiX", prop.Name, val);
+                    NativeMethods.Set(Settings.DefaultPath, "TiX", prop.GetCustomAttribute<Attr>().Name, val);
             }
         }
 
@@ -99,21 +122,6 @@ namespace TiX.Core
                     key.SetValue("TiX-wt",  this.SEWithText    ? 1 : 0, RegistryValueKind.DWord);
                     key.SetValue("TiX-wot", this.SEWithoutText ? 1 : 0, RegistryValueKind.DWord);
                 }
-            }
-            catch
-            {
-            }
-
-            try
-            {
-                using (var run = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\7Run", true))
-                {
-                    if (this.StartWithWindows)
-                        run.SetValue("TiX", Application.ExecutablePath, RegistryValueKind.String);
-                    else
-                        run.DeleteValue("TiX", false);
-                }
-
             }
             catch
             {

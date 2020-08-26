@@ -1,65 +1,66 @@
-﻿using System;
-using System.Diagnostics;
+using System;
+using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using System.Threading;
-using System.Threading.Tasks;
-using System.Windows.Forms;
+using System.Windows;
+using System.Windows.Input;
+using System.Windows.Interop;
+using Microsoft.Win32;
 using TiX.Core;
-using TiX.ScreenCapture;
 using TiX.Utilities;
+
+using Screen = System.Windows.Forms.Screen;
 
 namespace TiX.Windows
 {
-    internal partial class frmMain : Form
+    public partial class MainWindow : Window
     {
-        public static Form Instance { get; private set; }
-        
+        public static MainWindow Instance { get; private set; }
+
         private readonly GlobalKeyboardHook m_manager = new GlobalKeyboardHook();
-        public frmMain(int wmMessage)
+        private readonly int m_wmMessage;
+
+        public MainWindow(int wmMessage)
         {
+            this.InitializeComponent();
+
+            Instance = this;
+
             this.m_wmMessage = wmMessage;
 
-            frmMain.Instance = this;
+            this.Title = TiXMain.ProductName;
 
-            InitializeComponent();
-            this.Text = TiXMain.ProductName;
-            this.Icon = TiX.Resources.TiX;
-            
-            this.TopMost = Settings.Instance.Topmost;
-            if (Settings.Instance.ReversedCtrl)
-                this.lblCtrl.Text = "Ctrl을 눌러 [내용] 작성";
-            else
-                this.lblCtrl.Text = "Ctrl을 눌러 [바로] 작성";
-            
-            this.m_manager.Down.Add(Keys.PrintScreen);
-            this.m_manager.Down.Add(Keys.PrintScreen | Keys.Shift);
-            this.m_manager.Down.Add(Keys.PrintScreen | Keys.Control);
-            this.m_manager.Down.Add(Keys.PrintScreen | Keys.Alt);
+            this.m_manager.Down.Add((ModifierKeys.None, Key.PrintScreen));
+            this.m_manager.Down.Add((ModifierKeys.Shift, Key.PrintScreen));
+            this.m_manager.Down.Add((ModifierKeys.Control, Key.PrintScreen));
+            this.m_manager.Down.Add((ModifierKeys.Alt, Key.PrintScreen));
             this.m_manager.KeyDown += this.GlobalKeyboardHook_KeyDown;
         }
 
-        private readonly int m_wmMessage;
-        protected override void WndProc(ref Message m)
+        protected override void OnSourceInitialized(EventArgs e)
         {
-            if (m.Msg == this.m_wmMessage)
+            base.OnSourceInitialized(e);
+
+            if (this.m_wmMessage != 0)
             {
-                if (this.WindowState == FormWindowState.Minimized)
-                    this.WindowState = FormWindowState.Normal;
-
-                var  topMost = this.TopMost;
-                this.TopMost = true;
-                this.TopMost = topMost;
-
-                this.Activate();
-                this.Focus();
+                var source = PresentationSource.FromVisual(this) as HwndSource;
+                source.AddHook(this.WndProc);
             }
-
-            base.WndProc(ref m);
         }
 
-        private void frmMain_Load(object sender, EventArgs e)
+        private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+        {
+            if (msg == this.m_wmMessage)
+            {
+                this.Activate();
+            }
+
+            return IntPtr.Zero;
+        }
+
+        private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             if (Settings.Instance.StartInTray)
             {
@@ -68,16 +69,16 @@ namespace TiX.Windows
             }
         }
 
-        private void frmMain_FormClosing(object sender, FormClosingEventArgs e)
+        private void Window_Closing(object sender, CancelEventArgs e)
         {
             Settings.Instance.Save();
         }
 
-        private void frmMain_Resize(object sender, EventArgs e)
+        private void Window_StateChanged(object sender, EventArgs e)
         {
             if (Settings.Instance.MinizeToTray)
             {
-                if (this.WindowState == FormWindowState.Minimized)
+                if (this.WindowState == WindowState.Minimized)
                 {
                     this.ntf.Visible = true;
                     this.Hide();
@@ -89,46 +90,44 @@ namespace TiX.Windows
             }
         }
 
-        private DateTime m_lastLeftUp = DateTime.MinValue;
-        private void frmMain_MouseUp(object sender, System.Windows.Forms.MouseEventArgs e)
+        private void Window_MouseUp(object sender, MouseButtonEventArgs e)
         {
-            if (e.Button == MouseButtons.Left)
+            if (e.ChangedButton == MouseButton.Right)
             {
-                if ((DateTime.Now - this.m_lastLeftUp).TotalMilliseconds >= SystemInformation.DoubleClickTime)
+                var win = new ConfigWindow
                 {
-                    this.m_lastLeftUp = DateTime.Now;
-                }
-                else
-                {
-                    this.m_lastLeftUp = DateTime.MinValue;
-
-                    if (this.ofd.ShowDialog() != DialogResult.OK)
-                        return;
-
-                    var autoStart = (Control.ModifierKeys & Keys.Control) == Keys.Control;
-                    autoStart = (Settings.Instance.ReversedCtrl && !autoStart) || (!Settings.Instance.ReversedCtrl && autoStart);
-
-                    TweetModerator.Tweet(this.ofd.FileNames, new TweetOption { AutoStart = autoStart });
-                }
-            }
-            if (e.Button == System.Windows.Forms.MouseButtons.Right)
-            {
-                using (var frm = new frmSettings())
-                    frm.ShowDialog(this);
-
-                this.TopMost = Settings.Instance.Topmost;
-                if (Settings.Instance.ReversedCtrl)
-                    this.lblCtrl.Text = "Ctrl을 눌러 [내용] 작성";
-                else
-                    this.lblCtrl.Text = "Ctrl을 눌러 [바로] 작성";
+                    Owner = this
+                };
+                win.ShowDialog();
             }
         }
 
-        private void frmMain_DragOverOrEnter(object sender, DragEventArgs e)
+        private void Window_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
-            e.Effect = DragDropEffects.None;
+            if (e.ChangedButton == MouseButton.Left)
+            {
+                var ofd = new OpenFileDialog
+                {
+                    Filter = "지원하는 모든 파일|*.bmp;*.emf;*.exif;*.gif;*.ico;*.jpg;*.jpeg;*.png;*.tif;*.tiff;*.wmf;*.psd",
+                    Title = "트윗할 이미지들을 선택해주세요",
+                    Multiselect = true,
+                };
 
-            if (ImageSet.IsAvailable(e))
+                if (!ofd.ShowDialog(this) ?? false)
+                    return;
+
+                var autoStart = (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control;
+                autoStart = (Settings.Instance.ReversedCtrl && !autoStart) || (!Settings.Instance.ReversedCtrl && autoStart);
+
+                TweetModerator.Tweet(ofd.FileNames, new TweetOption { AutoStart = autoStart });
+            }
+        }
+
+        private void Window_DragOver(object sender, DragEventArgs e)
+        {
+            e.Effects = DragDropEffects.None;
+
+            if (ImageSet.IsAvailable(e.Data))
             {
                 bool allow = true;
 
@@ -148,80 +147,99 @@ namespace TiX.Windows
                 }
 
                 if (allow)
-                    e.Effect = DragDropEffects.Move | DragDropEffects.Link | DragDropEffects.Copy;
+                    e.Effects = DragDropEffects.Move | DragDropEffects.Link | DragDropEffects.Copy;
             }
         }
 
-        private void frmMain_DragDrop(object sender, DragEventArgs e)
+        private void Window_DragLeave(object sender, DragEventArgs e)
+        {
+
+        }
+
+        private void Window_Drop(object sender, DragEventArgs e)
         {
             //                 A                              *  !B                       +   !A                              *  B
             //                 ==============================    =======================      ===============================    =======================
             //var autoStart = (Settings.Instance.ReversedCtrl && ((e.KeyState & 8) != 8)) || (!Settings.Instance.ReversedCtrl && ((e.KeyState & 8) == 8));
 
             // (A * !B) + (!A * B) = A ^ B
-            var autoStart = Settings.Instance.ReversedCtrl ^ ((e.KeyState & 8) == 8);
+            var autoStart = Settings.Instance.ReversedCtrl ^ ((e.KeyStates & DragDropKeyStates.ControlKey) == DragDropKeyStates.ControlKey);
 
             TweetModerator.Tweet(e.Data, new TweetOption { AutoStart = autoStart });
         }
 
-        private void frmMain_KeyDown(object sender, KeyEventArgs e)
+        private void Window_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.Modifiers == Keys.Control && e.KeyCode == Keys.V)
-                TweetModerator.Tweet(Clipboard.GetDataObject(),
+            if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.V)
+                TweetModerator.Tweet(
+                    Clipboard.GetDataObject(),
                     new TweetOption
                     {
                         AutoStart = false,
                         WindowTitle = "클립보드 이미지 전송중"
                     });
         }
-        
-        private readonly ManualResetEvent m_captureing = new ManualResetEvent(true);
+
+        private int m_captureing = 0;
         private void GlobalKeyboardHook_KeyDown(object sender, KeyHookEventArgs e)
         {
-            if (!this.m_captureing.WaitOne(TimeSpan.Zero))
-                return;
-
-            this.Invoke(new Action<Keys>(this.GlobalKeyboardHook_KeyDown), e.Keys);
+            this.Dispatcher.Invoke(new Action<ModifierKeys, Key>(this.CaptureStart), e.ModifierKeys, e.Key);
 
             e.Handled = true;
         }
-        private void GlobalKeyboardHook_KeyDown(Keys key)
+        private void CaptureStart(ModifierKeys modifierKeys, Key key)
         {
-            this.m_captureing.Reset();
+            if (Interlocked.Exchange(ref this.m_captureing, 1) != 0)
+                return;
 
             try
             {
-                if ((key & Keys.Alt) == Keys.Alt)
-                    CaptureCurrentScreen();
-                else if ((key & Keys.Control) == Keys.Control)
-                    CaptureCurrentWindow();
-                else if ((key & Keys.Shift) == Keys.Shift)
-                    CaptureAndClip();
-                else
-                    CaptureScreen();
+                switch (modifierKeys)
+                {
+                    case ModifierKeys.Alt:
+                        this.CaptureCurrentScreen();
+                        break;
+
+                    case ModifierKeys.Control:
+                        this.CaptureCurrentWindow();
+                        break;
+
+                    case ModifierKeys.Shift:
+                        this.CaptureAndClip();
+                        break;
+
+                    default:
+                        this.CaptureScreen();
+                        break;
+                }
             }
             catch
             {
-                this.m_captureing.Set();
+                Interlocked.Exchange(ref this.m_captureing, 0);
             }
         }
+        private void CaptureEnd()
+        {
+            Interlocked.Exchange(ref this.m_captureing, 0);
+        }
+
         private void CaptureScreen()
         {
-            var sr = SystemInformation.VirtualScreen;
+            var sr = System.Windows.Forms.SystemInformation.VirtualScreen;
 
-            CaptureScreen(new Rectangle(sr.Location, sr.Size));
+            this.CaptureScreen(new Rectangle(sr.Location, sr.Size));
         }
         private void CaptureCurrentScreen()
         {
             var fg = NativeMethods.GetForegroundWindow();
             if (fg == IntPtr.Zero)
             {
-                this.m_captureing.Set();
+                this.CaptureEnd();
                 return;
             }
-            
+
             var sr = Screen.FromHandle(fg).Bounds;
-            CaptureScreen(new Rectangle(sr.Location, sr.Size));
+            this.CaptureScreen(new Rectangle(sr.Location, sr.Size));
         }
         private void CaptureScreen(Rectangle captureRect, bool hideTix = true)
         {
@@ -248,18 +266,18 @@ namespace TiX.Windows
             var hwnd = NativeMethods.GetForegroundWindow();
             if (hwnd == IntPtr.Zero)
             {
-                this.m_captureing.Set();
+                this.CaptureEnd();
                 return;
             }
-            
+
             if (!NativeMethods.GetWindowRect(hwnd, out NativeMethods.RECT wRect))
             {
-                this.m_captureing.Set();
+                this.CaptureEnd();
                 return;
             }
 
             var nRect = new Rectangle(wRect.Left, wRect.Top, wRect.Right - wRect.Left, wRect.Bottom - wRect.Top);
-                        
+
             var img = new Bitmap(nRect.Width, nRect.Height, PixelFormat.Format32bppArgb);
 
             using (var g = Graphics.FromImage(img))
@@ -291,7 +309,7 @@ namespace TiX.Windows
                 }
             }
 
-            CaptureTweet(img);
+            this.CaptureTweet(img);
         }
         private void CaptureAndClip()
         {
@@ -310,46 +328,24 @@ namespace TiX.Windows
 
             if (cropedImage == null)
             {
-                this.m_captureing.Set();
+                this.CaptureEnd();
                 return;
             }
 
-            CaptureTweet(cropedImage);
+            this.CaptureTweet(cropedImage);
         }
         private void CaptureTweet(Image image)
         {
-            this.WindowState = FormWindowState.Normal;
+            this.WindowState = WindowState.Normal;
             this.Show();
 
             TweetModerator.Tweet(image,
                 new TweetOption
                 {
-                    CloseEvent = this.CaptureCompleted,
+                    CloseEvent = this.CaptureEnd,
                     AutoStart = false,
                     WindowTitle = "캡처 화면 전송중"
                 });
-        }
-        private void CaptureCompleted()
-        {
-            this.m_captureing.Set();
-        }
-
-        private void frmMain_Shown(object sender, EventArgs e)
-        {
-            Task.Factory.StartNew(new Action(() =>
-            {
-                var update = LastRelease.CheckNewVersion();
-                if (update != null)
-                    if (MessageBox.Show(this, "새 업데이트가 있어요!", Application.ProductName, MessageBoxButtons.OKCancel, MessageBoxIcon.Information) == DialogResult.OK)
-                        Process.Start(new ProcessStartInfo { UseShellExecute = true, FileName = string.Format("\"{0}\"", update.HtmlUrl) }).Dispose();
-            }));
-        }
-
-        private void ntf_MouseDoubleClick(object sender, MouseEventArgs e)
-        {
-            this.Show();
-            this.WindowState = FormWindowState.Normal;
-            this.ntf.Visible = false;
         }
 
         private static class NativeMethods

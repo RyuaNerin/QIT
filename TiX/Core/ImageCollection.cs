@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Threading;
-using System.Windows.Forms;
+using System.Windows;
 using TiX.Utilities;
 
 namespace TiX.Core
@@ -17,9 +17,11 @@ namespace TiX.Core
 
     internal class ImageCollection : List<ImageSet>, IDisposable
     {
+        private readonly CancellationTokenSource m_cancel = new CancellationTokenSource();
+        public CancellationToken Token => this.m_cancel.Token;
+
         public ImageCollection()
         {
-            this.m_cancel = new CancellationTokenSource();
         }
         ~ImageCollection()
         {
@@ -30,18 +32,22 @@ namespace TiX.Core
             this.Dispose(true);
             GC.SuppressFinalize(this);
         }
+
         private bool m_disposed = false;
         protected void Dispose(bool disposing)
         {
             if (this.m_disposed)
                 return;
             this.m_disposed = true;
-            
-            this.m_cancel.Cancel();
-            this.m_cancel.Dispose();
 
-            for (int i = 0; i < this.Count; ++i)
-                this[i].Dispose();
+            if (disposing)
+            {
+                this.m_cancel.Cancel();
+                this.m_cancel.Dispose();
+
+                for (int i = 0; i < this.Count; ++i)
+                    this[i].Dispose();
+            }
         }
         
         public event EventHandler LoadedImage;
@@ -49,9 +55,6 @@ namespace TiX.Core
         {
             this.LoadedImage?.Invoke(sender, new EventArgs());
         }
-
-        private CancellationTokenSource m_cancel;
-        public CancellationToken Token { get { return this.m_cancel.Token; } }
 
         public void Add(IDataObject e)
         {

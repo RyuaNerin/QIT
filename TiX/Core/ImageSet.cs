@@ -7,24 +7,24 @@ using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Windows.Forms;
-using CloudFlareUtilities;
+using System.Windows;
 using TiX.Utilities;
+using WebPWrapper;
 
 namespace TiX.Core
 {
     internal class ImageSet : IDisposable
     {
-        public static bool IsAvailable(DragEventArgs e)
+        public static bool IsAvailable(IDataObject e)
         {
             if (e == null)
                 return false;
 
 #if DEBUG
             var dic = new System.Collections.Generic.Dictionary<string, object>();
-            foreach (var format in e.Data.GetFormats())
+            foreach (var format in e.GetFormats())
             {
-                var data = e.Data.GetData(format);
+                var data = e.GetData(format);
 
                 if (data is MemoryStream mem)
                 {
@@ -37,17 +37,17 @@ namespace TiX.Core
 #endif
 
             return 
-                   e.Data.GetDataPresent(DataFormats.FileDrop) ||
-                   e.Data.GetDataPresent(DataFormats.Bitmap) ||
-                   e.Data.GetDataPresent(DataFormats.Dib) ||
-                   e.Data.GetDataPresent(DataFormats.Tiff) ||
+                   e.GetDataPresent(DataFormats.FileDrop) ||
+                   e.GetDataPresent(DataFormats.Bitmap) ||
+                   e.GetDataPresent(DataFormats.Dib) ||
+                   e.GetDataPresent(DataFormats.Tiff) ||
                    (
-                       e.Data.GetDataPresent(DataFormats.EnhancedMetafile) &&
-                       e.Data.GetDataPresent(DataFormats.MetafilePict)
+                       e.GetDataPresent(DataFormats.EnhancedMetafile) &&
+                       e.GetDataPresent(DataFormats.MetafilePicture)
                    ) ||
-                   e.Data.GetDataPresent(DataFormats.Html) ||
-                   e.Data.GetDataPresent("text/x-moz-url") ||
-                   e.Data.GetDataPresent("UnicodeText");
+                   e.GetDataPresent(DataFormats.Html) ||
+                   e.GetDataPresent("text/x-moz-url") ||
+                   e.GetDataPresent("UnicodeText");
         }
 
         private ImageSet(ImageCollection collection, int index, DataTypes dataType)
@@ -284,9 +284,9 @@ namespace TiX.Core
 
             // In Program like MS Word
             if (idata.GetDataPresent(DataFormats.EnhancedMetafile) &&
-                     idata.GetDataPresent(DataFormats.MetafilePict))
+                     idata.GetDataPresent(DataFormats.MetafilePicture))
             {
-                using (var stream = (Stream)idata.GetData(DataFormats.MetafilePict))
+                using (var stream = (Stream)idata.GetData(DataFormats.MetafilePicture))
                 {
                     stream.Seek(0, SeekOrigin.Begin);
                     this.Image = Image.FromStream(stream);
@@ -349,8 +349,7 @@ namespace TiX.Core
 
         private bool GetImageFromHttp(Uri uri, CancellationToken cancel)
         {
-            using (var handler = new ClearanceHandler())
-            using (var client = new HttpClient(handler))
+            using (var client = new HttpClient())
             {
                 try
                 {
@@ -401,8 +400,8 @@ namespace TiX.Core
                 var buff = new byte[this.m_rawStream.Length];
                 this.m_rawStream.Read(buff, 0, buff.Length);
 
-                var decoder = new Imazen.WebP.SimpleDecoder();
-                this.Image = decoder.DecodeFromBytes(buff, buff.Length);
+                var webp = new WebP();
+                this.Image = webp.Decode(buff);
 
                 return;
             }
@@ -428,7 +427,7 @@ namespace TiX.Core
                     using (var ie = new IconExtractor(this.m_rawStream, true))
                     {
                         var img = ie.OrderByDescending(e => (double)e.Width * e.Height * e.BitsPerPixel).First().Image;
-                        this.Image = img.Clone(new Rectangle(Point.Empty, img.Size), PixelFormat.Format32bppArgb);
+                        this.Image = img.Clone(new Rectangle(System.Drawing.Point.Empty, img.Size), PixelFormat.Format32bppArgb);
                     }
                 }
             }

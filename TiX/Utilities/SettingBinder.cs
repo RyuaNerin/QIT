@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Windows.Forms;
+using System.Windows.Controls;
 
 namespace TiX.Utilities
 {
@@ -68,7 +68,7 @@ namespace TiX.Utilities
                 switch (binding.type)
                 {
                     case BindingType.Bool:
-                        binding.CheckBox.Checked = (bool)value;
+                        binding.CheckBox.IsChecked = (bool)value;
                         break;
 
                     case BindingType.String:
@@ -79,7 +79,7 @@ namespace TiX.Utilities
                         {
                             var v = Convert.ToInt32(value);
                             foreach (var st in binding.RadioButtons)
-                                st.Value.Checked = st.Key == v;
+                                st.Value.IsChecked = st.Key == v;
                         }
                         break;
                 }
@@ -97,7 +97,7 @@ namespace TiX.Utilities
                 switch (binding.type)
                 {
                     case BindingType.Bool:
-                        value = binding.CheckBox.Checked;
+                        value = binding.CheckBox.IsChecked;
                         break;
                     case BindingType.String:
                         value = binding.TextBox.Text;
@@ -106,7 +106,7 @@ namespace TiX.Utilities
                         value = 0;
                         foreach (var st in binding.RadioButtons)
                         {
-                            if (st.Value.Checked)
+                            if (st.Value.IsChecked)
                             {
                                 value = st.Key;
                                 break;

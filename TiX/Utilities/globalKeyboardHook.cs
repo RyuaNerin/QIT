@@ -1,42 +1,46 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using System.Windows.Forms;
+using System.Windows.Input;
 
 namespace TiX.Utilities
 {
     internal class KeyHookEventArgs : EventArgs
     {
-        public KeyHookEventArgs(Keys key)
+        public KeyHookEventArgs(ModifierKeys modifierKeys, Key key)
         {
-            this.Keys = key;
+            this.ModifierKeys = modifierKeys;
+            this.Key = key;
         }
-        public bool  Handled  { get; set; }
-        public Keys  Keys     { get; private set; }
+
+        public ModifierKeys ModifierKeys { get; }
+        public Key Key { get; }
+
+        public bool Handled { get; set; }
     }
 
 	internal class GlobalKeyboardHook : IDisposable
 	{
-        private List<Keys> m_down = new List<Keys>();
-        public IList<Keys> Down { get { return this.m_down; } }
-
-        private List<Keys> m_up = new List<Keys>();
-        public IList<Keys> Up { get { return this.m_up; } }
+        public IList<(ModifierKeys, Key)> Down { get; } = new List<(ModifierKeys, Key)>();
+        public IList<(ModifierKeys, Key)> Up   { get; } = new List<(ModifierKeys, Key)>();
         
 		IntPtr m_hwnd = IntPtr.Zero;
 		
 		public event EventHandler<KeyHookEventArgs> KeyDown;
 		public event EventHandler<KeyHookEventArgs> KeyUp;
 
-		NativeMethods.keyboardHookProc khp;
+		private readonly NativeMethods.keyboardHookProc khp;
 
 		public GlobalKeyboardHook()
 		{
-            this.khp = new NativeMethods.keyboardHookProc(this.hookProc);
-			Hook();
-		}
+            this.khp = new NativeMethods.keyboardHookProc(this.HookProc);
+        }
+        ~GlobalKeyboardHook()
+        {
+            this.Dispose(false);
+        }
 
-		private bool m_disposed = false;
+        private bool m_disposed = false;
 		public void Dispose()
 		{
 			this.Dispose(true);
@@ -49,13 +53,8 @@ namespace TiX.Utilities
 
 			if (disposing)
 			{
-				Unhook();
+                this.Unhook();
 			}
-		}
-
-		~GlobalKeyboardHook()
-		{
-			this.Dispose(false);
 		}
 
         private static IntPtr m_hLibrary = IntPtr.Zero;
@@ -79,26 +78,26 @@ namespace TiX.Utilities
             }
 		}
 
-		private IntPtr hookProc(int code, IntPtr wParam, ref NativeMethods.keyboardHookStruct lParam)
+		private IntPtr HookProc(int code, IntPtr wParam, ref NativeMethods.KeyboardHookStruct lParam)
 		{
 			if (code >= 0)
 			{
-                var key = (Keys)lParam.vkCode;
+                var key = KeyInterop.KeyFromVirtualKey(lParam.vkCode);
 				var wparam = wParam.ToInt64();
 
-                key = key | Control.ModifierKeys;
+                var modifierKeys = Keyboard.Modifiers;
 
-                if (this.KeyUp != null && this.Up.Contains(key))
+                if (this.KeyUp != null && this.Up.Contains((modifierKeys, key)))
                 {
-                    var arg = new KeyHookEventArgs(key);
+                    var arg = new KeyHookEventArgs(modifierKeys, key);
                     KeyUp.Invoke(this, arg);
                     if (arg.Handled)
                         return new IntPtr(1);
                 }
 
-                if (this.KeyDown != null && this.Down.Contains(key))
+                if (this.KeyDown != null && this.Down.Contains((modifierKeys, key)))
                 {
-                    var arg = new KeyHookEventArgs(key);
+                    var arg = new KeyHookEventArgs(modifierKeys, key);
                     KeyDown.Invoke(this, arg);
                     if (arg.Handled)
                         return new IntPtr(1);
@@ -109,10 +108,10 @@ namespace TiX.Utilities
 
 		private static class NativeMethods
 		{
-            public delegate IntPtr keyboardHookProc(int code, IntPtr wParam, ref keyboardHookStruct lParam);
+            public delegate IntPtr keyboardHookProc(int code, IntPtr wParam, ref KeyboardHookStruct lParam);
 
             [StructLayout(LayoutKind.Sequential)]
-            public struct keyboardHookStruct
+            public struct KeyboardHookStruct
             {
                 public int vkCode;
                 public int scanCode;
@@ -135,7 +134,7 @@ namespace TiX.Utilities
 			public static extern bool UnhookWindowsHookEx(IntPtr hInstance);
 
 			[DllImport("user32.dll")]
-			public static extern IntPtr CallNextHookEx(IntPtr idHook, int nCode, IntPtr wParam, ref keyboardHookStruct lParam);
+			public static extern IntPtr CallNextHookEx(IntPtr idHook, int nCode, IntPtr wParam, ref KeyboardHookStruct lParam);
 
 			[DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
 			public static extern IntPtr LoadLibrary(string lpFileName);

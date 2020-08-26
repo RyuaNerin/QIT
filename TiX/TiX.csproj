@@ -69,6 +69,9 @@
     <SignManifests>false</SignManifests>
   </PropertyGroup>
   <PropertyGroup />
+  <PropertyGroup>
+    <RunPostBuildEvent>Always</RunPostBuildEvent>
+  </PropertyGroup>
   <ItemGroup>
     <Compile Include="TiXMain.xaml.cs">
       <DependentUpon>TiXMain.xaml</DependentUpon>
@@ -95,27 +98,17 @@
     <Compile Include="Windows\ConfigWindow.xaml.cs">
       <DependentUpon>ConfigWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Windows\MainWindow.xaml.cs">
+      <DependentUpon>MainWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Windows\PinWindow.xaml.cs">
       <DependentUpon>PinWindow.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Windows\ProgressCircle.cs" />
-    <Compile Include="Windows\frmMain.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Windows\frmMain.Designer.cs">
-      <DependentUpon>frmMain.cs</DependentUpon>
     </Compile>
     <Compile Include="Windows\frmPreview.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Windows\frmPreview.Designer.cs">
       <DependentUpon>frmPreview.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Windows\frmSettings.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Windows\frmSettings.Designer.cs">
-      <DependentUpon>frmSettings.cs</DependentUpon>
     </Compile>
     <Compile Include="Windows\frmUpload.cs">
       <SubType>Form</SubType>
@@ -131,14 +124,8 @@
     </Compile>
     <Compile Include="Core\Settings.cs" />
     <EmbeddedResource Include="Properties\Resources.resx" />
-    <EmbeddedResource Include="Windows\frmMain.resx">
-      <DependentUpon>frmMain.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="Windows\frmPreview.resx">
       <DependentUpon>frmPreview.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Windows\frmSettings.resx">
-      <DependentUpon>frmSettings.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Windows\frmUpload.resx">
       <DependentUpon>frmUpload.cs</DependentUpon>
@@ -182,6 +169,15 @@
     </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
+    <Reference Include="Sentry, Version=2.1.6.0, Culture=neutral, PublicKeyToken=fba2ec45388e2af0, processorArchitecture=MSIL">
+      <HintPath>..\packages\Sentry.2.1.6\lib\net461\Sentry.dll</HintPath>
+    </Reference>
+    <Reference Include="Sentry.PlatformAbstractions, Version=1.1.1.0, Culture=neutral, PublicKeyToken=fba2ec45388e2af0, processorArchitecture=MSIL">
+      <HintPath>..\packages\Sentry.PlatformAbstractions.1.1.1\lib\net471\Sentry.PlatformAbstractions.dll</HintPath>
+    </Reference>
+    <Reference Include="Sentry.Protocol, Version=2.1.6.0, Culture=neutral, PublicKeyToken=fba2ec45388e2af0, processorArchitecture=MSIL">
+      <HintPath>..\packages\Sentry.Protocol.2.1.6\lib\net46\Sentry.Protocol.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Data" />
@@ -190,6 +186,7 @@
     <Reference Include="System.IO.Compression" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Numerics" />
+    <Reference Include="System.Web" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xaml" />
     <Reference Include="System.XML" />
@@ -210,6 +207,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Windows\MainWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Windows\PinWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -219,17 +220,23 @@
     <Resource Include="Resources\icon.png" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="encrypt-token.py" />
     <Content Include="libwebp\libwebp_x64.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="libwebp\libwebp_x86.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Resource Include="requirement.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PreBuildEvent>
-    </PreBuildEvent>
+    <PreBuildEvent>cd "$(ProjectDir)"
+python encrypt-token.py dec</PreBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PostBuildEvent>cd "$(ProjectDir)"
+python encrypt-token.py enc</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
