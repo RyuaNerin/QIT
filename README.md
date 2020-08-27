@@ -1,4 +1,4 @@
-﻿![TiX](Icon/256.png)
+![TiX](Icon/256.png)
 
 # TiX
 
@@ -90,28 +90,9 @@
 
 - Scheme
  - `tix://uri/{data}`
- - `tix://base64/{data}`
  - `data` 는 `|` 으로 구분됩니다.r
  - `data` 는 UrlEncoding 되어야 합니다.
 
 ## LICENSE
 
 - [LGPL v3](LICENSE.txt)
-
-- TiX 는 아래 오픈소스 라이브러리를 사용합니다.
-
-  - [CloudFlareUtilities](https://github.com/elcattivo/CloudFlareUtilities)
-
-  - [CommandLine](https://github.com/gsscoder/commandline)
-
-  - [Fody](https://github.com/Fody/Fody/)
-
-  - [Fody.Costura](https://github.com/Fody/Costura)
-
-  - [Json .NET](http://www.newtonsoft.com/json)
-
-  - [libwebp](https://github.com/webmproject/libwebp)
-
-  - [libwebp-net](https://github.com/imazen/libwebp-net)
-
-  - [SharpRaven](https://github.com/getsentry/raven-csharp)

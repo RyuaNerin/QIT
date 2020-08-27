@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Windows;
@@ -20,9 +21,6 @@ namespace TiX.Windows
             this.m_wmMessage = wmMessage;
         }
 
-        public string UserToken { get; private set; }
-        public string UserSecret { get; private set; }
-
         private IntPtr m_handle;
 
         protected override void OnSourceInitialized(EventArgs e)
@@ -32,6 +30,11 @@ namespace TiX.Windows
             var source = PresentationSource.FromVisual(this) as HwndSource;
             source.AddHook(this.WndProc);
             this.m_handle = source.Handle;
+        }
+
+        private void Window_Closing(object sender, CancelEventArgs e)
+        {
+            NativeMethods.RemoveClipboardFormatListener(this.m_handle);
         }
 
         private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
@@ -101,6 +104,8 @@ namespace TiX.Windows
                     Settings.Instance.Save();
 
                     this.DialogResult = true;
+                    this.Hide();
+                    TiXMain.AppMain();
                     this.Close();
 
                     break;

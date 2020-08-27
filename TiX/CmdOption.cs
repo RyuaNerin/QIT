@@ -3,17 +3,13 @@ using CommandLine;
 
 namespace TiX
 {
-    internal class Args
+    internal class CmdOption
     {
-        public static readonly Args Default = new Args();
+        public static readonly CmdOption Default = new CmdOption();
 
-        public static Args Parse(string[] args)
+        public static CmdOption Parse(string[] args)
         {
-            return (Parser.Default.ParseArguments<Args>(args) as Parsed<Args>)?.Value ?? Default;
-        }
-
-        private Args()
-        {
+            return (Parser.Default.ParseArguments<CmdOption>(args) as Parsed<CmdOption>)?.Value ?? Default;
         }
 
         [Option("install")] public int    OptionInstallation    { get; set; }

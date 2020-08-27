@@ -11,6 +11,7 @@
         Title="트위터 로그인"
         SizeToContent="WidthAndHeight"
         Icon="/TiX;component/Resources/TiX.ico"
+        Closing="Window_Closing"
         GotFocus="Window_GotFocus"
         Loaded="Window_Loaded">
     <Grid Margin="10">

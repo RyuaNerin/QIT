@@ -6,6 +6,7 @@ using System.Net;
 using System.Reflection;
 using System.Text;
 using System.Windows;
+using CoreTweet;
 using TiX.Core;
 using TiX.ScreenCapture;
 using TiX.Utilities;
@@ -32,7 +33,11 @@ namespace TiX
             ".svg"
         };
 
-        public static readonly OAuth Twitter = new OAuth(TwitterOAuth.AppKey, TwitterOAuth.AppSecret);
+        public static readonly Tokens Twitter = new Tokens
+        {
+            ConsumerKey = TwitterOAuthKey.AppKey,
+            ConsumerSecret = TwitterOAuthKey.AppSecret,
+        };
 
         public static readonly string ProductName;
         public static readonly string CurrentDirMutex;
@@ -70,9 +75,11 @@ namespace TiX
             return false;
         }
 
-        void App_Startup(object sender, StartupEventArgs e)
+        private static CmdOption Args;
+
+        private void App_Startup(object sender, StartupEventArgs e)
         {
-            var option = Args.Parse(e.Args);
+            Args = CmdOption.Parse(e.Args);
 
             CrashReport.Init();
 
@@ -110,29 +117,44 @@ namespace TiX
                 }
             }
 
-            TiXMain.Twitter.UserToken = Settings.Instance.UToken;
-            TiXMain.Twitter.UserSecret = Settings.Instance.USecret;
+            AppMain();
+        }
 
-            if (!string.IsNullOrWhiteSpace(option.SchemeData))
+        public static void AppMain()
+        {
+            TiXMain.Twitter.AccessToken = Settings.Instance.UToken;
+            TiXMain.Twitter.AccessTokenSecret = Settings.Instance.USecret;
+
+            if (!string.IsNullOrWhiteSpace(Args.SchemeData))
             {
-                MainPartOfScheme(option);
+                MainPartOfScheme();
+                return;
             }
 
-            if (option.CaptureScreenPart)
-                MainPartOfCaptureScreen(option);
+            if (Args.CaptureScreenPart)
+            {
+                MainPartOfCaptureScreen();
+                return;
+            }
 
-            if (option.UsePipe)
-                MainPartOfFiles(option, GetLinesFromStream(Console.OpenStandardInput(), Encoding.UTF8));
+            if (Args.UsePipe)
+            {
+                MainPartOfFiles(GetLinesFromStream(Console.OpenStandardInput(), Encoding.UTF8));
+                return;
+            }
 
-            if (option.Files != null && option.Files.Count >= 1)
-                MainPartOfFiles(option, option.Files);
+            if (Args.Files != null && Args.Files.Count >= 1)
+            {
+                MainPartOfFiles();
+                return;
+            }
 
             using (var helper = new InstanceHelper(CurrentDirMutex))
                 if (helper.LockOrActivate())
-                    (this.MainWindow = new MainWindow(helper.WMMessage)).Show();
+                    (Current.MainWindow = new MainWindow(helper.WMMessage)).Show();
         }
 
-        private static int MainPartOfScheme(Args option)
+        private static int MainPartOfScheme()
         {
             Uri uri = new Uri(option.SchemeData);
             if (!Uri.TryCreate(option.SchemeData, UriKind.RelativeOrAbsolute, out uri))
@@ -175,7 +197,7 @@ namespace TiX
             return 0;
         }
 
-        private static int MainPartOfCaptureScreen(Args option)
+        private static int MainPartOfCaptureScreen(CmdOption option)
         {
             Image cropedImage;
             using (var stasisForm = new Stasisfield())
@@ -204,7 +226,7 @@ namespace TiX
                 while (!string.IsNullOrWhiteSpace(line = reader.ReadLine()))
                     yield return line;
         }
-        private static int MainPartOfFiles(Args option, IEnumerable<string> items)
+        private static int MainPartOfFiles(CmdOption option, IEnumerable<string> items)
         {
             var lst = new List<Uri>(8);
             Uri uri;
