@@ -1,0 +1,22 @@
+<Window x:Class="TiX.Windows.CaptureWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        WindowState="Maximized"
+        WindowStyle="None"
+        Topmost="True"
+        Opacity=".25"
+        AllowsTransparency="True" 
+        Background="White"
+        Cursor="Cross">
+    <Canvas>
+        <Rectangle x:Name="RegionRect"
+                   Stroke="Red"
+                   StrokeThickness="1"
+                   Fill="White" />
+
+        <TextBlock x:Name="RegionText"
+                   Canvas.Top="10"
+                   Canvas.Left="10"
+                   FontSize="16" />
+    </Canvas>
+</Window>

@@ -7,8 +7,6 @@ namespace TiX.Utilities
     internal sealed class InstanceHelper : IDisposable
     {
         private readonly string m_uniqueName;
-        
-        private int   m_wmMessage;
         private Mutex m_mutex;
 
         public InstanceHelper(string uniqueName)
@@ -31,16 +29,19 @@ namespace TiX.Utilities
                 return;
             this.m_disposed = true;
 
-            if (this.m_mutex != null)
+            if (disposing)
             {
-                this.m_mutex.Dispose();
-                this.m_mutex = null;
+                if (this.m_mutex != null)
+                {
+                    this.m_mutex?.Dispose();
+                    this.m_mutex = null;
+                }
             }
         }
 
         public bool LockOrActivate()
         {
-            this.m_wmMessage = NativeMethods.RegisterWindowMessage($"WM_ACTIVATE_{this.m_uniqueName}");
+            this.WMMessage = NativeMethods.RegisterWindowMessage($"WM_ACTIVATE_{this.m_uniqueName}");
             
             try
             {
@@ -54,7 +55,7 @@ namespace TiX.Utilities
             {
                 NativeMethods.PostMessage(
                     (IntPtr)NativeMethods.HWND_BROADCAST,
-                    this.m_wmMessage,
+                    this.WMMessage,
                     IntPtr.Zero,
                     IntPtr.Zero);
 
@@ -66,11 +67,10 @@ namespace TiX.Utilities
 
         public void WaitOne()
         {
-            if (this.m_mutex != null)
-                this.m_mutex.WaitOne();
+            this.m_mutex?.WaitOne();
         }
 
-        public int WMMessage => this.m_wmMessage;
+        public int WMMessage { get; private set; }
 
         private static class NativeMethods
         {

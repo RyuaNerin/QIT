@@ -104,8 +104,6 @@ namespace TiX.Windows
                     Settings.Instance.Save();
 
                     this.DialogResult = true;
-                    this.Hide();
-                    TiXMain.AppMain();
                     this.Close();
 
                     break;

@@ -2,13 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Text;
 using System.Windows;
 using CoreTweet;
 using TiX.Core;
-using TiX.ScreenCapture;
 using TiX.Utilities;
 using TiX.Windows;
 
@@ -94,36 +94,44 @@ namespace TiX
             Settings.Instance.Load();
 
             // Check Pin Mutex
-            while (string.IsNullOrWhiteSpace(Settings.Instance.UToken) ||
-                   string.IsNullOrWhiteSpace(Settings.Instance.USecret))
+            if (string.IsNullOrWhiteSpace(Settings.Instance.UToken) || string.IsNullOrWhiteSpace(Settings.Instance.USecret))
             {
-                using (var helper = new InstanceHelper(CurrentDirMutex))
+                while (string.IsNullOrWhiteSpace(Settings.Instance.UToken) || string.IsNullOrWhiteSpace(Settings.Instance.USecret))
                 {
-                    if (helper.LockOrActivate())
+                    using (var helper = new InstanceHelper(CurrentDirMutex))
                     {
-                        var win = new PinWindow(helper.WMMessage);
-                        this.MainWindow = win;
-                        if (!(win.ShowDialog() ?? false))
+                        if (helper.LockOrActivate())
                         {
-                            this.Shutdown();
-                            return;
+                            var win = new PinWindow(helper.WMMessage);
+                            this.MainWindow = win;
+                            win.Closing += (ls, le) =>
+                            {
+                                if (win.DialogResult ?? false)
+                                {
+                                    this.AppMain();
+                                }
+                            };
+                            win.Show();
                         }
-                    }
-                    else
-                    {
-                        helper.WaitOne();
-                        Settings.Instance.Load();
+                        else
+                        {
+                            helper.WaitOne();
+                            Settings.Instance.Load();
+                        }
                     }
                 }
             }
+            else
+            {
+                this.AppMain();
+            }
 
-            AppMain();
         }
 
-        public static void AppMain()
+        private void AppMain()
         {
-            TiXMain.Twitter.AccessToken = Settings.Instance.UToken;
-            TiXMain.Twitter.AccessTokenSecret = Settings.Instance.USecret;
+            Twitter.AccessToken = Settings.Instance.UToken;
+            Twitter.AccessTokenSecret = Settings.Instance.USecret;
 
             if (!string.IsNullOrWhiteSpace(Args.SchemeData))
             {
@@ -145,7 +153,7 @@ namespace TiX
 
             if (Args.Files != null && Args.Files.Count >= 1)
             {
-                MainPartOfFiles();
+                MainPartOfFiles(Args.Files);
                 return;
             }
 
@@ -154,11 +162,13 @@ namespace TiX
                     (Current.MainWindow = new MainWindow(helper.WMMessage)).Show();
         }
 
-        private static int MainPartOfScheme()
+        private static void MainPartOfScheme()
         {
-            Uri uri = new Uri(option.SchemeData);
-            if (!Uri.TryCreate(option.SchemeData, UriKind.RelativeOrAbsolute, out uri))
-                return 1;
+            if (!Uri.TryCreate(Args.SchemeData, UriKind.RelativeOrAbsolute, out var uri))
+            {
+                Current.Shutdown(1);
+                return;
+            }
 
             var paq = uri.PathAndQuery.Substring(1);
 
@@ -173,49 +183,32 @@ namespace TiX
                 TweetModerator.Tweet(uris,
                     new TweetOption
                     {
-                        AutoStart = option.TweetWithoutText,
-                        DefaultString = option.Text,
-                        InReply = option.In_Reply_To_Status_Id,
+                        AutoStart = Args.TweetWithoutText,
+                        DefaultString = Args.Text,
+                        InReply = Args.In_Reply_To_Status_Id,
                     });
             }
-            else if (uri.Host == "base64")
-            {
-                var datas = new List<byte[]>();
-
-                foreach (var base64Part in paq.Split('|'))
-                    datas.Add(Convert.FromBase64String(Uri.UnescapeDataString(base64Part)));
-
-                TweetModerator.Tweet(datas,
-                    new TweetOption
-                    {
-                        AutoStart = option.TweetWithoutText,
-                        DefaultString = option.Text,
-                        InReply = option.In_Reply_To_Status_Id,
-                    });
-            }
-
-            return 0;
         }
 
-        private static int MainPartOfCaptureScreen(CmdOption option)
+        private static void MainPartOfCaptureScreen()
         {
-            Image cropedImage;
-            using (var stasisForm = new Stasisfield())
+            var win = new CaptureWindow();
+            Current.MainWindow = win;
+            win.Closed += (ls, le) =>
             {
-                Application.Run(stasisForm);
-                cropedImage = stasisForm.CropedImage;
-            }
-
-            if (cropedImage != null)
-                TweetModerator.Tweet(cropedImage,
-                    new TweetOption
-                    {
-                        AutoStart = false,
-                        DefaultString = option.Text,
-                        InReply = option.In_Reply_To_Status_Id,
-                    });
-
-            return 0;
+                if (win.DialogResult ?? false)
+                {
+                    TweetModerator.Tweet(
+                        win.CropedImage,
+                        new TweetOption
+                        {
+                            AutoStart = false,
+                            DefaultString = Args.Text,
+                            InReply = Args.In_Reply_To_Status_Id,
+                        });
+                }
+            };
+            win.Show();
         }
 
         private static IEnumerable<string> GetLinesFromStream(Stream stream, Encoding encoding)
@@ -226,23 +219,19 @@ namespace TiX
                 while (!string.IsNullOrWhiteSpace(line = reader.ReadLine()))
                     yield return line;
         }
-        private static int MainPartOfFiles(CmdOption option, IEnumerable<string> items)
+        private static int MainPartOfFiles(IEnumerable<string> items)
         {
-            var lst = new List<Uri>(8);
-            Uri uri;
+            var lst = items.Select(e => Uri.TryCreate(e, UriKind.RelativeOrAbsolute, out var uri) ? uri : null).Where(e => e != null).ToArray();
 
-            foreach (var item in items)
-                if (Uri.TryCreate(item, UriKind.RelativeOrAbsolute, out uri))
-                    lst.Add(uri);
+            if (lst.Length == 0) return 0;
 
-            if (lst.Count == 0) return 0;
-
-            TweetModerator.Tweet(lst,
+            TweetModerator.Tweet(
+                lst,
                 new TweetOption
                 {
-                    AutoStart = option.TweetWithoutText,
-                    DefaultString = option.Text,
-                    InReply = option.In_Reply_To_Status_Id,
+                    AutoStart = Args.TweetWithoutText,
+                    DefaultString = Args.Text,
+                    InReply = Args.In_Reply_To_Status_Id,
                 });
             return 0;
         }

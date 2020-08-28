@@ -1,4 +1,4 @@
-﻿namespace TiX.Windows
+namespace TiX.Windows
 {
     partial class frmUpload
     {

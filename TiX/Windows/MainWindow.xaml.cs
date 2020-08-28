@@ -151,11 +151,6 @@ namespace TiX.Windows
             }
         }
 
-        private void Window_DragLeave(object sender, DragEventArgs e)
-        {
-
-        }
-
         private void Window_Drop(object sender, DragEventArgs e)
         {
             //                 A                              *  !B                       +   !A                              *  B
@@ -225,9 +220,7 @@ namespace TiX.Windows
 
         private void CaptureScreen()
         {
-            var sr = System.Windows.Forms.SystemInformation.VirtualScreen;
-
-            this.CaptureScreen(new Rectangle(sr.Location, sr.Size));
+            this.CaptureScreenWithRectangle(System.Windows.Forms.SystemInformation.VirtualScreen);
         }
         private void CaptureCurrentScreen()
         {
@@ -239,9 +232,9 @@ namespace TiX.Windows
             }
 
             var sr = Screen.FromHandle(fg).Bounds;
-            this.CaptureScreen(new Rectangle(sr.Location, sr.Size));
+            this.CaptureScreenWithRectangle(new Rectangle(sr.Location, sr.Size));
         }
-        private void CaptureScreen(Rectangle captureRect, bool hideTix = true)
+        private void CaptureScreenWithRectangle(Rectangle captureRect, bool hideTix = true)
         {
             if (hideTix)
             {
@@ -259,7 +252,7 @@ namespace TiX.Windows
                 this.Opacity = 255;
             }
 
-            CaptureTweet(capture);
+            this.CaptureTweetImage(capture);
         }
         private void CaptureCurrentWindow()
         {
@@ -309,7 +302,7 @@ namespace TiX.Windows
                 }
             }
 
-            this.CaptureTweet(img);
+            this.CaptureTweetImage(img);
         }
         private void CaptureAndClip()
         {
@@ -317,10 +310,10 @@ namespace TiX.Windows
             this.ShowInTaskbar = false;
 
             Image cropedImage;
-            using (var stasis = new Stasisfield())
+            using (var form = new CaptureForm())
             {
-                stasis.ShowDialog();
-                cropedImage = stasis.CropedImage;
+                form.ShowDialog(new WindowWrapper(this));
+                cropedImage = form.CropedImage;
             }
 
             this.ShowInTaskbar = true;
@@ -332,14 +325,15 @@ namespace TiX.Windows
                 return;
             }
 
-            this.CaptureTweet(cropedImage);
+            this.CaptureTweetImage(cropedImage);
         }
-        private void CaptureTweet(Image image)
+        private void CaptureTweetImage(Image image)
         {
             this.WindowState = WindowState.Normal;
             this.Show();
 
-            TweetModerator.Tweet(image,
+            TweetModerator.Tweet(
+                image,
                 new TweetOption
                 {
                     CloseEvent = this.CaptureEnd,

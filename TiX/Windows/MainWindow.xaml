@@ -15,8 +15,7 @@
         MouseDoubleClick="Window_MouseDoubleClick"
         KeyDown="Window_KeyDown"
         Drop="Window_Drop"
-        DragOver="Window_DragOver"
-        DragLeave="Window_DragLeave">
+        DragOver="Window_DragOver">
     <Grid Margin="10">
         <StackPanel>
             <StackPanel.Resources>

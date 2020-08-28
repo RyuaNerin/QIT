@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Windows;
 using System.Windows.Threading;
+using TiX.Utilities;
 using TiX.Windows;
 
 namespace TiX.Core
@@ -84,7 +85,7 @@ namespace TiX.Core
             frm.FormClosed += (s, e) => frm.Dispose();
 
             if (MainWindow.Instance != null)
-                frm.Owner = MainWindow.Instance;
+                frm.Owner = new WindowWrapper(MainWindow.Instance);
             else
                 Application.Current.MainWindow = frm;
 

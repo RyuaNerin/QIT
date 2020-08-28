@@ -106,7 +106,7 @@ namespace TiX.Utilities
                         value = 0;
                         foreach (var st in binding.RadioButtons)
                         {
-                            if (st.Value.IsChecked)
+                            if (st.Value.IsChecked ?? false)
                             {
                                 value = st.Key;
                                 break;

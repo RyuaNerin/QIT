@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
@@ -7,16 +7,16 @@ using System.Text;
 
 namespace TiX.Utilities
 {
-    public struct IconExtractorEntry
+    internal struct IconExtractorEntry
     {
-        public int   Width;
-        public int   Height;
-        public int   ColorCount;
-        public int   Reserved;
-        public int   ColorPlanes;
-        public int   BitsPerPixel;
-        public int   DataLength;
-        public int   DataOffset;
+        public int    Width;
+        public int    Height;
+        public int    ColorCount;
+        public int    Reserved;
+        public int    ColorPlanes;
+        public int    BitsPerPixel;
+        public int    DataLength;
+        public int    DataOffset;
         public Bitmap Image;
     }
 
@@ -34,6 +34,8 @@ namespace TiX.Utilities
 
         public IconExtractor(Stream stream, bool leaveOpen)
         {
+            if (this.m_stream.CanSeek || this.m_stream.CanRead) throw new NotSupportedException();
+
             this.m_leaveOpen = leaveOpen;
 
             this.m_stream = stream;
@@ -55,10 +57,6 @@ namespace TiX.Utilities
 
             for (i = 0; i < this.m_count; ++i)
                 this.m_entry[i] = this.GetImage(this.m_entry[i]);
-        }
-        public IconExtractor(Stream stream)
-            : this(stream, true)
-        {
         }
         public IconExtractor(string filename)
             : this(File.OpenRead(filename), false)
@@ -83,13 +81,13 @@ namespace TiX.Utilities
                 return;
             this.m_disposed = true;
 
-            this.m_reader.Dispose();
+            if (disposing)
+            {
+                this.m_reader.Dispose();
 
-            if (!this.m_leaveOpen)
-                this.m_stream.Dispose();
-
-            for (int i = 0; i < this.m_count; ++i)
-                this.m_entry[i].Image.Dispose();
+                if (!this.m_leaveOpen)
+                    this.m_stream.Dispose();
+            }
         }
          
         private IconExtractorEntry ReadEntry()

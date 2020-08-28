@@ -151,7 +151,7 @@ namespace TiX.Core
             private static extern uint GetPrivateProfileString(string lpAppName, string lpKeyName, string lpDefault, StringBuilder lpReturnedString, uint nSize, string lpFileName);
             public static string Get(string path, string section, string key)
             {
-                var sb = new StringBuilder(64);
+                var sb = new StringBuilder(256);
                 GetPrivateProfileString(section, key, null, sb, (uint)sb.Capacity, path);
 
                 return sb.ToString();

@@ -8,13 +8,6 @@ using TiX.Utilities;
 
 namespace TiX.Core
 {
-    internal enum DataTypes {
-        Image,
-        Uri,
-        IDataObject,
-        Bytes,
-    }
-
     internal class ImageCollection : List<ImageSet>, IDisposable
     {
         private readonly CancellationTokenSource m_cancel = new CancellationTokenSource();
@@ -63,14 +56,13 @@ namespace TiX.Core
 
             if (e.GetDataPresent(DataFormats.FileDrop))
             {
-                Uri uri;
                 foreach (var path in (string[])e.GetData(DataFormats.FileDrop))
-                    if (Uri.TryCreate(path, UriKind.RelativeOrAbsolute, out uri))
+                    if (Uri.TryCreate(path, UriKind.RelativeOrAbsolute, out Uri uri))
                         this.Add(uri);
             }
             else
             {
-                this.Add(new ImageSet(this, this.Count, e));
+                this.Add(new ImageSet(this, e));
             }
         }
         public void Add(byte[] rawData)
@@ -78,7 +70,7 @@ namespace TiX.Core
             if (rawData == null)
                 return;
 
-            this.Add(new ImageSet(this, this.Count, rawData));
+            this.Add(new ImageSet(this, rawData));
         }
         public void Add(string path)
         {
@@ -88,11 +80,10 @@ namespace TiX.Core
             if (!TiXMain.CheckFile(path))
                 return;
 
-            Uri uri;
-            if (!Uri.TryCreate(path, UriKind.RelativeOrAbsolute, out uri))
+            if (!Uri.TryCreate(path, UriKind.RelativeOrAbsolute, out Uri uri))
                 return;
 
-            this.Add(new ImageSet(this, this.Count, uri));
+            this.Add(new ImageSet(this, uri));
         }
         public void Add(Uri uri)
         {
@@ -102,7 +93,14 @@ namespace TiX.Core
             if (!TiXMain.CheckFile(uri))
                 return;
 
-            this.Add(new ImageSet(this, this.Count, uri));
+            this.Add(new ImageSet(this, uri));
+        }
+        public void Add(Image image)
+        {
+            if (image == null)
+                return;
+
+            this.Add(new ImageSet(this, image));
         }
         public void Add(IEnumerable<string> paths, bool orderByPath)
         {
@@ -135,13 +133,6 @@ namespace TiX.Core
 
             foreach (var data in datas)
                 this.Add(data);
-        }
-        public void Add(Image image)
-        {
-            if (image == null)
-                return;
-
-            this.Add(new ImageSet(this, this.Count, image));
         }
         public void Add(IEnumerable<Image> images)
         {
