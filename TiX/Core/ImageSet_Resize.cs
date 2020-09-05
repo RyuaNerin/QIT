@@ -200,7 +200,7 @@ namespace TiX.Core
 
             try
             {
-                // Bitmap 변경
+                // Bitmap 으로 변경
                 if (bitmap == null)
                 {
                     bitmap = new Bitmap(img.Width, img.Height, PixelFormat.Format32bppArgb);
@@ -208,12 +208,12 @@ namespace TiX.Core
                     using (var g = Graphics.FromImage(bitmap))
                         g.DrawImageUnscaledAndClipped(img, new Rectangle(Point.Empty, bitmap.Size));
                 }
-
                 ct.ThrowIfCancellationRequested();
+
                 var hasAlpha = extension != ".jpg" && HasAlpha(bitmap, ct);
 
                 // 24 RGB 혹은 32 ARGB 로 변경
-                if (img.PixelFormat != PixelFormat.Format24bppRgb || img.PixelFormat != PixelFormat.Format32bppArgb)
+                if (img.PixelFormat != PixelFormat.Format24bppRgb && img.PixelFormat != PixelFormat.Format32bppArgb)
                 {
                     var bitmap2 = bitmap.Clone(
                         new Rectangle(Point.Empty, img.Size),
@@ -224,11 +224,14 @@ namespace TiX.Core
                     bitmap.Dispose();
                     bitmap = bitmap2;
                 }
+                ct.ThrowIfCancellationRequested();
 
                 var baseSize = bitmap.Size;
                 var targetSize = baseSize;
                 do
                 {
+                    ct.ThrowIfCancellationRequested();
+
                     this.m_tempFile.SetLength(0);
 
                     Bitmap bitmapResized = null;
@@ -274,6 +277,13 @@ namespace TiX.Core
         {
             switch (image.PixelFormat)
             {
+                case PixelFormat.Format16bppRgb555:
+                case PixelFormat.Format16bppRgb565:
+                case PixelFormat.Format24bppRgb:
+                case PixelFormat.Format32bppRgb:
+                case PixelFormat.Format48bppRgb:
+                    return false;
+
                 case PixelFormat.Format32bppArgb:
                 case PixelFormat.Format32bppPArgb:
                 case PixelFormat.Format64bppArgb:
@@ -333,6 +343,8 @@ namespace TiX.Core
                 // ㅜㅜ
                 default:
                     {
+                        var alpha = image.GetPixel(0, 0).A;
+
                         var result = Parallel.For(
                             0,
                             image.Height,
@@ -343,7 +355,7 @@ namespace TiX.Core
                             (y, state) =>
                             {
                                 for (int x = 0; x < image.Width; ++x)
-                                    if (image.GetPixel(x, y).A != 255)
+                                    if (image.GetPixel(x, y).A != alpha)
                                         state.Break();
                             });
 

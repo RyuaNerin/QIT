@@ -11,6 +11,7 @@ using Microsoft.Win32;
 using TiX.Core;
 using TiX.Utilities;
 
+using NotifyIcon = System.Windows.Forms.NotifyIcon;
 using Screen = System.Windows.Forms.Screen;
 
 namespace TiX.Windows
@@ -20,6 +21,7 @@ namespace TiX.Windows
         public static MainWindow Instance { get; private set; }
 
         private readonly GlobalKeyboardHook m_manager = new GlobalKeyboardHook();
+        private readonly NotifyIcon m_ntf = new NotifyIcon();
         private readonly int m_wmMessage;
 
         public MainWindow(int wmMessage)
@@ -27,6 +29,8 @@ namespace TiX.Windows
             this.InitializeComponent();
 
             Instance = this;
+
+            this.m_ntf.Icon = Properties.Resources.TiX;
 
             this.m_wmMessage = wmMessage;
 
@@ -37,6 +41,13 @@ namespace TiX.Windows
             this.m_manager.Down.Add((ModifierKeys.Control, Key.PrintScreen));
             this.m_manager.Down.Add((ModifierKeys.Alt, Key.PrintScreen));
             this.m_manager.KeyDown += this.GlobalKeyboardHook_KeyDown;
+
+            this.m_ntf.Click += this.Notify_Click;
+        }
+
+        private void Notify_Click(object sender, EventArgs e)
+        {
+            this.Activate();
         }
 
         protected override void OnSourceInitialized(EventArgs e)
@@ -64,7 +75,7 @@ namespace TiX.Windows
         {
             if (Settings.Instance.StartInTray)
             {
-                this.ntf.Visible = true;
+                this.m_ntf.Visible = true;
                 this.Hide();
             }
         }
@@ -80,12 +91,12 @@ namespace TiX.Windows
             {
                 if (this.WindowState == WindowState.Minimized)
                 {
-                    this.ntf.Visible = true;
+                    this.m_ntf.Visible = true;
                     this.Hide();
                 }
                 else
                 {
-                    this.ntf.Visible = false;
+                    this.m_ntf.Visible = false;
                 }
             }
         }
@@ -309,23 +320,23 @@ namespace TiX.Windows
             this.Opacity = 0;
             this.ShowInTaskbar = false;
 
-            Image cropedImage;
-            using (var form = new CaptureForm())
+            var win = new CaptureWindow
             {
-                form.ShowDialog(new WindowWrapper(this));
-                cropedImage = form.CropedImage;
-            }
+                Owner = this
+            };
+            var captured = win.ShowDialog() ?? false;
 
             this.ShowInTaskbar = true;
             this.Opacity = 255;
 
-            if (cropedImage == null)
+
+            if (captured)
             {
                 this.CaptureEnd();
                 return;
             }
 
-            this.CaptureTweetImage(cropedImage);
+            this.CaptureTweetImage(win.CropedImage);
         }
         private void CaptureTweetImage(Image image)
         {

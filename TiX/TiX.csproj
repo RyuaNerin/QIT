@@ -16,6 +16,20 @@
     <TargetFrameworkProfile />
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
+    <PublishUrl>게시\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -74,6 +88,11 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Core\ImageSet_Resize.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
     <Compile Include="TiXMain.xaml.cs">
       <DependentUpon>TiXMain.xaml</DependentUpon>
     </Compile>
@@ -108,6 +127,9 @@
     <Compile Include="Windows\PinWindow.xaml.cs">
       <DependentUpon>PinWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Windows\UploadWindow.xaml.cs">
+      <DependentUpon>UploadWindow.xaml</DependentUpon>
+    </Compile>
     <None Include="Windows\frmPreview.cs">
       <SubType>Form</SubType>
     </None>
@@ -121,7 +143,10 @@
       <DependentUpon>frmUpload.cs</DependentUpon>
     </None>
     <Compile Include="Core\Settings.cs" />
-    <EmbeddedResource Include="Properties\Resources.resx" />
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
     <None Include="Windows\frmPreview.resx">
       <DependentUpon>frmPreview.cs</DependentUpon>
     </None>
@@ -213,12 +238,15 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Windows\UploadWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Resources\icon.png" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="encrypt-token.py" />
     <Content Include="libwebp\libwebp_x64.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -230,12 +258,12 @@
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PreBuildEvent>cd "$(ProjectDir)"
-python encrypt-token.py dec</PreBuildEvent>
+    <PreBuildEvent>
+    </PreBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
-    <PostBuildEvent>cd "$(ProjectDir)"
-python encrypt-token.py enc</PostBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

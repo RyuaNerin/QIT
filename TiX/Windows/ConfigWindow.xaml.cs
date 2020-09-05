@@ -6,7 +6,7 @@ using TiX.Utilities;
 
 namespace TiX.Windows
 {
-    public partial class ConfigWindow : Window
+    internal partial class ConfigWindow : Window
     {
         private readonly SettingBinder m_binder = new SettingBinder();
 

@@ -3,9 +3,11 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:tc="clr-namespace:TiX.Core"
+        xmlns:TiX="clr-namespace:TiX"
+        xmlns:TiXCore="clr-namespace:TiX.Core"
         mc:Ignorable="d"
-        Topmost="{Binding Source={x:Static tc:Settings.Instance}, Path=Topmost, Mode=OneWay}"
+        Title="{x:Static TiX:TiXMain.ProductName}"
+        Topmost="{Binding Source={x:Static TiXCore:Settings.Instance}, Path=Topmost, Mode=OneWay}"
         SizeToContent="WidthAndHeight"
         Icon="/TiX;component/Resources/TiX.ico"
         Loaded="Window_Loaded"
@@ -37,11 +39,11 @@
                     <Style TargetType="TextBlock"
                            BasedOn="{StaticResource {x:Type TextBlock}}">
                         <Style.Triggers>
-                            <DataTrigger Binding="{Binding Source={x:Static tc:Settings.Instance}, Path=ReversedCtrl, Mode=OneWay}"
+                            <DataTrigger Binding="{Binding Source={x:Static TiXCore:Settings.Instance}, Path=ReversedCtrl, Mode=OneWay}"
                                          Value="True">
                                 <Setter Property="Text" Value="Ctrl을 눌러 [내용] 작성" />
                             </DataTrigger>
-                            <DataTrigger Binding="{Binding Source={x:Static tc:Settings.Instance}, Path=ReversedCtrl, Mode=OneWay}"
+                            <DataTrigger Binding="{Binding Source={x:Static TiXCore:Settings.Instance}, Path=ReversedCtrl, Mode=OneWay}"
                                          Value="False">
                                 <Setter Property="Text" Value="Ctrl을 눌러 [바로] 작성" />
                             </DataTrigger>

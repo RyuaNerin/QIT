@@ -1,4 +1,4 @@
-﻿// LoadPSD
+// LoadPSD
 // Made by RyuaNerin
 // https://ryuanerin.kr/post/2016-04-06-loadpsd
 //

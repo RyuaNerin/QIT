@@ -5,7 +5,7 @@ using System.Windows.Input;
 
 namespace TiX.Windows
 {
-    public partial class CaptureWindow : Window
+    internal partial class CaptureWindow : Window
     {
         private static readonly Point EmptyPoint = new Point(-1, -1);
 

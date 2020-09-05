@@ -133,11 +133,12 @@ namespace TiX.Core
         private readonly bool        m_baseIsBytes;
         private readonly Image       m_baseImage;
 
-        public string    TempPath  { get; }
-        public string    Extension { get; private set; }
-        public double    Ratio     { get; private set; }
-
         private Thread m_thread;
+
+        public string TempPath { get; }
+        public string Extension { get; private set; }
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
 
         private Statues m_status;
         public Statues Status
@@ -149,6 +150,19 @@ namespace TiX.Core
                 this.InvokePropertyChanged();
             }
         }
+
+        private double m_ratio;
+        public double Ratio
+        {
+            get => this.m_ratio;
+            set
+            {
+                this.m_ratio = value;
+                this.InvokePropertyChanged();
+            }
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
 
         public void Wait()
         {
@@ -163,7 +177,7 @@ namespace TiX.Core
 
         private void StartLoadPriv(object ocancel)
         {
-            var cancel = (CancellationToken)ocancel;
+            var ct = (CancellationToken)ocancel;
 
             if (this.Status == Statues.None || this.m_tempFile.Length == 0)
             {
@@ -173,18 +187,18 @@ namespace TiX.Core
                 {
                     if (this.m_baseDataObject != null)
                     {
-                        _ = GetImageFromDataObject(this.m_tempFile, this.m_baseDataObject, cancel, out bitmap, out extension);
+                        _ = GetImageFromDataObject(this.m_tempFile, this.m_baseDataObject, ct, out bitmap, out extension);
                     }
                     else if (this.m_baseUri != null)
                     {
                         if (this.m_baseUri.Scheme == "file")
-                            (bitmap, extension) = GetImageFromFile(this.m_tempFile, this.m_baseUri.ToString(), cancel);
+                            (bitmap, extension) = GetImageFromFile(this.m_tempFile, this.m_baseUri.ToString(), ct);
                         else
-                            (bitmap, extension) = GetImageFromHttp(this.m_tempFile, this.m_baseUri, cancel);
+                            (bitmap, extension) = GetImageFromHttp(this.m_tempFile, this.m_baseUri, ct);
                     }
                     else if (this.m_baseIsBytes)
                     {
-                        (bitmap, extension) = GetImageFromStream(this.m_tempFile, cancel);
+                        (bitmap, extension) = GetImageFromStream(this.m_tempFile, ct);
                     }
                     else if (this.m_baseImage != null)
                     {
@@ -192,12 +206,12 @@ namespace TiX.Core
                         extension = GetExtension(bitmap);
                     }
 
-                    if (cancel.IsCancellationRequested)
+                    if (ct.IsCancellationRequested)
                         throw new OperationCanceledException();
 
                     using (bitmap)
                     {
-                        this.Resize(bitmap, extension);
+                        this.Resize(bitmap, extension, ct);
 
                         this.Status = Statues.Success;
                     }
@@ -240,11 +254,43 @@ namespace TiX.Core
                 if (tempStream == null)
                     return true;
 
-                img = dataObject.GetData(DataFormats.Bitmap) as Image;
-                if (img != null)
+                try
                 {
-                    extension = GetExtension(img);
+                    img = dataObject.GetData(DataFormats.Bitmap) as Image;
+                    if (img != null)
+                    {
+                        extension = GetExtension(img);
+                        return true;
+                    }
+                }
+                catch
+                {
+                }
+            }
+
+            if (dataObject.GetDataPresent("PNG"))
+            {
+                if (tempStream == null)
                     return true;
+
+                try
+                {
+                    var stream = dataObject.GetData("PNG") as Stream;
+                    if (stream != null)
+                    {
+                        using (stream)
+                        {
+                            stream.Seek(0, SeekOrigin.Begin);
+                            stream.CopyToAsync(tempStream, BufferSize, ct).GetAwaiter().GetResult();
+                        }
+
+                        (img, extension) = GetImageFromStream(tempStream, ct);
+                        if (img != null)
+                            return true;
+                    }
+                }
+                catch
+                {
                 }
             }
 
@@ -253,14 +299,26 @@ namespace TiX.Core
                 if (tempStream == null)
                     return true;
 
-                using (var stream = dataObject.GetData("CF_DIBV5") as MemoryStream)
+                try
                 {
-                    img = NativeMethods.CF_DIBV5ToBitmap(stream.ToArray());
+                    var stream = dataObject.GetData("CF_DIBV5") as Stream;
+                    using (stream)
+                    {
+                        if (stream is MemoryStream memoryStream)
+                        {
+                            using (memoryStream)
+                            {
+                                memoryStream.Seek(0, SeekOrigin.Begin);
+                                img = NativeMethods.CF_DIBV5ToBitmap(memoryStream.ToArray());
+                            }
+
+                            if (img != null)
+                                return true;
+                        }
+                    }
                 }
-                if (img != null)
+                catch
                 {
-                    extension = GetExtension(img);
-                    return true;
                 }
             }
 
@@ -270,11 +328,17 @@ namespace TiX.Core
                 if (tempStream == null)
                     return true;
 
-                img = dataObject.GetData(DataFormats.Dib) as Image;
-                if (img != null)
+                try
                 {
-                    extension = GetExtension(img);
-                    return true;
+                    img = dataObject.GetData(DataFormats.Dib) as Image;
+                    if (img != null)
+                    {
+                        extension = GetExtension(img);
+                        return true;
+                    }
+                }
+                catch
+                {
                 }
             }
 
@@ -283,11 +347,17 @@ namespace TiX.Core
                 if (tempStream == null)
                     return true;
 
-                img = dataObject.GetData(DataFormats.Tiff, true) as Image;
-                if (img != null)
+                try
                 {
-                    extension = GetExtension(img);
-                    return true;
+                    img = dataObject.GetData(DataFormats.Tiff, true) as Image;
+                    if (img != null)
+                    {
+                        extension = GetExtension(img);
+                        return true;
+                    }
+                }
+                catch
+                {
                 }
             }
 
@@ -298,15 +368,25 @@ namespace TiX.Core
                 if (tempStream == null)
                     return true;
 
-                using (var stream = dataObject.GetData(DataFormats.MetafilePicture) as Stream)
+                try
                 {
-                    stream.Seek(0, SeekOrigin.Begin);
-                    stream.CopyToAsync(tempStream, BufferSize, ct).GetAwaiter().GetResult();
-                }
+                    var stream = dataObject.GetData(DataFormats.MetafilePicture) as Stream;
+                    if (stream != null)
+                    {
+                        using (stream)
+                        {
+                            stream.Seek(0, SeekOrigin.Begin);
+                            stream.CopyToAsync(tempStream, BufferSize, ct).GetAwaiter().GetResult();
+                        }
 
-                (img, extension) = GetImageFromStream(tempStream, ct);
-                if (img != null)
-                    return true;
+                        (img, extension) = GetImageFromStream(tempStream, ct);
+                        if (img != null)
+                            return true;
+                    }
+                }
+                catch
+                {
+                }
             }
 
             // HTML
@@ -315,26 +395,32 @@ namespace TiX.Core
                 if (tempStream == null)
                     return true;
 
-                string html;
-                string src;
-
-                html = (string)dataObject.GetData(DataFormats.Html, false);
-
-                src = regSrc.Match(html).Groups[1].Value;
-
-                if (!Uri.TryCreate(src, UriKind.Absolute, out Uri uri))
+                try
                 {
-                    int fragmentStart   = int.Parse(regFragmentStart.Match(html).Groups[1].Value);
-                    int fragmentEnd     = int.Parse(regFragmentEnd.Match(html).Groups[1].Value);
+                    string html;
+                    string src;
 
-                    string baseUrl = regBaseUrl.Match(html, fragmentStart, fragmentEnd - fragmentStart).Groups[0].Value;
+                    html = (string)dataObject.GetData(DataFormats.Html, false);
 
-                    uri = new Uri(new Uri(baseUrl), src);
+                    src = regSrc.Match(html).Groups[1].Value;
+
+                    if (!Uri.TryCreate(src, UriKind.Absolute, out Uri uri))
+                    {
+                        int fragmentStart = int.Parse(regFragmentStart.Match(html).Groups[1].Value);
+                        int fragmentEnd = int.Parse(regFragmentEnd.Match(html).Groups[1].Value);
+
+                        string baseUrl = regBaseUrl.Match(html, fragmentStart, fragmentEnd - fragmentStart).Groups[0].Value;
+
+                        uri = new Uri(new Uri(baseUrl), src);
+                    }
+
+                    (img, extension) = GetImageFromHttp(tempStream, uri, ct);
+                    if (img != null)
+                        return true;
                 }
-
-                (img, extension) = GetImageFromHttp(tempStream, uri, ct);
-                if (img != null)
-                    return true;
+                catch
+                {
+                }
             }
 
             // text/x-moz-url
@@ -343,11 +429,17 @@ namespace TiX.Core
                 if (tempStream == null)
                     return true;
 
-                var mem = dataObject.GetData("text/x-moz-url", false) as MemoryStream;
-                using (mem)
-                    (img, extension) = GetImageFromUri(tempStream, Encoding.Unicode.GetString(mem.ToArray()), ct);
-                if (img != null)
-                    return true;
+                try
+                {
+                    var mem = dataObject.GetData("text/x-moz-url", false) as MemoryStream;
+                    using (mem)
+                        (img, extension) = GetImageFromUri(tempStream, Encoding.Unicode.GetString(mem.ToArray()), ct);
+                    if (img != null)
+                        return true;
+                }
+                catch
+                {
+                }
             }
 
             // TEXT
@@ -356,9 +448,15 @@ namespace TiX.Core
                 if (tempStream == null)
                     return true;
 
-                (img, extension) = GetImageFromUri(tempStream, dataObject.GetData("UnicodeText") as string, ct);
-                if (img != null)
-                    return true;
+                try
+                {
+                    (img, extension) = GetImageFromUri(tempStream, dataObject.GetData("UnicodeText") as string, ct);
+                    if (img != null)
+                        return true;
+                }
+                catch
+                {
+                }
             }
 
             return false;
@@ -422,7 +520,7 @@ namespace TiX.Core
             {
                 tempStream.Position = 0;
                 var buff = new byte[tempStream.Length];
-                tempStream.Read(buff, 0, buff.Length);
+                tempStream.ReadAsync(buff, 0, buff.Length, ct).GetAwaiter().GetResult();
 
                 var webp = new WebP();
                 return (webp.Decode(buff), ".webp");
@@ -438,6 +536,7 @@ namespace TiX.Core
             tempStream.Position = 0;
             {
                 var img = Image.FromStream(tempStream);
+                ct.ThrowIfCancellationRequested();
 
                 if (img.RawFormat.Guid == ImageFormat.Icon.Guid)
                 {
@@ -461,8 +560,8 @@ namespace TiX.Core
         private static string GetExtension(Image image)
         {
             var guid = image.RawFormat.Guid;
-            if (guid == ImageFormat.Gif.Guid)  return ".gif";
-            if (guid == ImageFormat.Png.Guid)  return ".png";
+            if (guid == ImageFormat.Gif.Guid ) return ".gif";
+            if (guid == ImageFormat.Png.Guid ) return ".png";
             if (guid == ImageFormat.Jpeg.Guid) return ".jpg";
 
             return null;

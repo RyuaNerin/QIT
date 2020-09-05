@@ -11,7 +11,7 @@ using TiX.Utilities;
 
 namespace TiX.Windows
 {
-    public partial class PinWindow : Window
+    internal partial class PinWindow : Window
     {
         private readonly int m_wmMessage;
         public PinWindow(int wmMessage)
@@ -47,7 +47,7 @@ namespace TiX.Windows
             else if (msg == 0x031D) // WM_CLIPBOARDUPDATE
             {
                 var str = Clipboard.GetText();
-                if (!string.IsNullOrWhiteSpace(str) && str.Length == 7 && int.TryParse(str, out int i))
+                if (!string.IsNullOrWhiteSpace(str) && str.Length == 7 && int.TryParse(str, out _))
                 {
                     this.InputPin.Text = str;
 

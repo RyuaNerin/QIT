@@ -1,0 +1,111 @@
+<Window x:Class="TiX.Windows.UploadWindow"
+        x:ClassModifier="internal"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:at="clr-namespace:Antraxina.Templates;assembly=Antraxina"
+        xmlns:r="clr-namespace:TiX"
+        xmlns:c="clr-namespace:TiX.Core"
+        mc:Ignorable="d"
+        Icon="/TiX;component/Resources/TiX.ico"
+        Title="{x:Static r:TiXMain.ProductName}"
+        Height="200"
+        Width="300">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="auto" />
+            <RowDefinition Height="5" />
+            <RowDefinition Height="auto" />
+        </Grid.RowDefinitions>
+
+        <ListBox x:Name="ImageList">
+            <ListBox.ItemTemplate>
+                <DataTemplate DataType="{x:Type c:ImageSet}">
+                    <DataTemplate.Triggers>
+                        <DataTrigger Binding="{Binding Path=Status}"
+                                     Value="None">
+                            <Setter TargetName="PART_FILENAME"
+                                    Property="Foreground"
+                                    Value="{x:Static SystemColors.GrayTextBrush}" />
+                        </DataTrigger>
+                        
+                        <DataTrigger Binding="{Binding Path=Status}"
+                                     Value="Success">
+                            <Setter TargetName="PART_FILENAME"
+                                    Property="Foreground"
+                                    Value="{x:Static SystemColors.ControlTextBrush}" />
+                            
+                            <Setter TargetName="PART_RATIO"
+                                    Property="Visibility"
+                                    Value="Visible" />
+                        </DataTrigger>
+                        
+                        <DataTrigger Binding="{Binding Path=Status}"
+                                     Value="Error">
+                            <Setter TargetName="PART_FILENAME"
+                                    Property="Foreground"
+                                    Value="{x:Static SystemColors.GrayTextBrush}" />
+
+                            <Setter TargetName="PART_RATIO"
+                                    Property="Visibility"
+                                    Value="Visible" />
+                        </DataTrigger>
+                    </DataTemplate.Triggers>
+                    
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition />
+                            <ColumnDefinition Width="auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock x:Name="PART_FILENAME"
+                                   Grid.Column="0"
+                                   Text="{Binding Path=FileName}"
+                                   Tag="{Binding}"
+                                   Foreground="{x:Static SystemColors.GrayTextBrush}"
+                                   TextTrimming="CharacterEllipsis"
+                                   TextWrapping="NoWrap" />
+
+                        <TextBlock x:Name="PART_RATIO"
+                                   Grid.Column="1"
+                                   Visibility="Collapsed"
+                                   Text="{Binding Path=Ratio, StringFormat='##0 %'}" />
+
+                        <at:ProgressRing x:Name="PART_PROGRESSRING"
+                                         HorizontalAlignment="Center"
+                                         Grid.Column="1" />
+                    </Grid>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+
+        <Grid Grid.Row="2">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto" />
+                <RowDefinition />
+            </Grid.RowDefinitions>
+            
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition Width="5" />
+                <ColumnDefinition Width="auto" />
+            </Grid.ColumnDefinitions>
+
+            <TextBlock x:Name="InputTextCount"
+                       Grid.Row="0"
+                       Grid.ColumnSpan="3" />
+
+            <TextBox x:Name="InputText"
+                     Grid.Row="1"
+                     Grid.Column="0"
+                     TextChanged="InputText_TextChanged"
+                     PreviewKeyDown="InputText_PreviewKeyDown" />
+
+            <Button x:Name="TweetButton"
+                    Grid.Row="1"
+                    Grid.Column="2"
+                    Click="TweetButton_Click" />
+        </Grid>
+    </Grid>
+</Window>
