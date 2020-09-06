@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TiX", "TiX\TiX.csproj", "{3
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TiXExt", "TiXExt\KisboExt.vcxproj", "{FBD3817A-E704-4FC6-901C-D6E4FAC787EE}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TiXRsz", "TiXRsz\TiXRsz.vcxproj", "{A7545E2E-041A-495F-9623-D769414D3746}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,6 +53,16 @@ Global
 		{FBD3817A-E704-4FC6-901C-D6E4FAC787EE}.Release|x64.Build.0 = Release|x64
 		{FBD3817A-E704-4FC6-901C-D6E4FAC787EE}.Release|x86.ActiveCfg = Release|Win32
 		{FBD3817A-E704-4FC6-901C-D6E4FAC787EE}.Release|x86.Build.0 = Release|Win32
+		{A7545E2E-041A-495F-9623-D769414D3746}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{A7545E2E-041A-495F-9623-D769414D3746}.Debug|x64.ActiveCfg = Debug|x64
+		{A7545E2E-041A-495F-9623-D769414D3746}.Debug|x64.Build.0 = Debug|x64
+		{A7545E2E-041A-495F-9623-D769414D3746}.Debug|x86.ActiveCfg = Debug|Win32
+		{A7545E2E-041A-495F-9623-D769414D3746}.Debug|x86.Build.0 = Debug|Win32
+		{A7545E2E-041A-495F-9623-D769414D3746}.Release|Any CPU.ActiveCfg = Release|Win32
+		{A7545E2E-041A-495F-9623-D769414D3746}.Release|x64.ActiveCfg = Release|x64
+		{A7545E2E-041A-495F-9623-D769414D3746}.Release|x64.Build.0 = Release|x64
+		{A7545E2E-041A-495F-9623-D769414D3746}.Release|x86.ActiveCfg = Release|Win32
+		{A7545E2E-041A-495F-9623-D769414D3746}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

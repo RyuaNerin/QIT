@@ -1,5 +1,5 @@
-[submodule "submodules/libwebp"]
-	path = submodules/libwebp
+[submodule "TixRsz/libwebp"]
+	path = TixRsz/libwebp
 	url = git@github.com:webmproject/libwebp.git
 	branch = 0.6.0
 	

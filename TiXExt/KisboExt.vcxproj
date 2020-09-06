@@ -41,6 +41,7 @@
     <ResourceCompile Include="src\TixExt.rc" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="src\TixExt.def" />
     <None Include="src\TixExt32.def" />
     <None Include="src\TixExt64.def" />
   </ItemGroup>
