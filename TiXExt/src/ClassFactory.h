@@ -1,5 +1,4 @@
-#ifndef __CLASSFACTORY__H_
-#define __CLASSFACTORY__H_
+#pragma once
 
 #include <unknwn.h>     // IClassFactory
 
@@ -24,5 +23,3 @@ public:
 protected:
     ULONG m_ref;
 };
-
-#endif

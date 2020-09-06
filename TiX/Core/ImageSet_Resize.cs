@@ -16,7 +16,11 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using TiX.Utilities;
-using WebPWrapper;
+using NetVips;
+
+using Image = System.Drawing.Image;
+using VipsImg = NetVips.Image;
+using System.IO;
 
 namespace TiX.Core
 {
@@ -30,6 +34,8 @@ namespace TiX.Core
         private const int GifMaxHeight = 1080;
         private const int GifFrames    = 350;
         private const int GifMaxPixels = 300 * 1000 * 1000;
+
+        private const double WebpQ = 90;
 
         private static readonly ImageCodecInfo GifCodec = ImageCodecInfo.GetImageDecoders().First(e => e.FormatID == ImageFormat.Gif.Guid);
         private static readonly EncoderParameters GifParamFrame = new EncoderParameters
@@ -55,312 +61,177 @@ namespace TiX.Core
             }
         };
 
-        private void Resize(Image img, string extension, CancellationToken ct)
+        /// <summary>이미지는 Gif, Png, Webp, Jpeg 중 하나여야 함.</summary>
+        /// <returns>(extension, ratio)</returns>
+        private static (string, double) Resize(Stream stream, CancellationToken ct)
         {
-            if (img.RawFormat.Guid == ImageFormat.Gif.Guid)
+            // Gif Signature 확인
+            stream.Position = 0;
+
+            var fileType = Signatures.CheckSignature(stream);
+            stream.Position = 0;
+
+            if (fileType == Signatures.FileType.Gif)
             {
-                this.ResizeGif(img, ct);
+                var r = ResizeGif(stream, ct);
+                if (r.Item1 != null)
+                    return r;
             }
-            else
-            {
-                this.ResizeImg(img, extension, ct);
-            }
+
+            return ResizeImg(stream, fileType, ct);
         }
 
-        private void ResizeGif(Image gif, CancellationToken ct)
+        /// <returns>
+        /// (extension, ratio)
+        /// extension = null --> webp 파일로 변환할 필요가 있다면 
+        /// </returns>
+        private static (string, double) ResizeGif(Stream stream, CancellationToken ct)
         {
-            using (var gf = new GifFrames(gif))
+            using (var img = Image.FromStream(stream))
             {
+                var gifReader = new GifFrameReader(img);
+
                 // 프레임이 하나면 그냥 이미지로 바꿔서 트윗
-                if (gf.Count == 1)
-                {
-                    this.ResizeImg(gif, null, ct);
-                    return;
-                }
+                if (gifReader.FrameCount == 1)
+                    return (null, 0);
+
+                var baseSize = gifReader.Size;
+
+                var overFrames = gifReader.FrameCount < GifFrames;
+                var overSize = baseSize.Width > GifMaxWidth || baseSize.Height > GifMaxHeight;
+                var overPixels = (double)baseSize.Width * baseSize.Height * gifReader.FrameCount > GifMaxPixels;
 
                 // Gif 조건을 만족하면 처리할 필요가 없음.
-                var baseSize = gf.Size;
-                if (0 < this.m_tempFile.Length && this.m_tempFile.Length < GifMaxSize &&
-                    baseSize.Width < GifMaxWidth && baseSize.Height < GifMaxHeight &&
-                    gf.Count < GifFrames &&
-                    baseSize.Width * baseSize.Height * gf.Count <= GifMaxPixels)
-                {
-                    return;
-                }
+                if (stream.Length < GifMaxSize && !overFrames && !overSize && !overPixels)
+                    return (".gif", 1);
 
-                var targetSize = baseSize;
+                var gifFrameInfo = gifReader.Frames.ToArray();
+
+                var ratio = ReductionRatio;
 
                 // Width / Height 줄이기
-                if (baseSize.Width > GifMaxWidth || baseSize.Height > GifMaxHeight)
+                if (overSize)
                 {
-                    var ratio = Math.Min(
+                    ratio = Math.Min(
                         GifMaxWidth / baseSize.Width,
                         GifMaxHeight / baseSize.Height
                     );
-                    targetSize.Width = (int)(baseSize.Width  * ratio);
-                    targetSize.Height = (int)(baseSize.Height * ratio);
                 }
 
                 // 프레임 수 줄이기
-                if (gf.Count > 350)
+                if (overFrames)
                 {
-                    var delCount = gf.Count - 350;
-                    var sep = gf.Count / (delCount + 1);
+                    var delCount = gifReader.FrameCount - 350;
+                    var sep = gifReader.FrameCount / (delCount + 1);
 
                     for (var i = 0; i < delCount; ++i)
-                    {
-                        gf[sep * i - 1].Dalay += gf[sep * i].Dalay;
-                        gf[sep * i].Image.Dispose();
-                        gf.RemoveAt(sep * i);
-                    }
+                        gifFrameInfo[sep * i - 1].Delay += gifFrameInfo[sep * i].Delay;
                 }
 
                 // Max Pixels
+                if (overPixels)
                 {
-                    if (targetSize.Width * targetSize.Height * gf.Count > 300000000)
-                    {
-                        targetSize = GetSizeFromPixels((double)GifMaxPixels / gf.Count, targetSize);
-                    }
+                    ratio = (int)Math.Ceiling(Math.Sqrt((double)GifMaxPixels / gifFrameInfo.Length / baseSize.Height * baseSize.Width)) / baseSize.Width;
                 }
 
                 // File-Size
-                var image = new Bitmap[gf.Count];
+                var gifFrameOld = new Image[gifFrameInfo.Length];
+                var gifFrameNew = new Image[gifFrameInfo.Length];
 
                 try
                 {
-                    while (baseSize != targetSize && this.m_tempFile.Length < GifMaxSize)
+                    for (var i = 0; i < gifFrameInfo.Length; i++)
+                        gifFrameOld[i] = gifReader.GetImage(gifFrameInfo[i].Offset);
+
+                    do
                     {
+                        ratio *= ReductionRatio;
+
+                        var targetSize = new Size(
+                            (int)(baseSize.Width * ratio),
+                            (int)(baseSize.Height * ratio));
+
                         ct.ThrowIfCancellationRequested();
 
                         _ = Parallel.For(
                             0,
-                            gf.Count,
+                            gifFrameInfo.Length,
                             new ParallelOptions
                             {
                                 CancellationToken = ct,
                             },
                             index =>
                             {
-                                image[index]?.Dispose();
-                                image[index] = ResizeBySize(gf[index].Image, targetSize);
+                                gifFrameNew[index]?.Dispose();
+                                gifFrameNew[index] = ResizeBySize(gifFrameOld[index], targetSize);
                             });
 
-                        this.m_tempFile.SetLength(0);
+                        stream.SetLength(0);
 
-                        using (var newImage = new Bitmap(image[0]))
+                        gifFrameNew[0].SetPropertyItem(GifFrameReader.ToPropertyItem(gifFrameInfo));
+                        gifFrameNew[0].Save(stream, GifCodec, GifParamFrame);
+
+                        for (var i = 1; i < gifFrameInfo.Length; ++i)
                         {
-                            CopyProperties(gif, newImage);
-
-                            newImage.Save(this.m_tempFile, GifCodec, GifParamFrame);
-
-                            for (var i = 1; i < gf.Count; ++i)
-                            {
-                                ct.ThrowIfCancellationRequested();
-                                newImage.SaveAdd(image[i], GifParamDimention);
-                            }
-
                             ct.ThrowIfCancellationRequested();
-                            newImage.SaveAdd(GifParamFlush);
+                            gifFrameNew[0].SaveAdd(gifFrameNew[i], GifParamDimention);
                         }
 
-                        targetSize.Width  = (int)(targetSize.Width  * ReductionRatio);
-                        targetSize.Height = (int)(targetSize.Height * ReductionRatio);
-
-                        this.Extension = ".gif";
-                        this.Ratio = ((double)targetSize.Width * targetSize.Height) / ((double)baseSize.Width * baseSize.Height) * 100d;
+                        ct.ThrowIfCancellationRequested();
+                        gifFrameNew[0].SaveAdd(GifParamFlush);
                     }
+                    while (stream.Length < GifMaxSize);
+
+                    return (".gif", ratio);
                 }
                 finally
                 {
-                    foreach (var img in image)
-                    {
-                        img?.Dispose();
-                    }
+                    foreach (var frame in gifFrameOld)
+                        frame?.Dispose();
+
+                    foreach (var frame in gifFrameNew)
+                        frame?.Dispose();
                 }
             }
         }
 
-        private void ResizeImg(Image img, string extension, CancellationToken ct)
+        /// <returns>(extension, ratio)</returns>
+        private static (string, double) ResizeImg(Stream stream, Signatures.FileType fileType, CancellationToken ct)
         {
-            switch (extension)
+            if (fileType != Signatures.FileType.Unknown && stream.Length < ImgMaxSize)
             {
-                case ".jpg":
-                case ".png":
-                case ".webp":
-                    if (0 < this.m_tempFile.Length && this.m_tempFile.Length < ImgMaxSize)
-                    {
-                        this.Extension = extension;
-                        this.Ratio = 1;
-                        return;
-                    }
-                    break;
+                switch (fileType)
+                {
+                    case Signatures.FileType.Png:  return (".png",  1);
+                    case Signatures.FileType.Jpeg: return (".png",  1);
+                    case Signatures.FileType.WebP: return (".webp", 1);
+                }
             }
 
-            var bitmap = img as Bitmap;
-
-            try
+            using (var img = VipsImg.NewFromStream(stream))
             {
-                // Bitmap 으로 변경
-                if (bitmap == null)
-                {
-                    bitmap = new Bitmap(img.Width, img.Height, PixelFormat.Format32bppArgb);
+                var ratio = ReductionRatio;
 
-                    using (var g = Graphics.FromImage(bitmap))
-                        g.DrawImageUnscaledAndClipped(img, new Rectangle(Point.Empty, bitmap.Size));
-                }
-                ct.ThrowIfCancellationRequested();
+                var hasAlpha = img.HasAlpha();
 
-                var hasAlpha = extension != ".jpg" && HasAlpha(bitmap, ct);
-
-                // 24 RGB 혹은 32 ARGB 로 변경
-                if (img.PixelFormat != PixelFormat.Format24bppRgb && img.PixelFormat != PixelFormat.Format32bppArgb)
-                {
-                    var bitmap2 = bitmap.Clone(
-                        new Rectangle(Point.Empty, img.Size),
-                        hasAlpha ? PixelFormat.Format32bppArgb : PixelFormat.Format24bppRgb);
-
-                    CopyProperties(bitmap, bitmap2);
-
-                    bitmap.Dispose();
-                    bitmap = bitmap2;
-                }
-                ct.ThrowIfCancellationRequested();
-
-                var baseSize = bitmap.Size;
-                var targetSize = baseSize;
                 do
                 {
                     ct.ThrowIfCancellationRequested();
 
-                    this.m_tempFile.SetLength(0);
+                    ratio *= ReductionRatio;
 
-                    Bitmap bitmapResized = null;
-                    try
+                    using (var newImg = img.Resize(ratio, Enums.Kernel.Lanczos3))
                     {
-                        bitmapResized = baseSize == targetSize ? ResizeBySize(bitmap, targetSize) : null;
-
-                        using (var webp = new WebP())
-                        {
-                            byte[] buff;
-
-                            if (hasAlpha)
-                            {
-                                buff = webp.EncodeLossless(bitmapResized ?? bitmap);
-                            }
-                            else
-                            {
-                                buff = webp.EncodeLossy(bitmapResized ?? bitmap);
-                            }
-
-                            this.m_tempFile.WriteAsync(buff, 0, buff.Length, ct).GetAwaiter().GetResult();
-                        }
-                    }
-                    finally
-                    {
-                        bitmapResized?.Dispose();
+                        newImg.WebpsaveStream(
+                            stream,
+                            lossless: hasAlpha || fileType == Signatures.FileType.Png || fileType == Signatures.FileType.WebP
+                        );
+                        stream.SetLength(0);
                     }
 
-                    targetSize.Width  = (int)Math.Ceiling(targetSize.Width  * ReductionRatio);
-                    targetSize.Height = (int)Math.Ceiling(targetSize.Height * ReductionRatio);
-                } while (this.m_tempFile.Length < ImgMaxSize);
+                } while (stream.Length < ImgMaxSize);
 
-                this.Extension = ".webp";
-                this.Ratio = ((double)targetSize.Width * targetSize.Height) / ((double)baseSize.Width * baseSize.Height) * 100d;
-            }
-            finally
-            {
-                bitmap?.Dispose();
-            }
-        }
-
-        private unsafe static bool HasAlpha(Bitmap image, CancellationToken ct)
-        {
-            switch (image.PixelFormat)
-            {
-                case PixelFormat.Format16bppRgb555:
-                case PixelFormat.Format16bppRgb565:
-                case PixelFormat.Format24bppRgb:
-                case PixelFormat.Format32bppRgb:
-                case PixelFormat.Format48bppRgb:
-                    return false;
-
-                case PixelFormat.Format32bppArgb:
-                case PixelFormat.Format32bppPArgb:
-                case PixelFormat.Format64bppArgb:
-                case PixelFormat.Format64bppPArgb:
-                    {
-                        BitmapData bits = null;
-
-                        try
-                        {
-                            bits = image.LockBits(
-                                new Rectangle(Point.Empty, image.Size),
-                                ImageLockMode.ReadOnly,
-                                image.PixelFormat);
-
-                            var ptr = (byte*)bits.Scan0;
-
-                            var bpp = Image.GetPixelFormatSize(bits.PixelFormat);
-                            var v = (1 << (bpp * 2)) - 1;
-
-                            var pr = Parallel.For(
-                                0,
-                                bits.Height,
-                                new ParallelOptions
-                                {
-                                    CancellationToken = ct,
-                                },
-                                (y, state) =>
-                                {
-                                    var bptr = ptr + bits.Stride * y;
-
-                                    var buff = new byte[4];
-                                    for (int x = 0; x < bits.Width && !state.IsStopped; x += bpp)
-                                    {
-                                        buff[0] = bptr[x + 0];
-                                        buff[1] = bptr[x + 1];
-                                        buff[2] = bptr[x + 2];
-                                        buff[3] = bptr[x + 3];
-
-                                        if ((BitConverter.ToInt32(buff, 0) >> (bpp * 6)) != v)
-                                            state.Break();
-                                    }
-                                });
-
-                            return pr.IsCompleted;
-                        }
-                        catch
-                        {
-                            return true;
-                        }
-                        finally
-                        {
-                            if (bits != null)
-                                image.UnlockBits(bits);
-                        }
-                    }
-
-                // ㅜㅜ
-                default:
-                    {
-                        var alpha = image.GetPixel(0, 0).A;
-
-                        var result = Parallel.For(
-                            0,
-                            image.Height,
-                            new ParallelOptions
-                            {
-                                CancellationToken = ct,
-                            },
-                            (y, state) =>
-                            {
-                                for (int x = 0; x < image.Width; ++x)
-                                    if (image.GetPixel(x, y).A != alpha)
-                                        state.Break();
-                            });
-
-                        return !result.IsCompleted;
-                    }
+                return (".webp", ratio);
             }
         }
 
@@ -374,12 +245,6 @@ namespace TiX.Core
             if (@new.Height > old.Height) @new.Height = old.Height;
 
             return @new;
-        }
-
-        private static void CopyProperties(Image from, Image to)
-        {
-            foreach (var propertyItem in from.PropertyItems)
-                to.SetPropertyItem(propertyItem);
         }
 
         private static Bitmap ResizeBySize(Image oldImage, Size sz)

@@ -14,7 +14,7 @@ using System.Windows;
 using RyuaNerin.Drawing;
 using Sentry;
 using TiX.Utilities;
-using WebPWrapper;
+using Encoder = System.Drawing.Imaging.Encoder;
 
 namespace TiX.Core
 {
@@ -29,12 +29,7 @@ namespace TiX.Core
         }
 
         public static bool IsAvailable(IDataObject e)
-        {
-            if (e == null)
-                return false;
-
-            return GetImageFromDataObject(null, e, CancellationToken.None, out _, out _);
-        }
+            => e != null && ExtractFromDataObject(null, e, CancellationToken.None);
 
         private ImageSet(ImageCollection collection)
         {
@@ -181,40 +176,38 @@ namespace TiX.Core
 
             if (this.Status == Statues.None || this.m_tempFile.Length == 0)
             {
-                Image bitmap = null;
-                string extension = null;
+                var ret = false;
                 try
                 {
                     if (this.m_baseDataObject != null)
                     {
-                        _ = GetImageFromDataObject(this.m_tempFile, this.m_baseDataObject, ct, out bitmap, out extension);
+                        ret = ExtractFromDataObject(this.m_tempFile, this.m_baseDataObject, ct);
                     }
                     else if (this.m_baseUri != null)
                     {
                         if (this.m_baseUri.Scheme == "file")
-                            (bitmap, extension) = GetImageFromFile(this.m_tempFile, this.m_baseUri.ToString(), ct);
+                            ret = ExtractFromFile(this.m_tempFile, this.m_baseUri.ToString(), ct);
                         else
-                            (bitmap, extension) = GetImageFromHttp(this.m_tempFile, this.m_baseUri, ct);
+                            ret = ExtractFromWeb(this.m_tempFile, this.m_baseUri, ct);
                     }
                     else if (this.m_baseIsBytes)
                     {
-                        (bitmap, extension) = GetImageFromStream(this.m_tempFile, ct);
+                        ret = ExtractFromStream(this.m_tempFile, ct);
                     }
                     else if (this.m_baseImage != null)
                     {
-                        bitmap = this.m_baseImage;
-                        extension = GetExtension(bitmap);
+                        ret = ExtractFromImage(this.m_baseImage);
                     }
+
+                    if (!ret)
+                        throw new OperationCanceledException();
 
                     if (ct.IsCancellationRequested)
                         throw new OperationCanceledException();
 
-                    using (bitmap)
-                    {
-                        this.Resize(bitmap, extension, ct);
+                    (this.Extension, this.Ratio) = Resize(this.m_tempFile, ct);
 
-                        this.Status = Statues.Success;
-                    }
+                    this.Status = Statues.Success;
 
                     this.m_tempFile.Position = 0;
                 }
@@ -225,29 +218,17 @@ namespace TiX.Core
 
                     this.Status = Statues.Error;
                 }
-                finally
-                {
-                    bitmap?.Dispose();
-                }
             }
 
             this.m_collection?.RaiseEvent(this);
         }
 
-        private static readonly Regex regSrc             = new Regex(@"<img.*?src=[""'](.*?)[""'].*>", RegexOptions.Singleline | RegexOptions.IgnoreCase);
-        private static readonly Regex regFragmentStart   = new Regex(@"^StartFragment:(\d+)", RegexOptions.Multiline);
-        private static readonly Regex regFragmentEnd     = new Regex(@"^EndFragment:(\d+)", RegexOptions.Multiline);
-        private static readonly Regex regBaseUrl         = new Regex(@"http://.*?/", RegexOptions.Multiline);
-        private static bool GetImageFromDataObject(
-            Stream tempStream,
-            IDataObject dataObject,
-            CancellationToken ct,
-            out Image img,
-            out string extension)
+        private static readonly Regex regSrc             = new Regex(@"<img.*?src=[""'](.*?)[""'].*>", RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.IgnoreCase);
+        private static readonly Regex regFragmentStart   = new Regex(@"^StartFragment:(\d+)",          RegexOptions.Compiled | RegexOptions.Multiline);
+        private static readonly Regex regFragmentEnd     = new Regex(@"^EndFragment:(\d+)",            RegexOptions.Compiled | RegexOptions.Multiline);
+        private static readonly Regex regBaseUrl         = new Regex(@"http://.*?/",                   RegexOptions.Compiled | RegexOptions.Multiline);
+        private static bool ExtractFromDataObject(Stream tempStream, IDataObject dataObject, CancellationToken ct)
         {
-            img = null;
-            extension = null;
-
             // Images
             if (dataObject.GetDataPresent(DataFormats.Bitmap))
             {
@@ -256,11 +237,10 @@ namespace TiX.Core
 
                 try
                 {
-                    img = dataObject.GetData(DataFormats.Bitmap) as Image;
-                    if (img != null)
+                    using (var img = (Image)dataObject.GetData(DataFormats.Bitmap))
                     {
-                        extension = GetExtension(img);
-                        return true;
+                        if (ConvertToRegularFormat(img, tempStream))
+                            return true;
                     }
                 }
                 catch
@@ -275,19 +255,14 @@ namespace TiX.Core
 
                 try
                 {
-                    var stream = dataObject.GetData("PNG") as Stream;
-                    if (stream != null)
+                    using (var stream = (Stream)dataObject.GetData("PNG"))
                     {
-                        using (stream)
-                        {
-                            stream.Seek(0, SeekOrigin.Begin);
-                            stream.CopyToAsync(tempStream, BufferSize, ct).GetAwaiter().GetResult();
-                        }
-
-                        (img, extension) = GetImageFromStream(tempStream, ct);
-                        if (img != null)
-                            return true;
+                        stream.Seek(0, SeekOrigin.Begin);
+                        stream.CopyToAsync(tempStream, BufferSize, ct).GetAwaiter().GetResult();
                     }
+
+                    if (SaveToRegularFormat(tempStream))
+                        return true;
                 }
                 catch
                 {
@@ -301,8 +276,7 @@ namespace TiX.Core
 
                 try
                 {
-                    var stream = dataObject.GetData("CF_DIBV5") as Stream;
-                    using (stream)
+                    using (var stream = (Stream)dataObject.GetData("CF_DIBV5"))
                     {
                         if (stream is MemoryStream memoryStream)
                         {
@@ -379,7 +353,7 @@ namespace TiX.Core
                             stream.CopyToAsync(tempStream, BufferSize, ct).GetAwaiter().GetResult();
                         }
 
-                        (img, extension) = GetImageFromStream(tempStream, ct);
+                        (img, extension) = ExtractFromStream(tempStream, ct);
                         if (img != null)
                             return true;
                     }
@@ -414,7 +388,7 @@ namespace TiX.Core
                         uri = new Uri(new Uri(baseUrl), src);
                     }
 
-                    (img, extension) = GetImageFromHttp(tempStream, uri, ct);
+                    (img, extension) = ExtractFromWeb(tempStream, uri, ct);
                     if (img != null)
                         return true;
                 }
@@ -433,7 +407,7 @@ namespace TiX.Core
                 {
                     var mem = dataObject.GetData("text/x-moz-url", false) as MemoryStream;
                     using (mem)
-                        (img, extension) = GetImageFromUri(tempStream, Encoding.Unicode.GetString(mem.ToArray()), ct);
+                        (img, extension) = ExtractFromUri(tempStream, Encoding.Unicode.GetString(mem.ToArray()), ct);
                     if (img != null)
                         return true;
                 }
@@ -450,7 +424,7 @@ namespace TiX.Core
 
                 try
                 {
-                    (img, extension) = GetImageFromUri(tempStream, dataObject.GetData("UnicodeText") as string, ct);
+                    (img, extension) = ExtractFromUri(tempStream, dataObject.GetData("UnicodeText") as string, ct);
                     if (img != null)
                         return true;
                 }
@@ -462,23 +436,23 @@ namespace TiX.Core
             return false;
         }
 
-        private static (Image, string) GetImageFromFile(Stream tempStream, string path, CancellationToken ct)
+        private static bool ExtractFromFile(Stream tempStream, string path, CancellationToken ct)
         {
             using (var fs = File.OpenRead(path))
                 fs.CopyToAsync(tempStream, 16 * 1024, ct).GetAwaiter().GetResult();
 
-            return GetImageFromStream(tempStream, ct);
+            return ExtractFromStream(tempStream, ct);
         }
 
-        private static (Image, string) GetImageFromUri(Stream tempStream, string uriStr, CancellationToken ct)
+        private static bool ExtractFromUri(Stream tempStream, string uriStr, CancellationToken ct)
         {
             if (string.IsNullOrWhiteSpace(uriStr) || !Uri.TryCreate(uriStr, UriKind.Absolute, out Uri uri))
-                return (null, null);
+                return false;
 
-            return GetImageFromHttp(tempStream, uri, ct);
+            return ExtractFromWeb(tempStream, uri, ct);
         }
 
-        private static (Image, string) GetImageFromHttp(Stream tempStream, Uri uri, CancellationToken ct)
+        private static bool ExtractFromWeb(Stream tempStream, Uri uri, CancellationToken ct)
         {
             var req = WebRequest.Create(uri) as HttpWebRequest;
             req.Method = "GET";
@@ -491,7 +465,6 @@ namespace TiX.Core
                 using (ct.Register(() => req.Abort(), false))
                 {
                     res = req.GetResponseAsync().GetAwaiter().GetResult();
-                    ct.ThrowIfCancellationRequested();
                 }
             }
             catch (WebException ex)
@@ -500,7 +473,7 @@ namespace TiX.Core
             }
 
             if (res == null)
-                return (null, null);
+                return false;
 
             using (res)
             {
@@ -510,61 +483,163 @@ namespace TiX.Core
                 }
             }
 
-            return GetImageFromStream(tempStream, ct);
+            return ExtractFromStream(tempStream, ct);
         }
 
-        private static (Image, string) GetImageFromStream(Stream tempStream, CancellationToken ct)
+        private static bool ExtractFromStream(Stream tempStream, CancellationToken ct)
         {
             tempStream.Position = 0;
-            if (Signatures.CheckSignature(tempStream, Signatures.WebP))
+
+            switch (Signatures.CheckSignature(tempStream))
             {
-                tempStream.Position = 0;
-                var buff = new byte[tempStream.Length];
-                tempStream.ReadAsync(buff, 0, buff.Length, ct).GetAwaiter().GetResult();
+                case Signatures.FileType.Psd:
+                    using (var img = LoadPSD.Load(tempStream))
+                        return ExtractFromImage(tempStream, img);
 
-                var webp = new WebP();
-                return (webp.Decode(buff), ".webp");
-            }
+                case Signatures.FileType.WebP:
+                    return true;
 
-            tempStream.Position = 0;
-            if (Signatures.CheckSignature(tempStream, Signatures.Psd))
-            {
-                tempStream.Position = 0;
-                return (LoadPSD.Load(tempStream), null);
-            }
-
-            tempStream.Position = 0;
-            {
-                var img = Image.FromStream(tempStream);
-                ct.ThrowIfCancellationRequested();
-
-                if (img.RawFormat.Guid == ImageFormat.Icon.Guid)
-                {
-                    img.Dispose();
-
-                    tempStream.Position = 0;
-                    using (var ie = new IconExtractor(tempStream, true))
+                default:
+                    using (var img = Image.FromStream(tempStream))
                     {
-                        img = ie.OrderByDescending(e => (double)e.Width * e.Height * e.BitsPerPixel)
-                                .FirstOrDefault()
-                                .Image
-                                ?.Clone(new Rectangle(System.Drawing.Point.Empty, img.Size),
-                                        PixelFormat.Format32bppArgb);
-                    }
-                }
+                        ct.ThrowIfCancellationRequested();
 
-                return (img, GetExtension(img));
+                        if (img.RawFormat.Guid == ImageFormat.Icon.Guid)
+                        {
+                            try
+                            {
+                                tempStream.Position = 0;
+                                using (var ie = new IconExtractor(tempStream, true))
+                                {
+                                    return ExtractFromImage(
+                                        tempStream,
+                                        ie.Aggregate((a, b) => ((double)a.Width * a.Height * a.BitsPerPixel) > ((double)b.Width * b.Height * b.BitsPerPixel) ? a : b).Image);
+                                }
+                            }
+                            catch
+                            {
+                            }
+                        }
+                        
+                        return ExtractFromImage(tempStream, img);
+                    }
             }
         }
 
-        private static string GetExtension(Image image)
+        private static readonly ImageCodecInfo    PngCodec = ImageCodecInfo.GetImageDecoders().First(e => e.FormatID == ImageFormat.Png.Guid);
+        private static readonly EncoderParameters PngParam = new EncoderParameters(2)
+        {
+            Param = new EncoderParameter[]
+            {
+                new EncoderParameter(Encoder.ColorDepth, 32L),
+                new EncoderParameter(Encoder.Compression, (long) EncoderValue.CompressionLZW),
+            }
+        };
+
+        private static bool ExtractFromImage(Stream tempStream, Image image)
         {
             var guid = image.RawFormat.Guid;
-            if (guid == ImageFormat.Gif.Guid ) return ".gif";
-            if (guid == ImageFormat.Png.Guid ) return ".png";
-            if (guid == ImageFormat.Jpeg.Guid) return ".jpg";
+            if (guid == ImageFormat.Gif.Guid ) return true;
+            if (guid == ImageFormat.Png.Guid ) return true;
+            if (guid == ImageFormat.Jpeg.Guid) return true;
 
-            return null;
+            tempStream.SetLength(0);
+
+            image.Save(tempStream, PngCodec, PngParam);
+
+            return true;
+
+            unsafe bool HasAlpha(Bitmap b, CancellationToken ct)
+            {
+                switch (image.PixelFormat)
+                {
+                    case PixelFormat.Format16bppRgb555:
+                    case PixelFormat.Format16bppRgb565:
+                    case PixelFormat.Format24bppRgb:
+                    case PixelFormat.Format32bppRgb:
+                    case PixelFormat.Format48bppRgb:
+                        return false;
+
+                    case PixelFormat.Format32bppArgb:
+                    case PixelFormat.Format32bppPArgb:
+                    case PixelFormat.Format64bppArgb:
+                    case PixelFormat.Format64bppPArgb:
+                        {
+                            BitmapData bits = null;
+
+                            try
+                            {
+                                bits = image.LockBits(
+                                    new Rectangle(Point.Empty, image.Size),
+                                    ImageLockMode.ReadOnly,
+                                    image.PixelFormat);
+
+                                var ptr = (byte*)bits.Scan0;
+
+                                var bpp = Image.GetPixelFormatSize(bits.PixelFormat);
+                                var v = (1 << (bpp * 2)) - 1;
+
+                                var pr = Parallel.For(
+                                    0,
+                                    bits.Height,
+                                    new ParallelOptions
+                                    {
+                                        CancellationToken = ct,
+                                    },
+                                    (y, state) =>
+                                    {
+                                        var bptr = ptr + bits.Stride * y;
+
+                                        var buff = new byte[4];
+                                        for (int x = 0; x < bits.Width && !state.IsStopped; x += bpp)
+                                        {
+                                            buff[0] = bptr[x + 0];
+                                            buff[1] = bptr[x + 1];
+                                            buff[2] = bptr[x + 2];
+                                            buff[3] = bptr[x + 3];
+
+                                            if ((BitConverter.ToInt32(buff, 0) >> (bpp * 6)) != v)
+                                                state.Break();
+                                        }
+                                    });
+
+                                return pr.IsCompleted;
+                            }
+                            catch
+                            {
+                                return true;
+                            }
+                            finally
+                            {
+                                if (bits != null)
+                                    image.UnlockBits(bits);
+                            }
+                        }
+
+                    // ㅜㅜ
+                    default:
+                        {
+                            var alpha = image.GetPixel(0, 0).A;
+
+                            var result = Parallel.For(
+                                0,
+                                image.Height,
+                                new ParallelOptions
+                                {
+                                    CancellationToken = ct,
+                                },
+                                (y, state) =>
+                                {
+                                    for (int x = 0; x < image.Width; ++x)
+                                        if (image.GetPixel(x, y).A != alpha)
+                                            state.Break();
+                                });
+
+                            return !result.IsCompleted;
+                        }
+                }
+            }
+
         }
 
         private static class NativeMethods

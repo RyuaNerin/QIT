@@ -149,7 +149,7 @@ namespace TiX.Utilities
 
                 mem.Position = 0;
 
-                entry.Image = (Bitmap)Bitmap.FromStream(mem);
+                entry.Image = (Bitmap)Image.FromStream(mem);
                 entry.Width = entry.Image.Width;
                 entry.Height = entry.Image.Height;
             }

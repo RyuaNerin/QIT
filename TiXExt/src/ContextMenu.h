@@ -1,5 +1,4 @@
-﻿#ifndef __CONTEXTMENU__H__
-#define __CONTEXTMENU__H__
+#pragma once
 
 #include <shlobj.h> // IShellExtInit IContextMenu
 #include <vector>
@@ -33,5 +32,3 @@ private:
     DWORD m_id_withText    = -1;
     DWORD m_id_withoutText = -1;
 };
-
-#endif
